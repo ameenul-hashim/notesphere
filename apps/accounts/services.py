@@ -74,7 +74,6 @@ def send_transactional_email(to, subject, text_body, html_body=None, reply_to=No
         if html_body:
             msg.content_subtype = "html"
             msg.body = html_body
-            msg.extra_headers["X-Text-Fallback"] = text_body
 
         sent = msg.send(fail_silently=False)
         logger.info("Email sent via Brevo | to=%s | subject=%s | accepted=%s", to, subject, sent)
