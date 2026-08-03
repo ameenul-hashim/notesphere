@@ -1,9 +1,7 @@
-<span class="inline-flex items-center justify-center rounded-full overflow-hidden shrink-0
-  {% if size == 'lg' %}h-16 w-16 text-lg{% else %}h-10 w-10 text-sm{% endif %}
-  bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200">
+<span class="avatar {% if size == 'lg' %}avatar-lg{% else %}avatar-md{% endif %}">
   {% if user.profile_image %}
-    <img src="{{ user.profile_image.url }}" alt="{{ user.full_name }}" class="h-full w-full object-cover">
+    <img src="{{ user.profile_image.url }}" alt="{{ user.full_name }}">
   {% else %}
-    <span class="font-semibold">{{ user.full_name|first|upper }}</span>
+    <span>{{ user.full_name|first|upper }}</span>
   {% endif %}
 </span>

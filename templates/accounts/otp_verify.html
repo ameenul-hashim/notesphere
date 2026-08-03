@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 {% block title %}Verify OTP | NoteSphere{% endblock %}
 {% block content %}
-<div class="max-w-md mx-auto bg-white shadow rounded-lg p-6 dark:bg-slate-800">
-  <h1 class="text-2xl font-bold mb-1">Verify OTP</h1>
-  <p class="text-sm text-slate-500 mb-6 dark:text-slate-400">
+<div class="auth-card">
+  <h1 class="auth-title">Verify OTP</h1>
+  <p class="text-muted mt-2 mb-6">
     Enter the 6-digit code sent to your email. It expires in 5 minutes.
   </p>
 
@@ -12,13 +12,11 @@
   <form method="post" novalidate>
     {% csrf_token %}
     {% include "_field.html" with field=form.otp %}
-    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md font-medium">
-      Verify OTP
-    </button>
+    <button type="submit" class="btn btn-primary btn-block btn-lg">Verify OTP</button>
   </form>
 
-  <p class="text-sm text-center mt-4">
-    <a href="{% url 'accounts:forgot_password' %}" class="text-blue-600 hover:underline dark:text-blue-400">Request a new OTP</a>
+  <p class="form-note">
+    <a href="{% url 'accounts:forgot_password' %}">Request a new OTP</a>
   </p>
 </div>
 {% endblock %}

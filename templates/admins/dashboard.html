@@ -1,22 +1,23 @@
 {% extends "base.html" %}
 {% block title %}Admin Dashboard | NoteSphere{% endblock %}
+{% block topbar_title %}Dashboard{% endblock %}
 {% block content %}
-<div class="bg-white shadow rounded-lg p-6 dark:bg-slate-800">
-  <h1 class="text-2xl font-bold">Admin Dashboard</h1>
-  <p class="text-sm text-slate-500 mt-1 dark:text-slate-400">Overview of student accounts.</p>
+<div class="card card-pad">
+  <div class="page-head">
+    <h1 class="page-title">Admin Dashboard</h1>
+    <p class="page-subtitle">Overview of student accounts.</p>
+  </div>
 
-  <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-    {% include "_stat_card.html" with label="Total Students" value=total_students url=student_list_url card_class="bg-blue-50 border-blue-200 dark:bg-blue-950 dark:border-blue-800" text_class="text-blue-700 dark:text-blue-300" %}
-    {% include "_stat_card.html" with label="Active" value=active_students url=active_list_url card_class="bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800" text_class="text-green-700 dark:text-green-300" %}
-    {% include "_stat_card.html" with label="Inactive" value=inactive_students url=inactive_list_url card_class="bg-yellow-50 border-yellow-200 dark:bg-yellow-950 dark:border-yellow-800" text_class="text-yellow-700 dark:text-yellow-300" %}
-    {% include "_stat_card.html" with label="Blocked" value=blocked_students url=blocked_list_url card_class="bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-800" text_class="text-red-700 dark:text-red-300" %}
-    {% include "_stat_card.html" with label="Deleted" value=deleted_students url=deleted_list_url card_class="bg-slate-100 border-slate-300 dark:bg-slate-700 dark:border-slate-600" text_class="text-slate-700 dark:text-slate-300" %}
+  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+    {% include "_stat_card.html" with label="Total Students" value=total_students url=student_list_url %}
+    {% include "_stat_card.html" with label="Active" value=active_students url=active_list_url %}
+    {% include "_stat_card.html" with label="Inactive" value=inactive_students url=inactive_list_url %}
+    {% include "_stat_card.html" with label="Blocked" value=blocked_students url=blocked_list_url %}
+    {% include "_stat_card.html" with label="Deleted" value=deleted_students url=deleted_list_url %}
   </div>
 
   <div class="mt-6">
-    <a href="{% url 'admins:student_list' %}" class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm">
-      Manage Students
-    </a>
+    <a href="{% url 'admins:student_list' %}" class="btn btn-primary">Manage Students</a>
   </div>
 </div>
 {% endblock %}

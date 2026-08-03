@@ -1,26 +1,27 @@
 {% extends "base.html" %}
 {% block title %}{{ semester.name }} | NoteSphere{% endblock %}
+{% block topbar_title %}Semesters{% endblock %}
 {% block content %}
 <div class="max-w-3xl mx-auto">
-  <div class="bg-white shadow rounded-lg p-6 dark:bg-slate-800">
-    <div class="flex items-center justify-between mb-2">
-      <h1 class="text-2xl font-bold">{{ semester.name }}</h1>
+  <div class="card card-pad">
+    <div class="flex items-center justify-between gap-3 mb-2">
+      <h1 class="page-title">{{ semester.name }}</h1>
       {% include "_status_badge.html" with status=semester.status label=semester.get_status_display %}
     </div>
     {% if semester.description %}
-      <p class="text-sm text-slate-500 dark:text-slate-400">{{ semester.description }}</p>
+      <p class="text-muted">{{ semester.description }}</p>
     {% endif %}
 
-    <div class="mt-8 border-t pt-6 dark:border-slate-700">
+    <div class="mt-8 border-t pt-6" style="border-color: var(--border)">
       <h2 class="text-lg font-semibold mb-4">Subjects</h2>
-      <div class="bg-slate-50 border border-dashed border-slate-300 rounded-lg p-8 text-center dark:bg-slate-700 dark:border-slate-600">
-        <p class="text-slate-500 dark:text-slate-400">No subjects added yet.</p>
-        <p class="text-sm text-slate-400 dark:text-slate-500 mt-1">Subjects for {{ semester.name }} will appear here.</p>
+      <div class="empty-state">
+        <p class="empty-title">No subjects added yet</p>
+        <p class="empty-desc">Subjects for {{ semester.name }} will appear here.</p>
       </div>
     </div>
 
     <div class="mt-6">
-      <a href="{% url 'accounts:student_dashboard' %}" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded-md text-sm dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600">Back to Dashboard</a>
+      <a href="{% url 'accounts:student_dashboard' %}" class="btn btn-ghost">Back to Dashboard</a>
     </div>
   </div>
 </div>

@@ -1,14 +1,16 @@
 {% extends "base.html" %}
 {% block title %}{{ student.full_name }} | NoteSphere{% endblock %}
+{% block topbar_title %}Students{% endblock %}
 {% block content %}
 <div class="max-w-4xl mx-auto">
-  <div class="bg-white shadow rounded-lg p-6 dark:bg-slate-800">
+
+  <div class="card card-pad">
     <div class="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
       <div class="flex items-center gap-4">
         {% include "_avatar.html" with user=student size="lg" %}
         <div>
-          <h1 class="text-2xl font-bold">{{ student.full_name }}</h1>
-          <p class="text-sm text-slate-500 dark:text-slate-400">@{{ student.username }}</p>
+          <h1 class="page-title">{{ student.full_name }}</h1>
+          <p class="text-muted mt-1">@{{ student.username }}</p>
         </div>
       </div>
       <div class="sm:ml-auto">
@@ -16,109 +18,113 @@
       </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div class="bg-slate-50 border rounded-lg p-4 dark:bg-slate-700 dark:border-slate-600">
-        <p class="text-sm text-slate-500 dark:text-slate-300">Email</p>
-        <p class="font-medium break-all">{{ student.email }}</p>
+    <div class="detail-grid">
+      <div class="detail-item">
+        <p class="detail-label">Email</p>
+        <p class="detail-value">{{ student.email }}</p>
       </div>
-      <div class="bg-slate-50 border rounded-lg p-4 dark:bg-slate-700 dark:border-slate-600">
-        <p class="text-sm text-slate-500 dark:text-slate-300">Phone</p>
-        <p class="font-medium">{{ student.phone }}</p>
+      <div class="detail-item">
+        <p class="detail-label">Phone</p>
+        <p class="detail-value">{{ student.phone }}</p>
       </div>
-      <div class="bg-slate-50 border rounded-lg p-4 dark:bg-slate-700 dark:border-slate-600">
-        <p class="text-sm text-slate-500 dark:text-slate-300">Email Verified</p>
-        <p class="font-medium">{% if student.is_email_verified %}Yes{% else %}No{% endif %}</p>
+      <div class="detail-item">
+        <p class="detail-label">Email Verified</p>
+        <p class="detail-value">{% if student.is_email_verified %}Yes{% else %}No{% endif %}</p>
       </div>
-      <div class="bg-slate-50 border rounded-lg p-4 dark:bg-slate-700 dark:border-slate-600">
-        <p class="text-sm text-slate-500 dark:text-slate-300">Phone Verified</p>
-        <p class="font-medium">{% if student.is_phone_verified %}Yes{% else %}No{% endif %}</p>
+      <div class="detail-item">
+        <p class="detail-label">Phone Verified</p>
+        <p class="detail-value">{% if student.is_phone_verified %}Yes{% else %}No{% endif %}</p>
       </div>
-      <div class="bg-slate-50 border rounded-lg p-4 dark:bg-slate-700 dark:border-slate-600">
-        <p class="text-sm text-slate-500 dark:text-slate-300">Last Login</p>
-        <p class="font-medium">{{ student.last_login|date:"d M Y H:i"|default:"Never" }}</p>
+      <div class="detail-item">
+        <p class="detail-label">Last Login</p>
+        <p class="detail-value">{{ student.last_login|date:"d M Y H:i"|default:"Never" }}</p>
       </div>
-      <div class="bg-slate-50 border rounded-lg p-4 dark:bg-slate-700 dark:border-slate-600">
-        <p class="text-sm text-slate-500 dark:text-slate-300">Password Changed</p>
-        <p class="font-medium">{{ student.password_changed_at|date:"d M Y H:i"|default:"Never" }}</p>
+      <div class="detail-item">
+        <p class="detail-label">Password Changed</p>
+        <p class="detail-value">{{ student.password_changed_at|date:"d M Y H:i"|default:"Never" }}</p>
       </div>
-      <div class="bg-slate-50 border rounded-lg p-4 dark:bg-slate-700 dark:border-slate-600">
-        <p class="text-sm text-slate-500 dark:text-slate-300">Created Date</p>
-        <p class="font-medium">{{ student.created_at|date:"d M Y H:i" }}</p>
+      <div class="detail-item">
+        <p class="detail-label">Created Date</p>
+        <p class="detail-value">{{ student.created_at|date:"d M Y H:i" }}</p>
       </div>
-      <div class="bg-slate-50 border rounded-lg p-4 dark:bg-slate-700 dark:border-slate-600">
-        <p class="text-sm text-slate-500 dark:text-slate-300">Updated Date</p>
-        <p class="font-medium">{{ student.updated_at|date:"d M Y H:i" }}</p>
+      <div class="detail-item">
+        <p class="detail-label">Updated Date</p>
+        <p class="detail-value">{{ student.updated_at|date:"d M Y H:i" }}</p>
       </div>
       {% if student.status == 'DELETED' %}
-        <div class="bg-slate-50 border rounded-lg p-4 dark:bg-slate-700 dark:border-slate-600">
-          <p class="text-sm text-slate-500 dark:text-slate-300">Deleted Date</p>
-          <p class="font-medium">{{ student.deleted_at|date:"d M Y H:i"|default:"-" }}</p>
+        <div class="detail-item">
+          <p class="detail-label">Deleted Date</p>
+          <p class="detail-value">{{ student.deleted_at|date:"d M Y H:i"|default:"-" }}</p>
         </div>
-        <div class="bg-slate-50 border rounded-lg p-4 dark:bg-slate-700 dark:border-slate-600">
-          <p class="text-sm text-slate-500 dark:text-slate-300">Deleted By</p>
-          <p class="font-medium">{{ student.deleted_by.full_name|default:"-" }}</p>
+        <div class="detail-item">
+          <p class="detail-label">Deleted By</p>
+          <p class="detail-value">{{ student.deleted_by.full_name|default:"-" }}</p>
         </div>
       {% endif %}
     </div>
 
-    <div class="mt-8 flex flex-wrap gap-3">
+    <div class="action-row mt-6">
       {% if student.status == 'BLOCKED' %}
-        <form method="post" action="{% url 'admins:unblock_student' student.pk %}">
+        <form method="post" action="{% url 'admins:unblock_student' student.pk %}"
+              data-confirm="Allow this student to log in again?"
+              data-confirm-title="Unblock student" data-confirm-label="Unblock">
           {% csrf_token %}
-          <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm">Unblock</button>
+          <button type="submit" class="btn btn-success">Unblock</button>
         </form>
       {% elif student.status == 'DELETED' %}
-        <form method="post" action="{% url 'admins:restore_student' student.pk %}">
+        <form method="post" action="{% url 'admins:restore_student' student.pk %}"
+              data-confirm="Bring this student back to Active status?"
+              data-confirm-title="Restore student" data-confirm-label="Restore">
           {% csrf_token %}
-          <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm">Restore</button>
+          <button type="submit" class="btn btn-success">Restore</button>
         </form>
       {% else %}
-        <form method="post" action="{% url 'admins:block_student' student.pk %}">
+        <form method="post" action="{% url 'admins:block_student' student.pk %}"
+              data-confirm="This student will not be able to log in until unblocked."
+              data-confirm-title="Block student" data-confirm-label="Block" data-confirm-danger>
           {% csrf_token %}
-          <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm">Block</button>
+          <button type="submit" class="btn btn-danger">Block</button>
         </form>
       {% endif %}
 
       {% if student.status != 'DELETED' %}
-        <a href="{% url 'admins:initiate_student_password_reset' student.pk %}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm">
+        <a href="{% url 'admins:initiate_student_password_reset' student.pk %}" class="btn btn-primary">
           Reset Password
         </a>
-        <a href="{% url 'admins:delete_student' student.pk %}" class="bg-red-50 hover:bg-red-100 border border-red-300 text-red-700 px-4 py-2 rounded-md text-sm dark:bg-red-900 dark:hover:bg-red-800 dark:border-red-700 dark:text-red-200">
-          Delete
-        </a>
+        <a href="{% url 'admins:delete_student' student.pk %}" class="btn btn-danger-ghost">Delete</a>
       {% endif %}
 
-      <a href="{% url 'admins:student_list' %}" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded-md text-sm dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600">Back</a>
+      <a href="{% url 'admins:student_list' %}" class="btn btn-ghost">Back</a>
     </div>
   </div>
 
-  <div class="bg-white shadow rounded-lg p-6 mt-6 dark:bg-slate-800">
+  <div class="card card-pad mt-6">
     <h2 class="text-lg font-semibold mb-4">Activity Log</h2>
 
     {% if activities_page.object_list %}
-      <div class="overflow-x-auto">
-        <table class="min-w-full text-sm">
-          <thead class="bg-slate-50 dark:bg-slate-700 text-left">
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
             <tr>
-              <th class="px-4 py-2 text-slate-500 dark:text-slate-300">Action</th>
-              <th class="px-4 py-2 text-slate-500 dark:text-slate-300">Detail</th>
-              <th class="px-4 py-2 text-slate-500 dark:text-slate-300">Browser</th>
-              <th class="px-4 py-2 text-slate-500 dark:text-slate-300">OS</th>
-              <th class="px-4 py-2 text-slate-500 dark:text-slate-300">Device</th>
-              <th class="px-4 py-2 text-slate-500 dark:text-slate-300">IP</th>
-              <th class="px-4 py-2 text-slate-500 dark:text-slate-300">When</th>
+              <th>Action</th>
+              <th>Detail</th>
+              <th>Browser</th>
+              <th>OS</th>
+              <th>Device</th>
+              <th>IP</th>
+              <th>When</th>
             </tr>
           </thead>
-          <tbody class="divide-y dark:divide-slate-700">
+          <tbody>
             {% for activity in activities_page %}
               <tr>
-                <td class="px-4 py-2 font-medium whitespace-nowrap">{{ activity.get_action_display }}</td>
-                <td class="px-4 py-2 text-slate-600 dark:text-slate-300">{{ activity.detail|default:"-" }}</td>
-                <td class="px-4 py-2 text-slate-600 dark:text-slate-300">{{ activity.browser|default:"-" }}</td>
-                <td class="px-4 py-2 text-slate-600 dark:text-slate-300">{{ activity.os|default:"-" }}</td>
-                <td class="px-4 py-2 text-slate-600 dark:text-slate-300">{{ activity.device|default:"-" }}</td>
-                <td class="px-4 py-2 text-slate-600 dark:text-slate-300">{{ activity.ip_address|default:"-" }}</td>
-                <td class="px-4 py-2 text-slate-600 dark:text-slate-300 whitespace-nowrap">{{ activity.created_at|date:"d M Y H:i" }}</td>
+                <td class="font-medium whitespace-nowrap">{{ activity.get_action_display }}</td>
+                <td class="text-muted">{{ activity.detail|default:"-" }}</td>
+                <td class="text-muted">{{ activity.browser|default:"-" }}</td>
+                <td class="text-muted">{{ activity.os|default:"-" }}</td>
+                <td class="text-muted">{{ activity.device|default:"-" }}</td>
+                <td class="text-muted">{{ activity.ip_address|default:"-" }}</td>
+                <td class="text-muted whitespace-nowrap">{{ activity.created_at|date:"d M Y H:i" }}</td>
               </tr>
             {% endfor %}
           </tbody>
@@ -128,7 +134,10 @@
       {% include "_pagination.html" with page_obj=activities_page qs="" %}
 
     {% else %}
-      <p class="text-slate-500 dark:text-slate-400">No activity recorded yet.</p>
+      <div class="empty-state">
+        <p class="empty-title">No activity recorded yet</p>
+        <p class="empty-desc">Actions by this student will appear here.</p>
+      </div>
     {% endif %}
   </div>
 </div>

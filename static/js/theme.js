@@ -1,25 +1,21 @@
 (function () {
-  var root = document.documentElement;
-  var toggle = document.getElementById("theme-toggle");
+  var STORAGE_KEY = "notesphere-theme";
 
-  function syncIcons(dark) {
-    if (!toggle) return;
-    var iconDark = toggle.querySelector(".icon-dark");
-    var iconLight = toggle.querySelector(".icon-light");
-    if (iconDark) iconDark.classList.toggle("hidden", !dark);
-    if (iconLight) iconLight.classList.toggle("hidden", dark);
+  function isDark() {
+    return document.documentElement.classList.contains("dark");
   }
 
-  function applyTheme(dark) {
-    root.classList.toggle("dark", dark);
-    localStorage.setItem("notesphere-theme", dark ? "dark" : "light");
-    syncIcons(dark);
-  }
-
-  if (toggle) {
-    syncIcons(root.classList.contains("dark"));
-    toggle.addEventListener("click", function () {
-      applyTheme(!root.classList.contains("dark"));
+  document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("click", function (event) {
+      var btn = event.target.closest
+        ? event.target.closest("[data-theme-toggle]")
+        : null;
+      if (!btn) return;
+      var dark = !isDark();
+      document.documentElement.classList.toggle("dark", dark);
+      try {
+        localStorage.setItem(STORAGE_KEY, dark ? "dark" : "light");
+      } catch (e) {}
     });
-  }
+  });
 })();

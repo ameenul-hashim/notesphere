@@ -1,35 +1,29 @@
 {% if page_obj.has_other_pages %}
-  <div class="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4 text-sm">
-    <span class="text-slate-500 dark:text-slate-400">
+  <div class="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm">
+    <span class="text-muted">
       Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-      ({{ page_obj.paginator.count }} total)
+      &middot; {{ page_obj.paginator.count }} total
     </span>
-    <div class="flex flex-wrap gap-2">
+    <div class="flex flex-wrap items-center gap-1.5">
       {% if page_obj.has_previous %}
         <a href="?{{ qs }}{% if qs %}&{% endif %}page={{ page_obj.previous_page_number }}"
-           class="px-3 py-1 rounded bg-slate-200 hover:bg-slate-300 text-slate-700 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600">
-          Previous
-        </a>
+           class="btn btn-ghost btn-sm">Previous</a>
       {% endif %}
 
       {% for num in page_obj.paginator.get_elided_page_range %}
         {% if num == page_obj.paginator.ELLIPSIS %}
-          <span class="px-2 py-1 text-slate-500 dark:text-slate-400">…</span>
+          <span class="px-1 text-muted">…</span>
         {% elif num == page_obj.number %}
-          <span class="px-3 py-1 rounded bg-blue-600 text-white">{{ num }}</span>
+          <span class="btn btn-primary btn-sm" aria-current="page">{{ num }}</span>
         {% else %}
           <a href="?{{ qs }}{% if qs %}&{% endif %}page={{ num }}"
-             class="px-3 py-1 rounded bg-slate-200 hover:bg-slate-300 text-slate-700 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600">
-            {{ num }}
-          </a>
+             class="btn btn-ghost btn-sm">{{ num }}</a>
         {% endif %}
       {% endfor %}
 
       {% if page_obj.has_next %}
         <a href="?{{ qs }}{% if qs %}&{% endif %}page={{ page_obj.next_page_number }}"
-           class="px-3 py-1 rounded bg-slate-200 hover:bg-slate-300 text-slate-700 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600">
-          Next
-        </a>
+           class="btn btn-ghost btn-sm">Next</a>
       {% endif %}
     </div>
   </div>

@@ -1,10 +1,11 @@
 {% extends "base.html" %}
 {% block title %}Semesters | NoteSphere{% endblock %}
+{% block topbar_title %}Semesters{% endblock %}
 {% block content %}
-<div class="bg-white shadow rounded-lg p-6 dark:bg-slate-800">
+<div class="card card-pad">
 
-  <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
-    <h1 class="text-2xl font-bold">Semesters</h1>
+  <div class="page-head lg:flex-row lg:items-center lg:justify-between">
+    <h1 class="page-title">Semesters</h1>
     <div class="flex flex-col sm:flex-row gap-2">
       <form method="get" class="flex flex-col sm:flex-row gap-2">
         {% if status_filter %}
@@ -15,88 +16,68 @@
           name="q"
           value="{{ query }}"
           placeholder="Search by name or description"
-          class="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+          class="input sm:w-64"
         >
-        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm">Search</button>
+        <button type="submit" class="btn btn-primary">Search</button>
         {% if query or status_filter %}
-          <a href="{% url 'academics:semester_list' %}" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded-md text-sm dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600">Clear</a>
+          <a href="{% url 'academics:semester_list' %}" class="btn btn-ghost">Clear</a>
         {% endif %}
       </form>
-      <a href="{% url 'academics:semester_create' %}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm text-center">
-        Create Semester
-      </a>
+      <a href="{% url 'academics:semester_create' %}" class="btn btn-primary">Create Semester</a>
     </div>
   </div>
 
   <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-    {% include "_stat_card.html" with label="Total" value=total_semesters url=semester_list_url card_class="bg-blue-50 border-blue-200 dark:bg-blue-950 dark:border-blue-800" text_class="text-blue-700 dark:text-blue-300" %}
-    {% include "_stat_card.html" with label="Active" value=counts.ACTIVE|default:0 url=semester_list_url card_class="bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800" text_class="text-green-700 dark:text-green-300" %}
-    {% include "_stat_card.html" with label="Inactive" value=counts.INACTIVE|default:0 url=inactive_list_url card_class="bg-yellow-50 border-yellow-200 dark:bg-yellow-950 dark:border-yellow-800" text_class="text-yellow-700 dark:text-yellow-300" %}
-    {% include "_stat_card.html" with label="Archived" value=counts.ARCHIVED|default:0 url=archived_list_url card_class="bg-slate-100 border-slate-300 dark:bg-slate-700 dark:border-slate-600" text_class="text-slate-700 dark:text-slate-300" %}
+    {% include "_stat_card.html" with label="Total" value=total_semesters url=semester_list_url %}
+    {% include "_stat_card.html" with label="Active" value=counts.ACTIVE|default:0 url=semester_list_url %}
+    {% include "_stat_card.html" with label="Inactive" value=counts.INACTIVE|default:0 url=inactive_list_url %}
+    {% include "_stat_card.html" with label="Archived" value=counts.ARCHIVED|default:0 url=archived_list_url %}
   </div>
 
   <div class="flex flex-wrap gap-2 mb-6">
-    <a href="{% url 'academics:semester_list' %}"
-       class="px-3 py-1 rounded-full text-sm {% if not status_filter %}bg-blue-600 text-white{% else %}bg-slate-200 text-slate-700 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600{% endif %}">
-      All
-    </a>
-    <a href="{% url 'academics:semester_list' %}?status=ACTIVE"
-       class="px-3 py-1 rounded-full text-sm {% if status_filter == 'ACTIVE' %}bg-blue-600 text-white{% else %}bg-slate-200 text-slate-700 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600{% endif %}">
-      Active
-    </a>
-    <a href="{% url 'academics:semester_list' %}?status=INACTIVE"
-       class="px-3 py-1 rounded-full text-sm {% if status_filter == 'INACTIVE' %}bg-blue-600 text-white{% else %}bg-slate-200 text-slate-700 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600{% endif %}">
-      Inactive
-    </a>
-    <a href="{% url 'academics:semester_list' %}?status=ARCHIVED"
-       class="px-3 py-1 rounded-full text-sm {% if status_filter == 'ARCHIVED' %}bg-blue-600 text-white{% else %}bg-slate-200 text-slate-700 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600{% endif %}">
-      Archived
-    </a>
+    <a href="{% url 'academics:semester_list' %}" class="chip {% if not status_filter %}chip-active{% endif %}">All</a>
+    <a href="{% url 'academics:semester_list' %}?status=ACTIVE" class="chip {% if status_filter == 'ACTIVE' %}chip-active{% endif %}">Active</a>
+    <a href="{% url 'academics:semester_list' %}?status=INACTIVE" class="chip {% if status_filter == 'INACTIVE' %}chip-active{% endif %}">Inactive</a>
+    <a href="{% url 'academics:semester_list' %}?status=ARCHIVED" class="chip {% if status_filter == 'ARCHIVED' %}chip-active{% endif %}">Archived</a>
   </div>
 
   {% if page_obj.object_list %}
-    <div class="overflow-x-auto">
-      <table class="min-w-full text-sm">
-        <thead class="bg-slate-50 dark:bg-slate-700 text-left">
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
           <tr>
-            <th class="px-4 py-2 text-slate-500 dark:text-slate-300">
-              {% include "_sort_header.html" with key="name" label="Semester Name" sort=sort direction=direction qs=qs %}
-            </th>
-            <th class="px-4 py-2 text-slate-500 dark:text-slate-300">Description</th>
-            <th class="px-4 py-2 text-slate-500 dark:text-slate-300">
-              {% include "_sort_header.html" with key="status" label="Status" sort=sort direction=direction qs=qs %}
-            </th>
-            <th class="px-4 py-2 text-slate-500 dark:text-slate-300">
-              {% include "_sort_header.html" with key="display_order" label="Display Order" sort=sort direction=direction qs=qs %}
-            </th>
-            <th class="px-4 py-2 text-slate-500 dark:text-slate-300">
-              {% include "_sort_header.html" with key="created_at" label="Created" sort=sort direction=direction qs=qs %}
-            </th>
-            <th class="px-4 py-2 text-slate-500 dark:text-slate-300"></th>
+            <th>{% include "_sort_header.html" with key="name" label="Semester Name" sort=sort direction=direction qs=qs %}</th>
+            <th>Description</th>
+            <th>{% include "_sort_header.html" with key="status" label="Status" sort=sort direction=direction qs=qs %}</th>
+            <th>{% include "_sort_header.html" with key="display_order" label="Display Order" sort=sort direction=direction qs=qs %}</th>
+            <th>{% include "_sort_header.html" with key="created_at" label="Created" sort=sort direction=direction qs=qs %}</th>
+            <th></th>
           </tr>
         </thead>
-        <tbody class="divide-y dark:divide-slate-700">
+        <tbody>
           {% for semester in page_obj %}
-            <tr class="hover:bg-slate-50 dark:hover:bg-slate-700">
-              <td class="px-4 py-2 font-medium whitespace-nowrap">{{ semester.name }}</td>
-              <td class="px-4 py-2 text-slate-600 dark:text-slate-300 max-w-xs truncate">{{ semester.description|default:"-" }}</td>
-              <td class="px-4 py-2">
-                {% include "_status_badge.html" with status=semester.status label=semester.get_status_display %}
-              </td>
-              <td class="px-4 py-2 text-slate-600 dark:text-slate-300">{{ semester.display_order }}</td>
-              <td class="px-4 py-2 text-slate-600 dark:text-slate-300 whitespace-nowrap">{{ semester.created_at|date:"d M Y" }}</td>
-              <td class="px-4 py-2">
-                <div class="flex flex-wrap gap-2">
+            <tr>
+              <td class="font-medium whitespace-nowrap">{{ semester.name }}</td>
+              <td class="text-muted max-w-xs truncate">{{ semester.description|default:"-" }}</td>
+              <td>{% include "_status_badge.html" with status=semester.status label=semester.get_status_display %}</td>
+              <td class="text-muted">{{ semester.display_order }}</td>
+              <td class="text-muted whitespace-nowrap">{{ semester.created_at|date:"d M Y" }}</td>
+              <td>
+                <div class="flex flex-wrap gap-3">
                   {% if semester.status == 'ARCHIVED' %}
-                    <form method="post" action="{% url 'academics:semester_restore' semester.pk %}">
+                    <form method="post" action="{% url 'academics:semester_restore' semester.pk %}"
+                          data-confirm="Restore this semester and set it to Active?"
+                          data-confirm-title="Restore semester" data-confirm-label="Restore">
                       {% csrf_token %}
-                      <button type="submit" class="text-green-600 hover:underline dark:text-green-400">Restore</button>
+                      <button type="submit" class="link">Restore</button>
                     </form>
                   {% else %}
-                    <a href="{% url 'academics:semester_edit' semester.pk %}" class="text-blue-600 hover:underline dark:text-blue-400">Edit</a>
-                    <form method="post" action="{% url 'academics:semester_archive' semester.pk %}">
+                    <a href="{% url 'academics:semester_edit' semester.pk %}" class="link">Edit</a>
+                    <form method="post" action="{% url 'academics:semester_archive' semester.pk %}"
+                          data-confirm="Archive this semester? It will be hidden from students."
+                          data-confirm-title="Archive semester" data-confirm-label="Archive" data-confirm-danger>
                       {% csrf_token %}
-                      <button type="submit" class="text-red-600 hover:underline dark:text-red-400">Archive</button>
+                      <button type="submit" class="link link-danger">Archive</button>
                     </form>
                   {% endif %}
                 </div>
@@ -110,7 +91,10 @@
     {% include "_pagination.html" with page_obj=page_obj qs=qs %}
 
   {% else %}
-    <p class="text-slate-500 dark:text-slate-400">No semesters found.</p>
+    <div class="empty-state">
+      <p class="empty-title">No semesters found</p>
+      <p class="empty-desc">Try adjusting your search or filters.</p>
+    </div>
   {% endif %}
 </div>
 {% endblock %}

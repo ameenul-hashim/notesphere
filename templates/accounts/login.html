@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 {% block title %}Login | NoteSphere{% endblock %}
 {% block content %}
-<div class="max-w-md mx-auto bg-white shadow rounded-lg p-6 dark:bg-slate-800">
-  <h1 class="text-2xl font-bold mb-1">Student Login</h1>
-  <p class="text-sm text-slate-500 mb-6 dark:text-slate-400">Log in with your username and password.</p>
+<div class="auth-card">
+  <h1 class="auth-title">Student Login</h1>
+  <p class="text-muted mt-2 mb-6">Log in with your username and password.</p>
 
   {% include "_form_errors.html" %}
 
@@ -11,14 +11,13 @@
     {% csrf_token %}
     {% include "_field.html" with field=form.username %}
     {% include "_field.html" with field=form.password %}
-    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md font-medium">
-      Log In
-    </button>
+    <button type="submit" class="btn btn-primary btn-block btn-lg">Log In</button>
   </form>
 
-  <div class="flex items-center justify-between mt-4 text-sm">
-    <a href="{% url 'accounts:signup' %}" class="text-blue-600 hover:underline dark:text-blue-400">Create account</a>
-    <a href="{% url 'accounts:forgot_password' %}" class="text-blue-600 hover:underline dark:text-blue-400">Forgot Password?</a>
-  </div>
+  <p class="form-note">
+    <a href="{% url 'accounts:signup' %}">Create account</a>
+    <span class="text-muted">&nbsp;&middot;&nbsp;</span>
+    <a href="{% url 'accounts:forgot_password' %}">Forgot Password?</a>
+  </p>
 </div>
 {% endblock %}

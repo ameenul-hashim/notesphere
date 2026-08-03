@@ -1,21 +1,11 @@
 {% if status == 'ACTIVE' %}
-  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-    {{ label|default:status }}
-  </span>
+  <span class="badge badge-success">{{ label|default:status }}</span>
 {% elif status == 'BLOCKED' %}
-  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
-    {{ label|default:status }}
-  </span>
+  <span class="badge badge-danger">{{ label|default:status }}</span>
 {% elif status == 'INACTIVE' %}
-  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
-    {{ label|default:status }}
-  </span>
-{% elif status == 'DELETED' %}
-  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300">
-    {{ label|default:status }}
-  </span>
+  <span class="badge badge-warning">{{ label|default:status }}</span>
+{% elif status == 'DELETED' or status == 'ARCHIVED' %}
+  <span class="badge badge-muted">{{ label|default:status }}</span>
 {% else %}
-  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-    {{ label|default:status }}
-  </span>
+  <span class="badge badge-neutral">{{ label|default:status }}</span>
 {% endif %}

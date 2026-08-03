@@ -1,11 +1,7 @@
 <a href="?{{ qs }}{% if qs %}&{% endif %}sort={{ key }}&dir={% if sort == key and direction == 'asc' %}desc{% else %}asc{% endif %}"
-   class="inline-flex items-center gap-1 px-2 py-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 {% if sort == key %}font-semibold{% endif %}">
+   class="link inline-flex items-center gap-1">
   {{ label }}
   {% if sort == key %}
-    {% if direction == 'asc' %}
-      <span class="text-xs">▲</span>
-    {% else %}
-      <span class="text-xs">▼</span>
-    {% endif %}
+    {% if direction == 'asc' %}▲{% else %}▼{% endif %}
   {% endif %}
 </a>
