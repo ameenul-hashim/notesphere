@@ -149,12 +149,29 @@
   <script src="{% static 'js/theme.js' %}"></script>
   <script src="{% static 'js/main.js' %}"></script>
   {% if user.is_authenticated %}
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+    {{ FIREBASE_CONFIG_JSON|json_script:"firebase-config-data" }}
+    {{ CURRENT_USER_JSON_STR|json_script:"current-user-data" }}
+    {{ USER_REGISTRY_JSON_STR|json_script:"user-registry-data" }}
     <script>
-      window.FIREBASE_CONFIG = {{ FIREBASE_CONFIG_JSON|default:"{}"|safe }};
-      window.CURRENT_USER_JSON = {{ CURRENT_USER_JSON_STR|default:"null"|safe }};
+      (function() {
+        try {
+          var fbEl = document.getElementById("firebase-config-data");
+          var cuEl = document.getElementById("current-user-data");
+          var urEl = document.getElementById("user-registry-data");
+          window.FIREBASE_CONFIG = fbEl ? JSON.parse(fbEl.textContent) : {};
+          window.CURRENT_USER_JSON = cuEl ? JSON.parse(cuEl.textContent) : null;
+          window.USER_REGISTRY = urEl ? JSON.parse(urEl.textContent) : {};
+        } catch(e) {
+          console.error("Error parsing Firebase configuration:", e);
+        }
+      })();
     </script>
     <script src="{% static 'js/firebase_init.js' %}"></script>
     <script src="{% static 'js/firebase_presence.js' %}"></script>
   {% endif %}
+
 </body>
 </html>

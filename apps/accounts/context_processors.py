@@ -38,11 +38,22 @@ def firebase_config(request):
 
     fb_config = getattr(settings, "FIREBASE_CONFIG", {})
 
+    user_registry = {}
+    if request.user.is_authenticated:
+        # Build registry for user resolution in chat
+        for user in User.objects.filter(is_active=True).select_related("avatar"):
+            user_registry[user.id] = {
+                "name": format_clean_name(user.full_name),
+                "role": user.role,
+                "avatar_url": user.get_avatar_url(),
+            }
+
     return {
         "FIREBASE_CONFIG": fb_config,
         "FIREBASE_CONFIG_JSON": json.dumps(fb_config),
         "CURRENT_USER_JSON": user_data,
         "CURRENT_USER_JSON_STR": json.dumps(user_data),
+        "USER_REGISTRY_JSON_STR": json.dumps(user_registry),
     }
 
 

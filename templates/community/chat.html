@@ -271,40 +271,19 @@
 
 </div>
 
-{# WhatsApp Interactive Reply Quote & Auto-Scroll Script #}
+{# Firestore Realtime Chat Script #}
+<script src="{% static 'js/firestore_chat.js' %}"></script>
 <script>
-  function setReplyQuote(postId, authorName, snippetText) {
-    const parentInput = document.getElementById("reply-parent-id");
-    const quoteBar = document.getElementById("reply-quote-bar");
-    const authorEl = document.getElementById("reply-quote-author");
-    const textEl = document.getElementById("reply-quote-text");
-    const contentInput = document.getElementById("chat-content-input");
-
-    if (parentInput) parentInput.value = postId;
-    if (authorEl) authorEl.textContent = "@" + authorName;
-    if (textEl) textEl.textContent = `"${snippetText}"`;
-    if (quoteBar) quoteBar.classList.remove("hidden");
-
-    if (contentInput) {
-      if (!contentInput.value.includes("@" + authorName)) {
-        contentInput.value = `@${authorName} ` + contentInput.value;
-      }
-      contentInput.focus();
-    }
-  }
-
-  function cancelReplyQuote() {
-    const parentInput = document.getElementById("reply-parent-id");
-    const quoteBar = document.getElementById("reply-quote-bar");
-    if (parentInput) parentInput.value = "";
-    if (quoteBar) quoteBar.classList.add("hidden");
-  }
-
+  // Preserve the auto-scroll on DOMContentLoaded as a fallback before Firestore loads
   document.addEventListener("DOMContentLoaded", function () {
     const container = document.getElementById("chat-messages-container");
-    if (container) {
-      container.scrollTop = container.scrollHeight;
-    }
+    if (container) container.scrollTop = container.scrollHeight;
   });
+
+  // setReplyQuote alias (kept for compatibility with any remaining template onclick attrs)
+  function setReplyQuote(postId, authorName, snippetText) {
+    if (window.NoteSphereChatReply) window.NoteSphereChatReply(postId, authorName, snippetText);
+  }
 </script>
 {% endblock %}
+
