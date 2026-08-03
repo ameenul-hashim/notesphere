@@ -165,3 +165,11 @@ migrations_log/
 *.swo
 .DS_Store
 Thumbs.db
+
+# ==== Firebase Service Account (NEVER COMMIT) ====
+config/firebase/
+secrets/
+*firebase-service-account*.json
+*service-account*.json
+*-adminsdk-*.json
+

@@ -83,17 +83,26 @@ TEMPLATES = [
 ]
 
 # ---------------------------------------------------------------------------
-# Firebase Realtime Database Configuration
+# Firebase (Cloud Firestore) — Frontend Web SDK configuration
+# Passed to frontend via context processor / window.FIREBASE_CONFIG
 # ---------------------------------------------------------------------------
 FIREBASE_CONFIG = {
-    "apiKey": os.environ.get("FIREBASE_API_KEY", "your-firebase-web-api-key"),
-    "authDomain": os.environ.get("FIREBASE_AUTH_DOMAIN", "notesphere-app.firebaseapp.com"),
-    "databaseURL": os.environ.get("FIREBASE_DATABASE_URL", "https://notesphere-app-default-rtdb.firebaseio.com"),
-    "projectId": os.environ.get("FIREBASE_PROJECT_ID", "notesphere-app"),
-    "storageBucket": os.environ.get("FIREBASE_STORAGE_BUCKET", "notesphere-app.appspot.com"),
-    "messagingSenderId": os.environ.get("FIREBASE_MESSAGING_SENDER_ID", "1234567890"),
-    "appId": os.environ.get("FIREBASE_APP_ID", "1:1234567890:web:abcdef123456"),
+    "apiKey": os.environ.get("FIREBASE_API_KEY", ""),
+    "authDomain": os.environ.get("FIREBASE_AUTH_DOMAIN", "your-project-id.firebaseapp.com"),
+    "projectId": os.environ.get("FIREBASE_PROJECT_ID", "your-project-id"),
+    "storageBucket": os.environ.get("FIREBASE_STORAGE_BUCKET", "your-project-id.firebasestorage.app"),
+    "messagingSenderId": os.environ.get("FIREBASE_MESSAGING_SENDER_ID", ""),
+    "appId": os.environ.get("FIREBASE_APP_ID", ""),
 }
+
+# Path to the Firebase service account JSON (backend Admin SDK only, NEVER exposed to frontend)
+# This file is gitignored. Set this env var in production for a custom location.
+FIREBASE_SERVICE_ACCOUNT_PATH = os.environ.get(
+    "FIREBASE_SERVICE_ACCOUNT_PATH",
+    str(BASE_DIR / "config" / "firebase" / "firebase-service-account.json"),
+)
+
+
 
 WSGI_APPLICATION = "config.wsgi.application"
 
