@@ -3,13 +3,10 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 
-from .models import CommunityPost, CommunityReply
+from .models import CommunityPost, CommunityReply, Notification
 from .utils import format_clean_name
 
 User = get_user_model()
-
-
-from .models import CommunityPost, CommunityReply, Notification
 
 
 @login_required
@@ -25,9 +22,11 @@ def community_chat(request):
 
     # Include ALL users (Admin + Students) so their cards are pre-rendered in the sidebar
     # Firebase presence will dynamically show/hide them as they come online/offline
-    active_users = list(User.objects.select_related("avatar").order_by("-is_admin", "full_name"))
+    # Order: ADMIN role first (alphabetically 'ADMIN' < 'STUDENT'), then by full_name
+    active_users = list(User.objects.select_related("avatar").order_by("role", "full_name"))
     for u in active_users:
         u.clean_name = format_clean_name(u.full_name)
+
 
 
     if request.method == "POST":
