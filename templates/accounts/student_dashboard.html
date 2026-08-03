@@ -1,23 +1,41 @@
 {% extends "base.html" %}
 {% block title %}Student Dashboard | NoteSphere{% endblock %}
 {% block content %}
-<div class="bg-white shadow rounded-lg p-6">
+<div class="bg-white shadow rounded-lg p-6 dark:bg-slate-800">
   <h1 class="text-2xl font-bold">Welcome, {{ user.full_name }}</h1>
-  <p class="text-sm text-slate-500 mt-1">This is your student dashboard. Academic features will appear here soon.</p>
+  <p class="text-sm text-slate-500 mt-1 dark:text-slate-400">Browse your active semesters below.</p>
 
   <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-    <div class="bg-slate-50 border rounded-lg p-4">
-      <p class="text-sm text-slate-500">Email</p>
+    <div class="bg-slate-50 border rounded-lg p-4 dark:bg-slate-700 dark:border-slate-600">
+      <p class="text-sm text-slate-500 dark:text-slate-300">Email</p>
       <p class="font-medium">{{ user.email }}</p>
     </div>
-    <div class="bg-slate-50 border rounded-lg p-4">
-      <p class="text-sm text-slate-500">Phone</p>
+    <div class="bg-slate-50 border rounded-lg p-4 dark:bg-slate-700 dark:border-slate-600">
+      <p class="text-sm text-slate-500 dark:text-slate-300">Phone</p>
       <p class="font-medium">{{ user.phone }}</p>
     </div>
-    <div class="bg-slate-50 border rounded-lg p-4">
-      <p class="text-sm text-slate-500">Status</p>
+    <div class="bg-slate-50 border rounded-lg p-4 dark:bg-slate-700 dark:border-slate-600">
+      <p class="text-sm text-slate-500 dark:text-slate-300">Status</p>
       <p class="font-medium">{{ user.get_status_display }}</p>
     </div>
   </div>
+
+  <h2 class="text-lg font-semibold mt-8 mb-3">Semesters</h2>
+  {% if active_semesters %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {% for semester in active_semesters %}
+        <a href="{% url 'academics:semester_detail' semester.pk %}"
+           class="block bg-blue-50 border border-blue-200 rounded-lg p-4 hover:bg-blue-100 transition dark:bg-blue-950 dark:border-blue-800 dark:hover:bg-blue-900">
+          <p class="font-semibold">{{ semester.name }}</p>
+          {% if semester.description %}
+            <p class="text-sm text-slate-600 dark:text-slate-300 mt-1 line-clamp-2">{{ semester.description }}</p>
+          {% endif %}
+          <p class="text-sm text-blue-700 dark:text-blue-300 mt-2">View subjects →</p>
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="text-slate-500 dark:text-slate-400">No active semesters available right now.</p>
+  {% endif %}
 </div>
 {% endblock %}

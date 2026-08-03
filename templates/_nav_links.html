@@ -3,6 +3,7 @@
   {% if user.role == 'ADMIN' %}
     <a href="{% url 'admins:dashboard' %}" class="text-sm hover:text-slate-300">Dashboard</a>
     <a href="{% url 'admins:student_list' %}" class="text-sm hover:text-slate-300">Students</a>
+    <a href="{% url 'academics:semester_list' %}" class="text-sm hover:text-slate-300">Semesters</a>
     <a href="{% url 'admins:profile' %}" class="text-sm hover:text-slate-300">Profile</a>
     <form method="post" action="{% url 'admins:admin_logout' %}" class="inline">
       {% csrf_token %}

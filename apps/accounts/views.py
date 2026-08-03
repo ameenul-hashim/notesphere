@@ -13,6 +13,7 @@ from .forms import (
     SetNewPasswordForm,
     SignUpForm,
 )
+from academics.models import Semester
 from .models import PasswordResetOTP, User, UserActivity
 from .services import create_and_send_otp, log_activity, set_password_and_track
 
@@ -124,4 +125,5 @@ def reset_password(request):
 @login_required
 @student_required
 def student_dashboard(request):
-    return render(request, "accounts/student_dashboard.html")
+    active_semesters = Semester.objects.filter(status=Semester.Status.ACTIVE)
+    return render(request, "accounts/student_dashboard.html", {"active_semesters": active_semesters})

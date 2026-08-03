@@ -17,6 +17,8 @@ urlpatterns = [
     path("dashboard/", include("admins.urls")),
     # Student-facing authentication.
     path("", include("accounts.urls")),
+    # Academic features (semesters, later subjects).
+    path("", include("academics.urls")),
 ]
 
 # Serve static/media files during development only.
