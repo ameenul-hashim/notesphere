@@ -276,7 +276,7 @@ def student_support(request):
                 subject   = f"[NoteSphere Support] {subject} — from {request.user.full_name}",
                 text_body = text_body,
                 html_body = html_body,
-                reply_to  = f"{request.user.full_name} <{request.user.email}>",
+                reply_to  = [request.user.email] if request.user.email else None,
             )
             if ok:
                 messages.success(request, "Your support message has been sent successfully!")
