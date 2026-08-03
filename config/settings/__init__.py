@@ -18,7 +18,17 @@ load_dotenv(PROJECT_ROOT / ".env", override=True)
 
 DJANGO_ENV = os.environ.get("DJANGO_ENV", "development").lower()
 
+import sys
+
 if DJANGO_ENV == "production":
     from .production import *  # noqa: F401,F403
 else:
     from .development import *  # noqa: F401,F403
+
+print(
+    f"[SETTINGS DIAGNOSTICS] Loaded '{DJANGO_ENV}' settings module. "
+    f"Final ALLOWED_HOSTS = {ALLOWED_HOSTS}",
+    file=sys.stderr,
+    flush=True,
+)
+
