@@ -2,22 +2,95 @@
 {% block title %}Admin Dashboard | NoteSphere{% endblock %}
 {% block topbar_title %}Dashboard{% endblock %}
 {% block content %}
-<div class="card card-pad">
-  <div class="page-head">
-    <h1 class="page-title">Admin Dashboard</h1>
-    <p class="page-subtitle">Overview of student accounts.</p>
+<div class="page-head">
+  <h1 class="page-title">Admin Dashboard</h1>
+  <p class="page-subtitle">Overview of student accounts and academic content.</p>
+</div>
+
+<div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
+  {% include "_stat_card.html" with label="Total Students" value=total_students url=student_list_url %}
+  {% include "_stat_card.html" with label="Active" value=active_students url=active_list_url %}
+  {% include "_stat_card.html" with label="Inactive" value=inactive_students url=inactive_list_url %}
+  {% include "_stat_card.html" with label="Blocked" value=blocked_students url=blocked_list_url %}
+  {% include "_stat_card.html" with label="Semesters" value=semester_count url="/dashboard/semesters/" %}
+  {% include "_stat_card.html" with label="Subjects" value=subject_count url="/dashboard/subjects/" %}
+</div>
+
+<div class="chart-grid mt-6">
+  <div class="chart-card">
+    <p class="chart-title">Student Registrations</p>
+    <p class="chart-sub">Accounts created in the last {{ reg_chart|length }} months</p>
+    <div class="bar-chart">
+      {% for item in reg_chart %}
+        <div class="bar-item" title="{{ item.count }} student{{ item.count|pluralize }} in {{ item.label }}">
+          <div class="bar-track">
+            <div class="bar-fill" style="height: {% widthratio item.count reg_max 100 %}%"></div>
+          </div>
+          <p class="bar-count">{{ item.count }}</p>
+          <p class="bar-label">{{ item.label }}</p>
+        </div>
+      {% endfor %}
+    </div>
   </div>
 
-  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-    {% include "_stat_card.html" with label="Total Students" value=total_students url=student_list_url %}
-    {% include "_stat_card.html" with label="Active" value=active_students url=active_list_url %}
-    {% include "_stat_card.html" with label="Inactive" value=inactive_students url=inactive_list_url %}
-    {% include "_stat_card.html" with label="Blocked" value=blocked_students url=blocked_list_url %}
-    {% include "_stat_card.html" with label="Deleted" value=deleted_students url=deleted_list_url %}
+  <div class="chart-card">
+    <p class="chart-title">Students by Status</p>
+    <p class="chart-sub">Distribution across {{ total_students }} accounts</p>
+    <div class="seg-track">
+      {% for segment in status_segments %}
+        <div class="seg-fill" style="width: {{ segment.pct }}%; background: {{ segment.color }}"></div>
+      {% endfor %}
+    </div>
+    <div class="seg-legend">
+      {% for segment in status_segments %}
+        <div class="seg-item">
+          <span class="seg-dot" style="background: {{ segment.color }}"></span>
+          <span class="seg-item-label">{{ segment.label }}</span>
+          <span class="seg-item-value">{{ segment.count }}</span>
+          <span class="seg-item-pct">{{ segment.pct }}%</span>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="chart-grid mt-6">
+  <div class="chart-card">
+    <p class="chart-title">Recent Registrations</p>
+    <p class="chart-sub">Newest student accounts</p>
+    <div class="mini-list mt-4">
+      {% for student in recent_students %}
+        <a href="{% url 'admins:student_detail' student.pk %}" class="mini-item">
+          {% include "_avatar.html" with user=student %}
+          <span class="mini-meta">
+            <span class="mini-title">{{ student.full_name }}</span>
+            <span class="mini-sub">{{ student.email }}</span>
+          </span>
+          <span class="mini-right">{{ student.created_at|date:"d M Y" }}</span>
+        </a>
+      {% empty %}
+        <p class="text-muted text-sm">No students yet.</p>
+      {% endfor %}
+    </div>
   </div>
 
-  <div class="mt-6">
-    <a href="{% url 'admins:student_list' %}" class="btn btn-primary">Manage Students</a>
+  <div class="chart-card">
+    <p class="chart-title">Latest Logins</p>
+    <p class="chart-sub">Most recent student activity</p>
+    <div class="mini-list mt-4">
+      {% for student in recent_logins %}
+        <a href="{% url 'admins:student_detail' student.pk %}" class="mini-item">
+          {% include "_avatar.html" with user=student %}
+          <span class="mini-meta">
+            <span class="mini-title">{{ student.full_name }}</span>
+            <span class="mini-sub">{{ student.last_login|date:"d M Y H:i" }}</span>
+          </span>
+          <span class="mini-right">{{ student.last_login|timesince }} ago</span>
+        </a>
+      {% empty %}
+        <p class="text-muted text-sm">No logins recorded yet.</p>
+      {% endfor %}
+    </div>
   </div>
 </div>
 {% endblock %}

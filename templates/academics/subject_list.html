@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}Subjects | NoteSphere{% endblock %}
+{% block topbar_title %}Subjects{% endblock %}
+{% block content %}
+
+  <div class="page-head lg:flex-row lg:items-center lg:justify-between">
+    <div>
+      <h1 class="page-title">Subjects</h1>
+      <p class="page-subtitle">Manage subjects within each semester.</p>
+    </div>
+    <a href="{% url 'academics:subject_create' %}" class="btn btn-primary">Create Subject</a>
+  </div>
+
+  <div class="toolbar">
+    <form method="get" class="toolbar-group">
+      {% if status_filter %}
+        <input type="hidden" name="status" value="{{ status_filter }}">
+      {% endif %}
+      <input
+        type="search"
+        name="q"
+        value="{{ query }}"
+        placeholder="Search by name or description"
+        class="input sm:w-64"
+      >
+      <select name="semester" class="input" onchange="this.form.submit()" aria-label="Filter by semester">
+        <option value="">All Semesters</option>
+        {% for semester in semesters %}
+          <option value="{{ semester.pk }}" {% if semester_filter == semester.pk|stringformat:"s" %}selected{% endif %}>
+            {{ semester.name }}
+          </option>
+        {% endfor %}
+      </select>
+      <button type="submit" class="btn btn-primary">Search</button>
+      {% if query or status_filter or semester_filter %}
+        <a href="{% url 'academics:subject_list' %}" class="btn btn-ghost">Clear</a>
+      {% endif %}
+    </form>
+  </div>
+
+  <div class="chips">
+    <a href="{% url 'academics:subject_list' %}{% if query %}?q={{ query|urlencode }}{% endif %}{% if semester_filter %}{% if query %}&{% else %}?{% endif %}semester={{ semester_filter }}{% endif %}"
+       class="chip {% if not status_filter %}chip-active{% endif %}">
+      All ({{ total_subjects }})
+    </a>
+    <a href="{% url 'academics:subject_list' %}?{% if query %}q={{ query|urlencode }}&{% endif %}{% if semester_filter %}semester={{ semester_filter }}&{% endif %}status=ACTIVE"
+       class="chip {% if status_filter == 'ACTIVE' %}chip-active{% endif %}">
+      Active ({{ counts.ACTIVE|default:0 }})
+    </a>
+    <a href="{% url 'academics:subject_list' %}?{% if query %}q={{ query|urlencode }}&{% endif %}{% if semester_filter %}semester={{ semester_filter }}&{% endif %}status=INACTIVE"
+       class="chip {% if status_filter == 'INACTIVE' %}chip-active{% endif %}">
+      Inactive ({{ counts.INACTIVE|default:0 }})
+    </a>
+  </div>
+
+  {% if page_obj.object_list %}
+    <div class="media-grid">
+      {% for subject in page_obj %}
+        <article class="media-card">
+          <div class="media-thumb">
+            {% if subject.thumbnail %}
+              <img src="{{ subject.thumbnail.url }}" alt="{{ subject.name }}">
+            {% else %}
+              <span class="thumb-placeholder">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+                </svg>
+              </span>
+            {% endif %}
+          </div>
+          <div class="media-body">
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="media-title">{{ subject.name }}</h3>
+              {% include "_status_badge.html" with status=subject.status label=subject.get_status_display %}
+            </div>
+            <p class="media-desc">{{ subject.description|default:"No description provided." }}</p>
+            <div class="media-meta">
+              <span class="muted">{{ subject.semester.name }}</span>
+              <span class="ml-auto flex gap-3">
+                <a href="{% url 'academics:subject_edit' subject.pk %}" class="link">Edit</a>
+                <form method="post" action="{% url 'academics:subject_delete' subject.pk %}"
+                      data-confirm="Delete \"{{ subject.name }}\" permanently?"
+                      data-confirm-title="Delete subject" data-confirm-label="Delete" data-confirm-danger>
+                  {% csrf_token %}
+                  <button type="submit" class="link link-danger">Delete</button>
+                </form>
+              </span>
+            </div>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+
+    {% include "_pagination.html" with page_obj=page_obj qs=qs %}
+
+  {% else %}
+    <div class="empty-state">
+      <p class="empty-title">No subjects found</p>
+      <p class="empty-desc">Create a subject or adjust your search and filters.</p>
+    </div>
+  {% endif %}
+{% endblock %}

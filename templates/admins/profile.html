@@ -2,70 +2,65 @@
 {% block title %}My Profile | NoteSphere{% endblock %}
 {% block topbar_title %}Profile{% endblock %}
 {% block content %}
-<div class="max-w-3xl mx-auto card card-pad">
-  <h1 class="page-title mb-6">My Profile</h1>
-
-  <div class="detail-grid">
-    <div class="detail-item">
-      <p class="detail-label">Full Name</p>
-      <p class="detail-value">{{ profile_user.full_name }}</p>
-    </div>
-    <div class="detail-item">
-      <p class="detail-label">Role</p>
-      <p class="detail-value">{{ profile_user.get_role_display }}</p>
-    </div>
-    <div class="detail-item">
-      <p class="detail-label">Email</p>
-      <p class="detail-value">{{ profile_user.email }}</p>
-    </div>
-    <div class="detail-item">
-      <p class="detail-label">Phone</p>
-      <p class="detail-value">{{ profile_user.phone }}</p>
-    </div>
-    <div class="detail-item">
-      <p class="detail-label">Status</p>
-      <p class="detail-value">{{ profile_user.get_status_display }}</p>
-    </div>
-    <div class="detail-item">
-      <p class="detail-label">Member Since</p>
-      <p class="detail-value">{{ profile_user.created_at|date:"d M Y" }}</p>
-    </div>
-    <div class="detail-item">
-      <p class="detail-label">Email Verified</p>
-      <p class="detail-value">{% if profile_user.is_email_verified %}Yes{% else %}No{% endif %}</p>
-    </div>
-    <div class="detail-item">
-      <p class="detail-label">Phone Verified</p>
-      <p class="detail-value">{% if profile_user.is_phone_verified %}Yes{% else %}No{% endif %}</p>
-    </div>
+<div class="max-w-4xl mx-auto">
+  <div class="page-head">
+    <h1 class="page-title">My Profile</h1>
+    <p class="page-subtitle">Manage your account details, profile photo and theme.</p>
   </div>
 
-  {% if profile_user.activities.all %}
-    <h2 class="text-lg font-semibold mt-8 mb-4">Recent Activity</h2>
-    <div class="table-wrap">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Action</th>
-            <th>Detail</th>
-            <th>Device</th>
-            <th>IP</th>
-            <th>When</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for activity in profile_user.activities.all|slice:":10" %}
-            <tr>
-              <td class="font-medium">{{ activity.get_action_display }}</td>
-              <td class="text-muted">{{ activity.detail|default:"-" }}</td>
-              <td class="text-muted">{{ activity.device|default:"-" }}</td>
-              <td class="text-muted">{{ activity.ip_address|default:"-" }}</td>
-              <td class="text-muted whitespace-nowrap">{{ activity.created_at|date:"d M Y H:i" }}</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+  <div class="card card-pad mb-6">
+    <div class="profile-head">
+      {% include "_avatar.html" with user=profile_user size="xl" %}
+      <div class="flex-1">
+        <h2 class="text-lg font-semibold">{{ profile_user.full_name }}</h2>
+        <p class="text-muted text-sm">@{{ profile_user.username }}</p>
+        <div class="mt-2 flex flex-wrap items-center gap-2">
+          {% include "_status_badge.html" with status=profile_user.status label=profile_user.get_status_display %}
+          <span class="text-muted text-sm">{{ profile_user.get_role_display }} &middot; Joined {{ profile_user.created_at|date:"d M Y" }}</span>
+        </div>
+      </div>
     </div>
-  {% endif %}
+
+    <form method="post" enctype="multipart/form-data" class="grid sm:grid-cols-2 gap-4">
+      {% csrf_token %}
+      <input type="hidden" name="save_profile" value="1">
+      {% include "_field.html" with field=profile_form.full_name %}
+      {% include "_field.html" with field=profile_form.username %}
+      {% include "_field.html" with field=profile_form.email %}
+      {% include "_field.html" with field=profile_form.phone %}
+      {% include "_field.html" with field=profile_form.theme %}
+      <div class="field">
+        {% if profile_form.profile_image.label %}
+          <label for="{{ profile_form.profile_image.id_for_label }}" class="field-label">{{ profile_form.profile_image.label }}</label>
+        {% endif %}
+        {{ profile_form.profile_image }}
+        <div class="image-preview" data-preview-target>
+          {% if profile_user.profile_image %}
+            <img src="{{ profile_user.profile_image.url }}" alt="Current profile image">
+          {% endif %}
+        </div>
+        {% if profile_form.profile_image.errors %}
+          {% for error in profile_form.profile_image.errors %}
+            <p class="field-error">{{ error }}</p>
+          {% endfor %}
+        {% endif %}
+      </div>
+      <div class="sm:col-span-2">
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="card card-pad">
+    <h2 class="text-lg font-semibold mb-4">Change Password</h2>
+    <form method="post" class="max-w-lg space-y-4">
+      {% csrf_token %}
+      <input type="hidden" name="change_password" value="1">
+      {% include "_field.html" with field=password_form.current_password %}
+      {% include "_field.html" with field=password_form.new_password %}
+      {% include "_field.html" with field=password_form.confirm_password %}
+      <button type="submit" class="btn btn-primary">Update Password</button>
+    </form>
+  </div>
 </div>
 {% endblock %}

@@ -1,5 +1,5 @@
-"""Views for the academics module (semester management for admins, semester
-browsing for students)."""
+"""Views for the academics module (semester and subject management for admins,
+semester browsing for students)."""
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -7,18 +7,25 @@ from django.core.paginator import Paginator
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from django.utils import timezone
 
 from accounts.decorators import admin_required, student_required
 
-from .forms import SemesterForm
-from .models import Semester
+from .forms import SemesterForm, SubjectForm
+from .models import Semester, Subject
 
-SEMESTERS_PER_PAGE = 10
+SEMESTERS_PER_PAGE = 12
+SUBJECTS_PER_PAGE = 12
 
 # Whitelist of sortable columns -> model field.
-SORTABLE_FIELDS = {
+SEMESTER_SORTABLE_FIELDS = {
     "name": "name",
+    "status": "status",
+    "display_order": "display_order",
+    "created_at": "created_at",
+}
+SUBJECT_SORTABLE_FIELDS = {
+    "name": "name",
+    "semester": "semester__name",
     "status": "status",
     "display_order": "display_order",
     "created_at": "created_at",
@@ -33,22 +40,23 @@ def semester_list(request):
     sort = request.GET.get("sort", "display_order")
     direction = request.GET.get("dir", "asc")
 
-    # `all_objects` so archived semesters stay visible and restorable.
-    semesters = Semester.all_objects.all()
+    semesters = Semester.objects.annotate(subject_count=Count("subjects"))
 
     if query:
         semesters = semesters.filter(Q(name__icontains=query) | Q(description__icontains=query))
 
     if status_filter in Semester.Status.values:
         semesters = semesters.filter(status=status_filter)
+    else:
+        status_filter = ""
 
-    sort_field = SORTABLE_FIELDS.get(sort, "display_order")
+    sort_field = SEMESTER_SORTABLE_FIELDS.get(sort, "display_order")
     order = f"-{sort_field}" if direction == "desc" else sort_field
     semesters = semesters.order_by(order, "display_order")
 
     counts = {
         row["status"]: row["total"]
-        for row in Semester.all_objects.values("status").annotate(total=Count("id"))
+        for row in Semester.objects.values("status").annotate(total=Count("id"))
     }
 
     paginator = Paginator(semesters, SEMESTERS_PER_PAGE)
@@ -76,7 +84,6 @@ def semester_list(request):
             "total_semesters": sum(counts.values()),
             "semester_list_url": semester_list_url,
             "inactive_list_url": f"{semester_list_url}?status=INACTIVE",
-            "archived_list_url": f"{semester_list_url}?status=ARCHIVED",
         },
     )
 
@@ -84,7 +91,7 @@ def semester_list(request):
 @login_required
 @admin_required
 def semester_create(request):
-    form = SemesterForm(request.POST or None)
+    form = SemesterForm(request.POST or None, request.FILES or None)
     if request.method == "POST" and form.is_valid():
         form.save()
         messages.success(request, f"Semester \"{form.cleaned_data['name']}\" has been created.")
@@ -96,7 +103,7 @@ def semester_create(request):
 @admin_required
 def semester_edit(request, pk):
     semester = get_object_or_404(Semester, pk=pk)
-    form = SemesterForm(request.POST or None, instance=semester)
+    form = SemesterForm(request.POST or None, request.FILES or None, instance=semester)
     if request.method == "POST" and form.is_valid():
         form.save()
         messages.success(request, f"Semester \"{semester.name}\" has been updated.")
@@ -110,39 +117,124 @@ def semester_edit(request, pk):
 
 @login_required
 @admin_required
-def semester_archive(request, pk):
+def semester_delete(request, pk):
     if request.method == "POST":
-        semester = get_object_or_404(Semester.all_objects, pk=pk)
-        if semester.status != Semester.Status.ARCHIVED:
-            semester.status = Semester.Status.ARCHIVED
-            semester.archived_at = timezone.now()
-            semester.archived_by = request.user
-            semester.save(update_fields=["status", "archived_at", "archived_by", "updated_at"])
-            messages.success(request, f"Semester \"{semester.name}\" has been archived.")
-        else:
-            messages.error(request, "This semester is already archived.")
+        semester = get_object_or_404(Semester, pk=pk)
+        messages.success(
+            request,
+            f"Semester \"{semester.name}\" and its subjects have been deleted.",
+        )
+        semester.delete()
     return redirect("academics:semester_list")
 
 
 @login_required
 @admin_required
-def semester_restore(request, pk):
+def subject_list(request):
+    query = request.GET.get("q", "").strip()
+    semester_filter = request.GET.get("semester", "").strip()
+    status_filter = request.GET.get("status", "").strip().upper()
+    sort = request.GET.get("sort", "display_order")
+    direction = request.GET.get("dir", "asc")
+
+    subjects = Subject.objects.select_related("semester")
+
+    if query:
+        subjects = subjects.filter(
+            Q(name__icontains=query) | Q(description__icontains=query)
+        )
+
+    if semester_filter.isdigit():
+        subjects = subjects.filter(semester_id=int(semester_filter))
+    else:
+        semester_filter = ""
+
+    if status_filter in Subject.Status.values:
+        subjects = subjects.filter(status=status_filter)
+    else:
+        status_filter = ""
+
+    sort_field = SUBJECT_SORTABLE_FIELDS.get(sort, "display_order")
+    order = f"-{sort_field}" if direction == "desc" else sort_field
+    subjects = subjects.order_by(order, "display_order")
+
+    counts = {
+        row["status"]: row["total"]
+        for row in Subject.objects.values("status").annotate(total=Count("id"))
+    }
+
+    paginator = Paginator(subjects, SUBJECTS_PER_PAGE)
+    page_obj = paginator.get_page(request.GET.get("page"))
+
+    params = request.GET.copy()
+    params.pop("page", None)
+    params.pop("sort", None)
+    params.pop("dir", None)
+    qs = params.urlencode()
+
+    return render(
+        request,
+        "academics/subject_list.html",
+        {
+            "page_obj": page_obj,
+            "query": query,
+            "semester_filter": semester_filter,
+            "status_filter": status_filter,
+            "semesters": Semester.objects.order_by("display_order"),
+            "sort": sort,
+            "direction": direction,
+            "qs": qs,
+            "counts": counts,
+            "total_subjects": sum(counts.values()),
+        },
+    )
+
+
+@login_required
+@admin_required
+def subject_create(request):
+    form = SubjectForm(request.POST or None, request.FILES or None)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, f"Subject \"{form.cleaned_data['name']}\" has been created.")
+        return redirect("academics:subject_list")
+    return render(request, "academics/subject_form.html", {"form": form, "title": "Create Subject"})
+
+
+@login_required
+@admin_required
+def subject_edit(request, pk):
+    subject = get_object_or_404(Subject, pk=pk)
+    form = SubjectForm(request.POST or None, request.FILES or None, instance=subject)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, f"Subject \"{subject.name}\" has been updated.")
+        return redirect("academics:subject_list")
+    return render(
+        request,
+        "academics/subject_form.html",
+        {"form": form, "title": "Edit Subject", "subject": subject},
+    )
+
+
+@login_required
+@admin_required
+def subject_delete(request, pk):
     if request.method == "POST":
-        semester = get_object_or_404(Semester.all_objects, pk=pk)
-        if semester.status == Semester.Status.ARCHIVED:
-            semester.status = Semester.Status.ACTIVE
-            semester.archived_at = None
-            semester.archived_by = None
-            semester.save(update_fields=["status", "archived_at", "archived_by", "updated_at"])
-            messages.success(request, f"Semester \"{semester.name}\" has been restored.")
-        else:
-            messages.error(request, "Only archived semesters can be restored.")
-    return redirect("academics:semester_list")
+        subject = get_object_or_404(Subject, pk=pk)
+        messages.success(request, f"Subject \"{subject.name}\" has been deleted.")
+        subject.delete()
+    return redirect("academics:subject_list")
 
 
 @login_required
 @student_required
 def semester_detail(request, pk):
     """Students only ever see ACTIVE semesters."""
-    semester = get_object_or_404(Semester.objects, pk=pk, status=Semester.Status.ACTIVE)
-    return render(request, "academics/semester_detail.html", {"semester": semester})
+    semester = get_object_or_404(Semester, pk=pk, status=Semester.Status.ACTIVE)
+    subjects = semester.subjects.filter(status=Subject.Status.ACTIVE)
+    return render(
+        request,
+        "academics/semester_detail.html",
+        {"semester": semester, "subjects": subjects},
+    )

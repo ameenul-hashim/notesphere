@@ -1,21 +1,25 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="{{ active_theme }}" {% if user.is_authenticated %}data-auth="true"{% endif %}>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}NoteSphere{% endblock %}</title>
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  <link rel="stylesheet" href="{% static 'css/themes.css' %}">
   <link rel="stylesheet" href="{% static 'css/app.css' %}">
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>tailwind.config = { darkMode: 'class' };</script>
   <script>
     // Apply theme before paint to avoid flash of wrong theme.
+    // Authenticated pages: the theme is server-rendered from User.theme.
+    // Anonymous pages: honour the last guest preference from localStorage.
     (function () {
-      var stored = localStorage.getItem('notesphere-theme');
-      var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-      if (stored === 'dark' || (!stored && prefersDark)) {
-        document.documentElement.classList.add('dark');
-      }
+      var html = document.documentElement;
+      if (html.getAttribute('data-auth') === 'true') return;
+      try {
+        var stored = localStorage.getItem('ns-theme');
+        if (stored) html.setAttribute('data-theme', stored);
+      } catch (e) {}
     })();
   </script>
 </head>
@@ -44,7 +48,7 @@
         {% block topbar_title %}
           <span class="topbar-title">NoteSphere</span>
         {% endblock %}
-        {% include "_theme_toggle.html" %}
+        {% include "_theme_picker.html" %}
         <a href="{% url 'admins:profile' %}" class="ml-1 hidden lg:inline-flex items-center gap-2" aria-label="Profile">
           {% include "_avatar.html" with user=user %}
         </a>
@@ -52,7 +56,7 @@
     {% else %}
       <header class="auth-header">
         <span class="brand"><span class="brand-mark">N</span>NoteSphere</span>
-        {% include "_theme_toggle.html" %}
+        {% include "_theme_picker.html" %}
       </header>
     {% endif %}
 

@@ -1,0 +1,11 @@
+<div class="theme-picker" data-theme-picker data-save-url="{% url 'accounts:save_theme' %}">
+  <button type="button" class="icon-btn theme-trigger" data-theme-trigger
+          aria-haspopup="listbox" aria-label="Change theme" aria-expanded="false">
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 22a10 10 0 1 1 10-10"/><path d="M22 12a2 2 0 0 1-2 2h-3a3 3 0 0 0-3 3v3a2 2 0 0 1-2 2"/><circle cx="8" cy="8" r="1"/><circle cx="13" cy="7" r="1"/><circle cx="17" cy="10" r="1"/>
+    </svg>
+  </button>
+  <div class="theme-menu" role="listbox" aria-label="Choose theme" data-theme-menu hidden>
+    <!-- Options are rendered by theme.js from the THEMES registry -->
+  </div>
+</div>

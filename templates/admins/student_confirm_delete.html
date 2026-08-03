@@ -5,13 +5,13 @@
 <div class="max-w-md mx-auto card card-pad text-center">
   <h1 class="page-title mb-2">Delete {{ student.full_name }}?</h1>
   <p class="text-muted mb-6">
-    This is a soft delete. The account will be hidden and blocked from logging in,
-    but all data is retained and the student can always be restored.
+    This action is <strong>permanent</strong>. The student account, their activity
+    log and any related data will be removed and cannot be recovered.
   </p>
 
   <form method="post" class="action-row justify-center">
     {% csrf_token %}
-    <button type="submit" class="btn btn-danger">Yes, delete</button>
+    <button type="submit" class="btn btn-danger">Yes, permanently delete</button>
     <a href="{% url 'admins:student_detail' student.pk %}" class="btn btn-ghost">Cancel</a>
   </form>
 </div>

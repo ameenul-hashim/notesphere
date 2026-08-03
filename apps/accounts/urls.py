@@ -14,4 +14,5 @@ urlpatterns = [
     path("forgot-password/otp/", views.otp_verify, name="otp_verify"),
     path("forgot-password/reset/", views.reset_password, name="reset_password"),
     path("dashboard/student/", views.student_dashboard, name="student_dashboard"),
+    path("theme/", views.save_theme, name="save_theme"),
 ]

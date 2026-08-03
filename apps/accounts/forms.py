@@ -53,19 +53,19 @@ class SignUpForm(forms.Form):
 
     def clean_username(self):
         username = self.cleaned_data.get("username")
-        if User.all_objects.filter(username__iexact=username).exists():
+        if User.objects.filter(username__iexact=username).exists():
             raise ValidationError("Username already exists.")
         return username
 
     def clean_email(self):
         email = self.cleaned_data.get("email")
-        if User.all_objects.filter(email__iexact=email).exists():
+        if User.objects.filter(email__iexact=email).exists():
             raise ValidationError("Email already exists.")
         return email
 
     def clean_phone(self):
         phone = self.cleaned_data.get("phone")
-        if User.all_objects.filter(phone=phone).exists():
+        if User.objects.filter(phone=phone).exists():
             raise ValidationError("Phone number already exists.")
         return phone
 
@@ -245,5 +245,106 @@ class SetNewPasswordForm(forms.Form):
         password = cleaned.get("password")
         confirm_password = cleaned.get("confirm_password")
         if password and confirm_password and password != confirm_password:
+            raise ValidationError("Passwords do not match.")
+        return cleaned
+
+
+class ProfileForm(forms.ModelForm):
+    """Edit profile details for the logged-in user (admin or student)."""
+
+    full_name = forms.CharField(
+        widget=forms.TextInput(attrs={"class": INPUT_CLASS, "placeholder": "John Smith"}),
+        validators=[validate_full_name],
+        error_messages={"required": "Full name is required."},
+    )
+    username = forms.CharField(
+        widget=forms.TextInput(attrs={"class": INPUT_CLASS, "placeholder": "john_123"}),
+        validators=[validate_username],
+        error_messages={"required": "Username is required."},
+    )
+    email = forms.EmailField(
+        widget=forms.EmailInput(attrs={"class": INPUT_CLASS, "placeholder": "john@example.com"}),
+        error_messages={"required": "Email is required.", "invalid": "Invalid email address."},
+    )
+    phone = forms.CharField(
+        widget=forms.TextInput(attrs={"class": INPUT_CLASS, "placeholder": "1234567890", "maxlength": "10"}),
+        validators=[validate_phone],
+        error_messages={"required": "Phone number is required."},
+    )
+    profile_image = forms.ImageField(
+        required=False,
+        label="Profile Image",
+        widget=forms.FileInput(attrs={"class": INPUT_CLASS, "accept": "image/*", "data-preview": ""}),
+    )
+    theme = forms.ChoiceField(
+        choices=User.Theme.choices,
+        widget=forms.Select(attrs={"class": INPUT_CLASS}),
+        label="Theme Preference",
+    )
+
+    class Meta:
+        model = User
+        fields = ["full_name", "username", "email", "phone", "profile_image", "theme"]
+
+    def clean_username(self):
+        username = self.cleaned_data.get("username")
+        queryset = User.objects.filter(username__iexact=username)
+        if self.instance.pk is not None:
+            queryset = queryset.exclude(pk=self.instance.pk)
+        if queryset.exists():
+            raise ValidationError("Username already exists.")
+        return username
+
+    def clean_email(self):
+        email = self.cleaned_data.get("email")
+        queryset = User.objects.filter(email__iexact=email)
+        if self.instance.pk is not None:
+            queryset = queryset.exclude(pk=self.instance.pk)
+        if queryset.exists():
+            raise ValidationError("Email already exists.")
+        return email
+
+    def clean_phone(self):
+        phone = self.cleaned_data.get("phone")
+        queryset = User.objects.filter(phone=phone)
+        if self.instance.pk is not None:
+            queryset = queryset.exclude(pk=self.instance.pk)
+        if queryset.exists():
+            raise ValidationError("Phone number already exists.")
+        return phone
+
+
+class ChangePasswordForm(forms.Form):
+    """Change the logged-in user's password (requires the current password)."""
+
+    current_password = forms.CharField(
+        widget=forms.PasswordInput(attrs={"class": INPUT_CLASS, "data-toggle": "password"}),
+        error_messages={"required": "Current password is required."},
+    )
+    new_password = forms.CharField(
+        widget=forms.PasswordInput(attrs={"class": INPUT_CLASS, "data-toggle": "password"}),
+        validators=[validate_password_strength],
+        error_messages={"required": "New password is required."},
+    )
+    confirm_password = forms.CharField(
+        widget=forms.PasswordInput(attrs={"class": INPUT_CLASS, "data-toggle": "password"}),
+        error_messages={"required": "Confirm password is required."},
+    )
+
+    def __init__(self, *args, user=None, **kwargs):
+        self.user = user
+        super().__init__(*args, **kwargs)
+
+    def clean_current_password(self):
+        current_password = self.cleaned_data.get("current_password")
+        if current_password and not check_password(current_password, self.user.password):
+            raise ValidationError("Current password is incorrect.")
+        return current_password
+
+    def clean(self):
+        cleaned = super().clean()
+        new_password = cleaned.get("new_password")
+        confirm_password = cleaned.get("confirm_password")
+        if new_password and confirm_password and new_password != confirm_password:
             raise ValidationError("Passwords do not match.")
         return cleaned

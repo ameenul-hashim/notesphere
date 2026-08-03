@@ -1,4 +1,4 @@
-<span class="avatar {% if size == 'lg' %}avatar-lg{% else %}avatar-md{% endif %}">
+<span class="avatar {% if size == 'xl' %}avatar-xl{% elif size == 'lg' %}avatar-lg{% else %}avatar-md{% endif %}">
   {% if user.profile_image %}
     <img src="{{ user.profile_image.url }}" alt="{{ user.full_name }}">
   {% else %}

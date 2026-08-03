@@ -201,11 +201,33 @@
     });
   }
 
+  /* ---------- Image preview ---------- */
+  function initImagePreviews() {
+    document.querySelectorAll("input[data-preview]").forEach(function (input) {
+      var target = document.querySelector("[data-preview-target]");
+      if (!target) return;
+      input.addEventListener("change", function () {
+        var file = input.files && input.files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function () {
+          target.innerHTML = "";
+          var img = document.createElement("img");
+          img.src = reader.result;
+          img.alt = "Preview";
+          target.appendChild(img);
+        };
+        reader.readAsDataURL(file);
+      });
+    });
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
     modalEl = document.getElementById("modal");
     initPasswordToggles();
     initSidebar();
     initAlerts();
     initConfirmForms();
+    initImagePreviews();
   });
 })();

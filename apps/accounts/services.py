@@ -63,13 +63,6 @@ def create_and_send_otp(user, request=None):
         html_message=html_message,
         fail_silently=False,
     )
-
-    log_activity(
-        user,
-        UserActivity.Action.OTP_SENT,
-        request,
-        detail=f"OTP sent to {user.email} for flow {otp_obj.flow_id}",
-    )
     return otp_obj
 
 

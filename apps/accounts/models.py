@@ -14,11 +14,10 @@ class User(AbstractUser):
 
     - `role` distinguishes ADMIN from STUDENT.
     - `status` is the single source of truth for account state
-      (ACTIVE / INACTIVE / BLOCKED / DELETED).
-    - `is_active` is auto-synced so that only DELETED accounts are rejected by
-      Django's authentication backend; BLOCKED and INACTIVE accounts pass
-      `authenticate()` and are then rejected by the login form with a
-      specific message.
+      (ACTIVE / INACTIVE / BLOCKED). Deletion is permanent: a deleted
+      record is removed from the database entirely.
+    - `theme` stores the user's preferred UI theme, applied via the
+      `data-theme` attribute on `<html>`.
     """
 
     class Role(models.TextChoices):
@@ -29,13 +28,29 @@ class User(AbstractUser):
         ACTIVE = "ACTIVE", "Active"
         INACTIVE = "INACTIVE", "Inactive"
         BLOCKED = "BLOCKED", "Blocked"
-        DELETED = "DELETED", "Deleted"
+
+    class Theme(models.TextChoices):
+        CLASSIC_WHITE = "classic_white", "Classic White"
+        MIDNIGHT_BLACK = "midnight_black", "Midnight Black"
+        OCEAN_BLUE = "ocean_blue", "Ocean Blue"
+        EMERALD_GREEN = "emerald_green", "Emerald Green"
+        ROYAL_PURPLE = "royal_purple", "Royal Purple"
+        SUNSET_ORANGE = "sunset_orange", "Sunset Orange"
+        ROSE_PINK = "rose_pink", "Rose Pink"
+        SLATE_GRAY = "slate_gray", "Slate Gray"
+        CYBER_NEON = "cyber_neon", "Cyber Neon"
+        COFFEE_BROWN = "coffee_brown", "Coffee Brown"
 
     full_name = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
     phone = models.CharField(max_length=10, unique=True)
     role = models.CharField(max_length=10, choices=Role.choices, default=Role.STUDENT)
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.ACTIVE)
+    theme = models.CharField(
+        max_length=30,
+        choices=Theme.choices,
+        default=Theme.CLASSIC_WHITE,
+    )
 
     is_email_verified = models.BooleanField(default=False)
     is_phone_verified = models.BooleanField(default=False)
@@ -47,40 +62,21 @@ class User(AbstractUser):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    deleted_at = models.DateTimeField(null=True, blank=True)
-    deleted_by = models.ForeignKey(
-        "self",
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="deleted_students",
-    )
-
     objects = UserManager()
-    # Base manager used for related lookups and migrations: sees EVERYTHING,
-    # including soft-deleted rows, so deleted students stay recoverable.
-    all_objects = models.Manager()
 
     USERNAME_FIELD = "username"
     REQUIRED_FIELDS = ["email", "phone", "full_name"]
 
     class Meta:
         ordering = ["-created_at"]
-        base_manager_name = "all_objects"
         indexes = [
             models.Index(fields=["status"]),
+            models.Index(fields=["role", "last_login"]),
         ]
 
     def __str__(self):
         # Display rule: the username is a login credential and is never shown.
         return self.full_name
-
-    def save(self, *args, **kwargs):
-        if self.status == self.Status.DELETED:
-            self.is_active = False
-        else:
-            self.is_active = True
-        super().save(*args, **kwargs)
 
 
 class PasswordResetOTP(models.Model):
@@ -110,19 +106,19 @@ class PasswordResetOTP(models.Model):
 
 
 class UserActivity(models.Model):
-    """Scalable audit log of authentication and account actions."""
+    """Audit log reserved for important account events only.
+
+    Login timestamps live on `User.last_login`; this table intentionally does
+    NOT record every login/logout. Only password resets, profile updates and
+    block / unblock / delete actions are stored.
+    """
 
     class Action(models.TextChoices):
-        LOGIN = "LOGIN", "Login"
-        LOGOUT = "LOGOUT", "Logout"
-        PASSWORD_CHANGED = "PASSWORD_CHANGED", "Password Changed"
         PASSWORD_RESET = "PASSWORD_RESET", "Password Reset"
-        OTP_SENT = "OTP_SENT", "OTP Sent"
-        OTP_VERIFIED = "OTP_VERIFIED", "OTP Verified"
+        PROFILE_UPDATED = "PROFILE_UPDATED", "Profile Updated"
         ACCOUNT_BLOCKED = "ACCOUNT_BLOCKED", "Account Blocked"
         ACCOUNT_UNBLOCKED = "ACCOUNT_UNBLOCKED", "Account Unblocked"
         ACCOUNT_DELETED = "ACCOUNT_DELETED", "Account Deleted"
-        PROFILE_UPDATED = "PROFILE_UPDATED", "Profile Updated"
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="activities")
     action = models.CharField(max_length=30, choices=Action.choices)

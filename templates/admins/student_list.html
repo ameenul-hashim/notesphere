@@ -2,13 +2,18 @@
 {% block title %}Students | NoteSphere{% endblock %}
 {% block topbar_title %}Students{% endblock %}
 {% block content %}
-<div class="card card-pad">
 
   <div class="page-head lg:flex-row lg:items-center lg:justify-between">
-    <h1 class="page-title">Students</h1>
+    <div>
+      <h1 class="page-title">Students</h1>
+      <p class="page-subtitle">Manage student accounts, filters and activity.</p>
+    </div>
     <form method="get" class="flex flex-col sm:flex-row gap-2">
       {% if status_filter %}
         <input type="hidden" name="status" value="{{ status_filter }}">
+      {% endif %}
+      {% if filter_key %}
+        <input type="hidden" name="filter" value="{{ filter_key }}">
       {% endif %}
       <input
         type="search"
@@ -18,32 +23,53 @@
         class="input sm:w-72"
       >
       <button type="submit" class="btn btn-primary">Search</button>
-      {% if query or status_filter %}
+      {% if query or status_filter or filter_key %}
         <a href="{% url 'admins:student_list' %}" class="btn btn-ghost">Clear</a>
       {% endif %}
     </form>
   </div>
 
-  <div class="flex flex-wrap gap-2 mb-6">
-    <a href="{% url 'admins:student_list' %}{% if query %}?q={{ query|urlencode }}{% endif %}"
+  <div class="chips">
+    <p class="chip-static">Status</p>
+    <a href="{% url 'admins:student_list' %}{% if query %}?q={{ query|urlencode }}{% endif %}{% if filter_key %}{% if query %}&{% else %}?{% endif %}filter={{ filter_key }}{% endif %}"
        class="chip {% if not status_filter %}chip-active{% endif %}">
-      All ({{ total_students }})
+      All ({{ filter_counts.all }})
     </a>
-    <a href="{% url 'admins:student_list' %}?{% if query %}q={{ query|urlencode }}&{% endif %}status=ACTIVE"
+    <a href="{% url 'admins:student_list' %}?{% if query %}q={{ query|urlencode }}&{% endif %}{% if filter_key %}filter={{ filter_key }}&{% endif %}status=ACTIVE"
        class="chip {% if status_filter == 'ACTIVE' %}chip-active{% endif %}">
       Active ({{ counts.ACTIVE|default:0 }})
     </a>
-    <a href="{% url 'admins:student_list' %}?{% if query %}q={{ query|urlencode }}&{% endif %}status=INACTIVE"
+    <a href="{% url 'admins:student_list' %}?{% if query %}q={{ query|urlencode }}&{% endif %}{% if filter_key %}filter={{ filter_key }}&{% endif %}status=INACTIVE"
        class="chip {% if status_filter == 'INACTIVE' %}chip-active{% endif %}">
       Inactive ({{ counts.INACTIVE|default:0 }})
     </a>
-    <a href="{% url 'admins:student_list' %}?{% if query %}q={{ query|urlencode }}&{% endif %}status=BLOCKED"
+    <a href="{% url 'admins:student_list' %}?{% if query %}q={{ query|urlencode }}&{% endif %}{% if filter_key %}filter={{ filter_key }}&{% endif %}status=BLOCKED"
        class="chip {% if status_filter == 'BLOCKED' %}chip-active{% endif %}">
       Blocked ({{ counts.BLOCKED|default:0 }})
     </a>
-    <a href="{% url 'admins:student_list' %}?{% if query %}q={{ query|urlencode }}&{% endif %}status=DELETED"
-       class="chip {% if status_filter == 'DELETED' %}chip-active{% endif %}">
-      Deleted ({{ counts.DELETED|default:0 }})
+  </div>
+
+  <div class="chips">
+    <p class="chip-static">Joined / Activity</p>
+    <a href="{% url 'admins:student_list' %}?{% if query %}q={{ query|urlencode }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}filter=latest_joined"
+       class="chip {% if filter_key == 'latest_joined' %}chip-active{% endif %}">
+      Latest Joined
+    </a>
+    <a href="{% url 'admins:student_list' %}?{% if query %}q={{ query|urlencode }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}filter=oldest_joined"
+       class="chip {% if filter_key == 'oldest_joined' %}chip-active{% endif %}">
+      Oldest Joined
+    </a>
+    <a href="{% url 'admins:student_list' %}?{% if query %}q={{ query|urlencode }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}filter=login_today"
+       class="chip {% if filter_key == 'login_today' %}chip-active{% endif %}">
+      Last Login Today ({{ filter_counts.login_today }})
+    </a>
+    <a href="{% url 'admins:student_list' %}?{% if query %}q={{ query|urlencode }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}filter=login_yesterday"
+       class="chip {% if filter_key == 'login_yesterday' %}chip-active{% endif %}">
+      Last Login Yesterday ({{ filter_counts.login_yesterday }})
+    </a>
+    <a href="{% url 'admins:student_list' %}?{% if query %}q={{ query|urlencode }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}filter=inactive_30d"
+       class="chip {% if filter_key == 'inactive_30d' %}chip-active{% endif %}">
+      Inactive for 30 Days ({{ filter_counts.inactive_30d }})
     </a>
   </div>
 
@@ -59,6 +85,7 @@
             <th>{% include "_sort_header.html" with key="phone" label="Phone" sort=sort direction=direction qs=qs %}</th>
             <th>{% include "_sort_header.html" with key="status" label="Status" sort=sort direction=direction qs=qs %}</th>
             <th>{% include "_sort_header.html" with key="created_at" label="Joined" sort=sort direction=direction qs=qs %}</th>
+            <th>Last Login</th>
             <th></th>
           </tr>
         </thead>
@@ -72,6 +99,7 @@
               <td class="text-muted whitespace-nowrap">{{ student.phone }}</td>
               <td>{% include "_status_badge.html" with status=student.status label=student.get_status_display %}</td>
               <td class="text-muted whitespace-nowrap">{{ student.created_at|date:"d M Y" }}</td>
+              <td class="text-muted whitespace-nowrap">{{ student.last_login|date:"d M Y"|default:"Never" }}</td>
               <td><a href="{% url 'admins:student_detail' student.pk %}" class="link">View</a></td>
             </tr>
           {% endfor %}
@@ -87,5 +115,4 @@
       <p class="empty-desc">Try adjusting your search or filters.</p>
     </div>
   {% endif %}
-</div>
 {% endblock %}

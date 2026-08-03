@@ -1,54 +1,39 @@
-"""Academic models for NoteSphere (semesters and, in later phases, subjects)."""
+"""Academic models for NoteSphere (semesters and subjects)."""
 
 from django.db import models
-from django.utils import timezone
 
 
 class SemesterManager(models.Manager):
-    """Default manager: hides ARCHIVED semesters.
+    """Legacy manager retained so the initial migration can be loaded.
 
-    `all_objects` (the base manager) keeps archived semesters visible so they
-    always remain restorable.
+    Semester soft-deletion (ARCHIVED) was removed, so this manager behaves
+    exactly like the default manager.
     """
 
     use_in_migrations = True
 
     def get_queryset(self):
-        return super().get_queryset().exclude(status="ARCHIVED")
+        return super().get_queryset()
 
 
 class Semester(models.Model):
     """A study semester such as "Semester 1" or "Semester 2".
 
-    - `status` is the source of truth: ACTIVE / INACTIVE / ARCHIVED.
-    - ARCHIVED is a soft delete: `archived_at`/`archived_by` are recorded and
-      the row is hidden from the default manager until restored.
+    Deletion is permanent: deleting a semester cascades to its subjects.
     """
 
     class Status(models.TextChoices):
         ACTIVE = "ACTIVE", "Active"
         INACTIVE = "INACTIVE", "Inactive"
-        ARCHIVED = "ARCHIVED", "Archived"
 
     name = models.CharField(max_length=50, unique=True)
     description = models.TextField(blank=True)
+    thumbnail = models.ImageField(upload_to="semesters/", null=True, blank=True)
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.ACTIVE)
     display_order = models.PositiveIntegerField(default=0)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-    archived_at = models.DateTimeField(null=True, blank=True)
-    archived_by = models.ForeignKey(
-        "accounts.User",
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="archived_semesters",
-    )
-
-    objects = SemesterManager()
-    all_objects = models.Manager()
 
     class Meta:
         ordering = ["display_order", "-created_at"]
@@ -59,11 +44,29 @@ class Semester(models.Model):
     def __str__(self):
         return self.name
 
-    def save(self, *args, **kwargs):
-        if self.status == self.Status.ARCHIVED:
-            if self.archived_at is None:
-                self.archived_at = timezone.now()
-        else:
-            self.archived_at = None
-            self.archived_by = None
-        super().save(*args, **kwargs)
+
+class Subject(models.Model):
+    """A subject that belongs to one semester."""
+
+    class Status(models.TextChoices):
+        ACTIVE = "ACTIVE", "Active"
+        INACTIVE = "INACTIVE", "Inactive"
+
+    semester = models.ForeignKey(Semester, on_delete=models.CASCADE, related_name="subjects")
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    thumbnail = models.ImageField(upload_to="subjects/", null=True, blank=True)
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.ACTIVE)
+    display_order = models.PositiveIntegerField(default=0)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["display_order", "name"]
+        indexes = [
+            models.Index(fields=["semester", "status"]),
+        ]
+
+    def __str__(self):
+        return self.name

@@ -51,16 +51,6 @@
         <p class="detail-label">Updated Date</p>
         <p class="detail-value">{{ student.updated_at|date:"d M Y H:i" }}</p>
       </div>
-      {% if student.status == 'DELETED' %}
-        <div class="detail-item">
-          <p class="detail-label">Deleted Date</p>
-          <p class="detail-value">{{ student.deleted_at|date:"d M Y H:i"|default:"-" }}</p>
-        </div>
-        <div class="detail-item">
-          <p class="detail-label">Deleted By</p>
-          <p class="detail-value">{{ student.deleted_by.full_name|default:"-" }}</p>
-        </div>
-      {% endif %}
     </div>
 
     <div class="action-row mt-6">
@@ -71,13 +61,6 @@
           {% csrf_token %}
           <button type="submit" class="btn btn-success">Unblock</button>
         </form>
-      {% elif student.status == 'DELETED' %}
-        <form method="post" action="{% url 'admins:restore_student' student.pk %}"
-              data-confirm="Bring this student back to Active status?"
-              data-confirm-title="Restore student" data-confirm-label="Restore">
-          {% csrf_token %}
-          <button type="submit" class="btn btn-success">Restore</button>
-        </form>
       {% else %}
         <form method="post" action="{% url 'admins:block_student' student.pk %}"
               data-confirm="This student will not be able to log in until unblocked."
@@ -87,12 +70,10 @@
         </form>
       {% endif %}
 
-      {% if student.status != 'DELETED' %}
-        <a href="{% url 'admins:initiate_student_password_reset' student.pk %}" class="btn btn-primary">
-          Reset Password
-        </a>
-        <a href="{% url 'admins:delete_student' student.pk %}" class="btn btn-danger-ghost">Delete</a>
-      {% endif %}
+      <a href="{% url 'admins:initiate_student_password_reset' student.pk %}" class="btn btn-primary">
+        Reset Password
+      </a>
+      <a href="{% url 'admins:delete_student' student.pk %}" class="btn btn-danger-ghost">Delete</a>
 
       <a href="{% url 'admins:student_list' %}" class="btn btn-ghost">Back</a>
     </div>

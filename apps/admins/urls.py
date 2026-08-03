@@ -16,7 +16,6 @@ urlpatterns = [
     path("students/<int:pk>/block/", views.block_student, name="block_student"),
     path("students/<int:pk>/unblock/", views.unblock_student, name="unblock_student"),
     path("students/<int:pk>/delete/", views.delete_student, name="delete_student"),
-    path("students/<int:pk>/restore/", views.restore_student, name="restore_student"),
     path(
         "students/<int:pk>/reset-password/",
         views.initiate_student_password_reset,

@@ -1,24 +1,21 @@
 """
 Custom user manager for NoteSphere.
 
-The default manager (`objects`) hides DELETED accounts so the app only ever
-sees live users. `all_objects` (the base manager) includes everything so
-soft-deleted students always remain recoverable.
+Deletion is permanent in NoteSphere, so the default manager exposes every
+user. The `create_user` / `create_superuser` helpers centralize account
+creation.
 """
 
 from django.contrib.auth.base_user import BaseUserManager
 
 
 class UserManager(BaseUserManager):
-    """Manager for the custom User model.
-
-    Used as the default manager; excludes DELETED accounts from queries.
-    """
+    """Manager for the custom User model."""
 
     use_in_migrations = True
 
     def get_queryset(self):
-        return super().get_queryset().exclude(status="DELETED")
+        return super().get_queryset()
 
     def create_user(self, username, email, phone, full_name, password=None, **extra_fields):
         if not username:

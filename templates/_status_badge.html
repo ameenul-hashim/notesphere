@@ -4,8 +4,6 @@
   <span class="badge badge-danger">{{ label|default:status }}</span>
 {% elif status == 'INACTIVE' %}
   <span class="badge badge-warning">{{ label|default:status }}</span>
-{% elif status == 'DELETED' or status == 'ARCHIVED' %}
-  <span class="badge badge-muted">{{ label|default:status }}</span>
 {% else %}
   <span class="badge badge-neutral">{{ label|default:status }}</span>
 {% endif %}

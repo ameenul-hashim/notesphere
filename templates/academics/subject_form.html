@@ -1,17 +1,18 @@
 {% extends "base.html" %}
 {% block title %}{{ title }} | NoteSphere{% endblock %}
-{% block topbar_title %}Semesters{% endblock %}
+{% block topbar_title %}Subjects{% endblock %}
 {% block content %}
 <div class="max-w-lg mx-auto card card-pad">
   <div class="flex items-center justify-between mb-6">
     <h1 class="page-title">{{ title }}</h1>
-    <a href="{% url 'academics:semester_list' %}" class="btn btn-ghost btn-sm">Back</a>
+    <a href="{% url 'academics:subject_list' %}" class="btn btn-ghost btn-sm">Back</a>
   </div>
 
   {% include "_form_errors.html" %}
 
   <form method="post" enctype="multipart/form-data" novalidate class="space-y-4">
     {% csrf_token %}
+    {% include "_field.html" with field=form.semester %}
     {% include "_field.html" with field=form.name %}
     {% include "_field.html" with field=form.description %}
     <div class="field">
@@ -19,7 +20,7 @@
         <label for="{{ form.thumbnail.id_for_label }}" class="field-label">{{ form.thumbnail.label }}</label>
       {% endif %}
       {{ form.thumbnail }}
-      <p class="field-hint">Optional image shown on semester cards.</p>
+      <p class="field-hint">Optional image shown on subject cards.</p>
       <div class="image-preview" data-preview-target>
         {% if form.instance.thumbnail %}
           <img src="{{ form.instance.thumbnail.url }}" alt="Current thumbnail">
@@ -36,7 +37,7 @@
       {% include "_field.html" with field=form.display_order %}
     </div>
     <button type="submit" class="btn btn-primary btn-block btn-lg">
-      {% if semester %}Save Changes{% else %}Create Semester{% endif %}
+      {% if subject %}Save Changes{% else %}Create Subject{% endif %}
     </button>
   </form>
 </div>

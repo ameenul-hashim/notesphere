@@ -1,0 +1,330 @@
+/* ============================================================
+   NoteSphere Theme System
+   Ten selectable themes. The active theme is set via
+   `data-theme` on <html> (server-rendered from User.theme, or
+   applied client-side by the theme picker / pre-paint script).
+   Base layout tokens (radii, shadows, font) live in `:root`;
+   each theme redefines the color tokens only.
+   ============================================================ */
+
+:root {
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-pill: 999px;
+
+  --shadow-sm: 0 1px 2px rgba(16, 16, 18, 0.05);
+  --shadow: 0 1px 2px rgba(16, 16, 18, 0.06), 0 8px 24px -12px rgba(16, 16, 18, 0.12);
+  --shadow-lg: 0 2px 6px rgba(16, 16, 18, 0.06), 0 24px 48px -16px rgba(16, 16, 18, 0.2);
+
+  --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* ---------- 1. Classic White ---------- */
+[data-theme="classic_white"] {
+  --bg: #f7f7f8;
+  --surface: #ffffff;
+  --surface-2: #f4f4f5;
+  --surface-3: #e9e9ec;
+  --text: #18181b;
+  --text-muted: #71717a;
+  --text-faint: #a1a1aa;
+  --border: #e6e6e9;
+  --border-strong: #d4d4d8;
+
+  --primary: #18181b;
+  --on-primary: #ffffff;
+  --ring: rgba(24, 24, 27, 0.14);
+
+  --success: #15803d;
+  --success-bg: #f0fdf4;
+  --success-border: #bbf7d0;
+  --warning: #b45309;
+  --warning-bg: #fffbeb;
+  --warning-border: #fde68a;
+  --danger: #b91c1c;
+  --danger-bg: #fef2f2;
+  --danger-border: #fecaca;
+  --info: #1f2937;
+  --info-bg: #f4f4f5;
+  --info-border: #e4e4e7;
+}
+
+/* ---------- 2. Midnight Black ---------- */
+[data-theme="midnight_black"] {
+  --bg: #09090b;
+  --surface: #18181b;
+  --surface-2: #1e1e22;
+  --surface-3: #27272b;
+  --text: #fafafa;
+  --text-muted: #a1a1aa;
+  --text-faint: #6b6b74;
+  --border: #27272b;
+  --border-strong: #3f3f46;
+
+  --primary: #fafafa;
+  --on-primary: #09090b;
+  --ring: rgba(250, 250, 250, 0.16);
+
+  --success: #4ade80;
+  --success-bg: #052e16;
+  --success-border: #14532d;
+  --warning: #fbbf24;
+  --warning-bg: #431407;
+  --warning-border: #78350f;
+  --danger: #f87171;
+  --danger-bg: #450a0a;
+  --danger-border: #7f1d1d;
+  --info: #e4e4e7;
+  --info-bg: #18181b;
+  --info-border: #3f3f46;
+}
+
+/* ---------- 3. Ocean Blue ---------- */
+[data-theme="ocean_blue"] {
+  --bg: #f2f6fa;
+  --surface: #ffffff;
+  --surface-2: #eef3f8;
+  --surface-3: #e2eaf3;
+  --text: #0f1b2d;
+  --text-muted: #5b7086;
+  --text-faint: #92a6ba;
+  --border: #e2eaf2;
+  --border-strong: #c7d6e3;
+
+  --primary: #0369a1;
+  --on-primary: #ffffff;
+  --ring: rgba(3, 105, 161, 0.18);
+
+  --success: #047857;
+  --success-bg: #ecfdf5;
+  --success-border: #a7f3d0;
+  --warning: #b45309;
+  --warning-bg: #fffbeb;
+  --warning-border: #fde68a;
+  --danger: #b91c1c;
+  --danger-bg: #fef2f2;
+  --danger-border: #fecaca;
+  --info: #0c4a6e;
+  --info-bg: #f0f9ff;
+  --info-border: #bae6fd;
+}
+
+/* ---------- 4. Emerald Green ---------- */
+[data-theme="emerald_green"] {
+  --bg: #f3f9f6;
+  --surface: #ffffff;
+  --surface-2: #ecf6f1;
+  --surface-3: #d9eee4;
+  --text: #0e1f17;
+  --text-muted: #4d6a5c;
+  --text-faint: #8aa798;
+  --border: #dcebe4;
+  --border-strong: #c2d8cc;
+
+  --primary: #047857;
+  --on-primary: #ffffff;
+  --ring: rgba(4, 120, 87, 0.18);
+
+  --success: #047857;
+  --success-bg: #ecfdf5;
+  --success-border: #a7f3d0;
+  --warning: #a16207;
+  --warning-bg: #fefce8;
+  --warning-border: #fde047;
+  --danger: #b91c1c;
+  --danger-bg: #fef2f2;
+  --danger-border: #fecaca;
+  --info: #065f46;
+  --info-bg: #ecfdf5;
+  --info-border: #a7f3d0;
+}
+
+/* ---------- 5. Royal Purple ---------- */
+[data-theme="royal_purple"] {
+  --bg: #14111f;
+  --surface: #1e1931;
+  --surface-2: #282144;
+  --surface-3: #352c57;
+  --text: #f4f2ff;
+  --text-muted: #b5add8;
+  --text-faint: #857caa;
+  --border: #302850;
+  --border-strong: #443a6e;
+
+  --primary: #8b5cf6;
+  --on-primary: #ffffff;
+  --ring: rgba(139, 92, 246, 0.35);
+
+  --success: #34d399;
+  --success-bg: #052e16;
+  --success-border: #166534;
+  --warning: #fbbf24;
+  --warning-bg: #431407;
+  --warning-border: #78350f;
+  --danger: #f87171;
+  --danger-bg: #450a0a;
+  --danger-border: #7f1d1d;
+  --info: #a78bfa;
+  --info-bg: #1e1b4b;
+  --info-border: #3730a3;
+}
+
+/* ---------- 6. Sunset Orange ---------- */
+[data-theme="sunset_orange"] {
+  --bg: #fbf5ef;
+  --surface: #ffffff;
+  --surface-2: #f9f0e7;
+  --surface-3: #f2e2d2;
+  --text: #2a1a0f;
+  --text-muted: #7b6a5a;
+  --text-faint: #a99b8b;
+  --border: #efe1d3;
+  --border-strong: #dfc9b3;
+
+  --primary: #c2410c;
+  --on-primary: #ffffff;
+  --ring: rgba(194, 65, 12, 0.18);
+
+  --success: #15803d;
+  --success-bg: #f0fdf4;
+  --success-border: #bbf7d0;
+  --warning: #b45309;
+  --warning-bg: #fffbeb;
+  --warning-border: #fde68a;
+  --danger: #b91c1c;
+  --danger-bg: #fef2f2;
+  --danger-border: #fecaca;
+  --info: #9a3412;
+  --info-bg: #fff7ed;
+  --info-border: #fed7aa;
+}
+
+/* ---------- 7. Rose Pink ---------- */
+[data-theme="rose_pink"] {
+  --bg: #faf3f5;
+  --surface: #ffffff;
+  --surface-2: #f8edf0;
+  --surface-3: #f1dce1;
+  --text: #31131c;
+  --text-muted: #855962;
+  --text-faint: #ad8a92;
+  --border: #efdce1;
+  --border-strong: #dfbfc7;
+
+  --primary: #be123c;
+  --on-primary: #ffffff;
+  --ring: rgba(190, 18, 60, 0.18);
+
+  --success: #15803d;
+  --success-bg: #f0fdf4;
+  --success-border: #bbf7d0;
+  --warning: #b45309;
+  --warning-bg: #fffbeb;
+  --warning-border: #fde68a;
+  --danger: #b91c1c;
+  --danger-bg: #fef2f2;
+  --danger-border: #fecaca;
+  --info: #9f1239;
+  --info-bg: #fff1f2;
+  --info-border: #fecdd3;
+}
+
+/* ---------- 8. Slate Gray ---------- */
+[data-theme="slate_gray"] {
+  --bg: #0f172a;
+  --surface: #1e293b;
+  --surface-2: #27364d;
+  --surface-3: #334158;
+  --text: #f1f5f9;
+  --text-muted: #94a3b8;
+  --text-faint: #64748b;
+  --border: #2d3a51;
+  --border-strong: #41516c;
+
+  --primary: #cbd5e1;
+  --on-primary: #0f172a;
+  --ring: rgba(203, 213, 225, 0.18);
+
+  --success: #4ade80;
+  --success-bg: #052e16;
+  --success-border: #166534;
+  --warning: #fbbf24;
+  --warning-bg: #431407;
+  --warning-border: #78350f;
+  --danger: #f87171;
+  --danger-bg: #450a0a;
+  --danger-border: #7f1d1d;
+  --info: #cbd5e1;
+  --info-bg: #1e293b;
+  --info-border: #3b4a63;
+}
+
+/* ---------- 9. Cyber Neon ---------- */
+[data-theme="cyber_neon"] {
+  --bg: #04070f;
+  --surface: #0b1122;
+  --surface-2: #101838;
+  --surface-3: #182248;
+  --text: #e9f7ff;
+  --text-muted: #8ca9c6;
+  --text-faint: #5c7793;
+  --border: #1a2444;
+  --border-strong: #2b3765;
+
+  --primary: #22d3ee;
+  --on-primary: #04141a;
+  --ring: rgba(34, 211, 238, 0.35);
+
+  --success: #4ade80;
+  --success-bg: #052e16;
+  --success-border: #166534;
+  --warning: #fbbf24;
+  --warning-bg: #431407;
+  --warning-border: #78350f;
+  --danger: #fb7185;
+  --danger-bg: #4c0519;
+  --danger-border: #881337;
+  --info: #818cf8;
+  --info-bg: #1e1b4b;
+  --info-border: #3730a3;
+}
+
+/* ---------- 10. Coffee Brown ---------- */
+[data-theme="coffee_brown"] {
+  --bg: #f5efe7;
+  --surface: #fffdf8;
+  --surface-2: #f1e9dc;
+  --surface-3: #e7d9c4;
+  --text: #2b1f15;
+  --text-muted: #7c6a57;
+  --text-faint: #a7947d;
+  --border: #e7dac6;
+  --border-strong: #d5c1a5;
+
+  --primary: #6f4e28;
+  --on-primary: #ffffff;
+  --ring: rgba(111, 78, 40, 0.18);
+
+  --success: #15803d;
+  --success-bg: #f0fdf4;
+  --success-border: #bbf7d0;
+  --warning: #92400e;
+  --warning-bg: #fffbeb;
+  --warning-border: #fde68a;
+  --danger: #b91c1c;
+  --danger-bg: #fef2f2;
+  --danger-border: #fecaca;
+  --info: #78350f;
+  --info-bg: #fffbeb;
+  --info-border: #fde68a;
+}
+
+/* Dark-style shadow overrides for dark themes */
+[data-theme="midnight_black"],
+[data-theme="royal_purple"],
+[data-theme="slate_gray"],
+[data-theme="cyber_neon"] {
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 2px 6px rgba(0, 0, 0, 0.4), 0 24px 48px -16px rgba(0, 0, 0, 0.7);
+}

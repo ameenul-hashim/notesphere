@@ -2,90 +2,85 @@
 {% block title %}Semesters | NoteSphere{% endblock %}
 {% block topbar_title %}Semesters{% endblock %}
 {% block content %}
-<div class="card card-pad">
 
   <div class="page-head lg:flex-row lg:items-center lg:justify-between">
-    <h1 class="page-title">Semesters</h1>
-    <div class="flex flex-col sm:flex-row gap-2">
-      <form method="get" class="flex flex-col sm:flex-row gap-2">
-        {% if status_filter %}
-          <input type="hidden" name="status" value="{{ status_filter }}">
-        {% endif %}
-        <input
-          type="search"
-          name="q"
-          value="{{ query }}"
-          placeholder="Search by name or description"
-          class="input sm:w-64"
-        >
-        <button type="submit" class="btn btn-primary">Search</button>
-        {% if query or status_filter %}
-          <a href="{% url 'academics:semester_list' %}" class="btn btn-ghost">Clear</a>
-        {% endif %}
-      </form>
-      <a href="{% url 'academics:semester_create' %}" class="btn btn-primary">Create Semester</a>
+    <div>
+      <h1 class="page-title">Semesters</h1>
+      <p class="page-subtitle">Organize academic content into semesters.</p>
     </div>
+    <a href="{% url 'academics:semester_create' %}" class="btn btn-primary">Create Semester</a>
   </div>
 
-  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-    {% include "_stat_card.html" with label="Total" value=total_semesters url=semester_list_url %}
-    {% include "_stat_card.html" with label="Active" value=counts.ACTIVE|default:0 url=semester_list_url %}
-    {% include "_stat_card.html" with label="Inactive" value=counts.INACTIVE|default:0 url=inactive_list_url %}
-    {% include "_stat_card.html" with label="Archived" value=counts.ARCHIVED|default:0 url=archived_list_url %}
+  <div class="toolbar">
+    <form method="get" class="toolbar-group">
+      {% if status_filter %}
+        <input type="hidden" name="status" value="{{ status_filter }}">
+      {% endif %}
+      <input
+        type="search"
+        name="q"
+        value="{{ query }}"
+        placeholder="Search by name or description"
+        class="input sm:w-72"
+      >
+      <button type="submit" class="btn btn-primary">Search</button>
+      {% if query or status_filter %}
+        <a href="{% url 'academics:semester_list' %}" class="btn btn-ghost">Clear</a>
+      {% endif %}
+    </form>
   </div>
 
-  <div class="flex flex-wrap gap-2 mb-6">
-    <a href="{% url 'academics:semester_list' %}" class="chip {% if not status_filter %}chip-active{% endif %}">All</a>
-    <a href="{% url 'academics:semester_list' %}?status=ACTIVE" class="chip {% if status_filter == 'ACTIVE' %}chip-active{% endif %}">Active</a>
-    <a href="{% url 'academics:semester_list' %}?status=INACTIVE" class="chip {% if status_filter == 'INACTIVE' %}chip-active{% endif %}">Inactive</a>
-    <a href="{% url 'academics:semester_list' %}?status=ARCHIVED" class="chip {% if status_filter == 'ARCHIVED' %}chip-active{% endif %}">Archived</a>
+  <div class="chips">
+    <a href="{% url 'academics:semester_list' %}{% if query %}?q={{ query|urlencode }}{% endif %}"
+       class="chip {% if not status_filter %}chip-active{% endif %}">
+      All ({{ total_semesters }})
+    </a>
+    <a href="{% url 'academics:semester_list' %}?{% if query %}q={{ query|urlencode }}&{% endif %}status=ACTIVE"
+       class="chip {% if status_filter == 'ACTIVE' %}chip-active{% endif %}">
+      Active ({{ counts.ACTIVE|default:0 }})
+    </a>
+    <a href="{% url 'academics:semester_list' %}?{% if query %}q={{ query|urlencode }}&{% endif %}status=INACTIVE"
+       class="chip {% if status_filter == 'INACTIVE' %}chip-active{% endif %}">
+      Inactive ({{ counts.INACTIVE|default:0 }})
+    </a>
   </div>
 
   {% if page_obj.object_list %}
-    <div class="table-wrap">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>{% include "_sort_header.html" with key="name" label="Semester Name" sort=sort direction=direction qs=qs %}</th>
-            <th>Description</th>
-            <th>{% include "_sort_header.html" with key="status" label="Status" sort=sort direction=direction qs=qs %}</th>
-            <th>{% include "_sort_header.html" with key="display_order" label="Display Order" sort=sort direction=direction qs=qs %}</th>
-            <th>{% include "_sort_header.html" with key="created_at" label="Created" sort=sort direction=direction qs=qs %}</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for semester in page_obj %}
-            <tr>
-              <td class="font-medium whitespace-nowrap">{{ semester.name }}</td>
-              <td class="text-muted max-w-xs truncate">{{ semester.description|default:"-" }}</td>
-              <td>{% include "_status_badge.html" with status=semester.status label=semester.get_status_display %}</td>
-              <td class="text-muted">{{ semester.display_order }}</td>
-              <td class="text-muted whitespace-nowrap">{{ semester.created_at|date:"d M Y" }}</td>
-              <td>
-                <div class="flex flex-wrap gap-3">
-                  {% if semester.status == 'ARCHIVED' %}
-                    <form method="post" action="{% url 'academics:semester_restore' semester.pk %}"
-                          data-confirm="Restore this semester and set it to Active?"
-                          data-confirm-title="Restore semester" data-confirm-label="Restore">
-                      {% csrf_token %}
-                      <button type="submit" class="link">Restore</button>
-                    </form>
-                  {% else %}
-                    <a href="{% url 'academics:semester_edit' semester.pk %}" class="link">Edit</a>
-                    <form method="post" action="{% url 'academics:semester_archive' semester.pk %}"
-                          data-confirm="Archive this semester? It will be hidden from students."
-                          data-confirm-title="Archive semester" data-confirm-label="Archive" data-confirm-danger>
-                      {% csrf_token %}
-                      <button type="submit" class="link link-danger">Archive</button>
-                    </form>
-                  {% endif %}
-                </div>
-              </td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+    <div class="media-grid">
+      {% for semester in page_obj %}
+        <article class="media-card">
+          <div class="media-thumb">
+            {% if semester.thumbnail %}
+              <img src="{{ semester.thumbnail.url }}" alt="{{ semester.name }}">
+            {% else %}
+              <span class="thumb-placeholder">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>
+                </svg>
+              </span>
+            {% endif %}
+          </div>
+          <div class="media-body">
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="media-title">{{ semester.name }}</h3>
+              {% include "_status_badge.html" with status=semester.status label=semester.get_status_display %}
+            </div>
+            <p class="media-desc">{{ semester.description|default:"No description provided." }}</p>
+            <div class="media-meta">
+              <span class="muted">{{ semester.subject_count }} subject{{ semester.subject_count|pluralize }}</span>
+              <span class="ml-auto flex gap-3">
+                <a href="{% url 'academics:semester_edit' semester.pk %}" class="link">Edit</a>
+                <form method="post" action="{% url 'academics:semester_delete' semester.pk %}"
+                      data-confirm="Delete \"{{ semester.name }}\" and all of its subjects? This cannot be undone."
+                      data-confirm-title="Delete semester" data-confirm-label="Delete" data-confirm-danger>
+                  {% csrf_token %}
+                  <button type="submit" class="link link-danger">Delete</button>
+                </form>
+              </span>
+            </div>
+          </div>
+        </article>
+      {% endfor %}
     </div>
 
     {% include "_pagination.html" with page_obj=page_obj qs=qs %}
@@ -93,8 +88,7 @@
   {% else %}
     <div class="empty-state">
       <p class="empty-title">No semesters found</p>
-      <p class="empty-desc">Try adjusting your search or filters.</p>
+      <p class="empty-desc">Create a semester or adjust your search and filters.</p>
     </div>
   {% endif %}
-</div>
 {% endblock %}

@@ -3,6 +3,8 @@
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
+from django.db.models import Count, Q
+from django.http import JsonResponse
 from django.shortcuts import redirect, render
 
 from .decorators import student_required
@@ -15,7 +17,7 @@ from .forms import (
 )
 from academics.models import Semester
 from .models import PasswordResetOTP, User, UserActivity
-from .services import create_and_send_otp, log_activity, set_password_and_track
+from .services import create_and_send_otp, set_password_and_track
 
 
 def redirect_after_login(user):
@@ -41,7 +43,6 @@ def login_view(request):
     if request.method == "POST" and form.is_valid():
         user = form.cleaned_data["user"]
         login(request, user)
-        log_activity(user, UserActivity.Action.LOGIN, request, detail="Student login")
         return redirect_after_login(user)
     return render(request, "accounts/login.html", {"form": form})
 
@@ -49,7 +50,6 @@ def login_view(request):
 @login_required
 def logout_view(request):
     if request.method == "POST":
-        log_activity(request.user, UserActivity.Action.LOGOUT, request)
         logout(request)
         messages.success(request, "You have been logged out.")
     return redirect("accounts:login")
@@ -86,7 +86,6 @@ def otp_verify(request):
     form = OTPVerifyForm(request.POST or None, otp_obj=otp_obj)
     if request.method == "POST" and form.is_valid():
         request.session["reset_flow_id"] = str(otp_obj.flow_id)
-        log_activity(otp_obj.user, UserActivity.Action.OTP_VERIFIED, request)
         return redirect("accounts:reset_password")
 
     return render(request, "accounts/otp_verify.html", {"form": form})
@@ -123,7 +122,22 @@ def reset_password(request):
 
 
 @login_required
+def save_theme(request):
+    """Persist the logged-in user's selected theme (used by the theme picker)."""
+    if request.method == "POST":
+        theme = request.POST.get("theme", "")
+        if theme in User.Theme.values:
+            request.user.theme = theme
+            request.user.save(update_fields=["theme", "updated_at"])
+            return JsonResponse({"ok": True})
+    return JsonResponse({"ok": False}, status=400)
+
+
+@login_required
 @student_required
 def student_dashboard(request):
-    active_semesters = Semester.objects.filter(status=Semester.Status.ACTIVE)
+    active_semesters = (
+        Semester.objects.filter(status=Semester.Status.ACTIVE)
+        .annotate(subject_count=Count("subjects", filter=Q(subjects__status="ACTIVE")))
+    )
     return render(request, "accounts/student_dashboard.html", {"active_semesters": active_semesters})
