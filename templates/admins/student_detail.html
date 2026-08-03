@@ -77,40 +77,48 @@
   </div>
 
   <div class="card card-pad mb-6">
-    <div class="card-head-row">
+    <div class="card-head-row mb-4">
       <div>
-        <h2 class="text-lg font-semibold">Login Username</h2>
-        <p class="text-muted text-sm">Change the student's login username.</p>
+        <h2 class="text-lg font-semibold">Edit Credentials</h2>
+        <p class="text-muted text-sm">Update the student's login username or set a new password.</p>
       </div>
     </div>
-    <form method="post" class="space-y-4 max-w-sm" novalidate>
-      {% csrf_token %}
-      <input type="hidden" name="save_username" value="1">
-      {% include "_form_errors.html" with form=username_form %}
-      {% include "_field.html" with field=username_form.username %}
-      <div class="flex justify-end">
-        <button type="submit" class="btn btn-primary">Save Username</button>
-      </div>
-    </form>
-  </div>
 
-  <div class="card card-pad mb-6">
-    <div class="card-head-row">
-      <div>
-        <h2 class="text-lg font-semibold">Password</h2>
-        <p class="text-muted text-sm">Set a new password for the student directly. The student's other sessions will be signed out.</p>
-      </div>
+    {# Username sub-section #}
+    <div class="border-b border-border pb-5 mb-5">
+      <h3 class="text-sm font-semibold text-foreground mb-1">Login Username</h3>
+      <p class="text-xs text-muted mb-3">Change this student's login username. Must be unique (4–30 characters, letters, numbers and underscore only).</p>
+      <form method="post" class="space-y-3 max-w-sm" novalidate>
+        {% csrf_token %}
+        <input type="hidden" name="save_username" value="1">
+        {% include "_form_errors.html" with form=username_form %}
+        {% include "_field.html" with field=username_form.username %}
+        <div class="flex justify-end">
+          <button type="submit" class="btn btn-primary">Save Username</button>
+        </div>
+      </form>
     </div>
-    <form method="post" class="space-y-4 max-w-lg" novalidate>
-      {% csrf_token %}
-      <input type="hidden" name="save_password" value="1">
-      {% include "_form_errors.html" with form=password_form %}
-      {% include "_field.html" with field=password_form.new_password %}
-      {% include "_field.html" with field=password_form.confirm_password %}
-      <div class="flex justify-end">
-        <button type="submit" class="btn btn-primary">Update Password</button>
-      </div>
-    </form>
+
+    {# Password sub-section #}
+    <div>
+      <h3 class="text-sm font-semibold text-foreground mb-1">Set New Password</h3>
+      <p class="text-xs text-muted mb-1">Set a new password for this student directly — no current password required.</p>
+      <p class="text-xs text-muted mb-3">
+        Password must be at least <strong>8 characters</strong> and contain an
+        <strong>uppercase letter</strong>, <strong>lowercase letter</strong>,
+        <strong>number</strong> and <strong>special character</strong> (e.g. <code>Test@1234</code>).
+      </p>
+      <form method="post" class="space-y-3 max-w-lg" novalidate>
+        {% csrf_token %}
+        <input type="hidden" name="save_password" value="1">
+        {% include "_form_errors.html" with form=password_form %}
+        {% include "_field.html" with field=password_form.new_password %}
+        {% include "_field.html" with field=password_form.confirm_password %}
+        <div class="flex justify-end">
+          <button type="submit" class="btn btn-primary">Update Password</button>
+        </div>
+      </form>
+    </div>
   </div>
 </div>
 {% endblock %}

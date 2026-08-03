@@ -4,7 +4,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
-from django.core.mail import send_mail
+from django.core.mail import EmailMessage
 from django.db.models import Count, Q
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
@@ -233,40 +233,50 @@ def student_avatar(request):
 @login_required
 @student_required
 def student_support(request):
-    """Student support page: allows sending email inquiries to admin/support."""
+    """Student support page: allows sending email inquiries to admin/support.
+
+    Email is sent FROM the system account (EMAIL_HOST_USER) TO the support
+    inbox, with Reply-To set to the student's own email so the admin can
+    reply directly. This avoids Gmail silently dropping self-to-self mail.
+    """
     if request.method == "POST":
         subject = request.POST.get("subject", "").strip()
-        message = request.POST.get("message", "").strip()
+        message_text = request.POST.get("message", "").strip()
 
-        if not subject or not message:
+        if not subject or not message_text:
             messages.error(request, "Please fill out both subject and description.")
         else:
+            host_user = getattr(settings, "EMAIL_HOST_USER", "")
+            recipient = getattr(settings, "SUPPORT_EMAIL", host_user)
+
             email_body = (
-                f"Support Request from Student:\n"
-                f"Name: {request.user.full_name}\n"
-                f"Username: {request.user.username}\n"
-                f"Email: {request.user.email}\n"
-                f"Phone: {request.user.phone}\n\n"
-                f"Subject: {subject}\n\n"
-                f"Message:\n{message}"
+                f"Support Request from Student\n"
+                f"{'=' * 40}\n"
+                f"Name     : {request.user.full_name}\n"
+                f"Username : {request.user.username}\n"
+                f"Email    : {request.user.email}\n"
+                f"Phone    : {request.user.phone}\n"
+                f"{'=' * 40}\n\n"
+                f"Subject  : {subject}\n\n"
+                f"Message:\n{message_text}"
             )
-            recipient = getattr(settings, "SUPPORT_EMAIL", "noreply@notesphere.com")
-            sender = getattr(settings, "EMAIL_HOST_USER", recipient)
+
             try:
-                send_mail(
+                email = EmailMessage(
                     subject=f"[NoteSphere Support] {subject} — from {request.user.full_name}",
-                    message=email_body,
-                    from_email=sender,
-                    recipient_list=[recipient],
-                    fail_silently=False,
+                    body=email_body,
+                    from_email=f"NoteSphere Support <{host_user}>",
+                    to=[recipient],
+                    reply_to=[f"{request.user.full_name} <{request.user.email}>"],
                 )
+                email.send(fail_silently=False)
                 messages.success(request, "Your support message has been sent successfully!")
             except Exception as e:
                 import logging
                 logging.getLogger(__name__).error("Support email failed: %s", e)
                 messages.error(
                     request,
-                    f"Failed to send email. Please try again or contact support directly at {recipient}."
+                    f"Failed to send email. Please try again or contact support at {recipient}.",
                 )
             return redirect("accounts:student_support")
 
