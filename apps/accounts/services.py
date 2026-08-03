@@ -48,8 +48,8 @@ def send_transactional_email(to, subject, text_body, html_body=None, reply_to=No
     if isinstance(reply_to, str):
         reply_to = [reply_to]
 
-    from_name  = getattr(settings, "BREVO_FROM_NAME",  "NoteSphere")
-    from_email = getattr(settings, "BREVO_FROM_EMAIL", settings.EMAIL_HOST_USER)
+    from_name  = getattr(settings, "BREVO_FROM_NAME",  "NoteSphere").strip()
+    from_email = getattr(settings, "BREVO_FROM_EMAIL", settings.EMAIL_HOST_USER).strip()
     from_addr  = f"{from_name} <{from_email}>"
 
     try:
