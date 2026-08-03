@@ -1,40 +1,40 @@
 {% extends "base.html" %}
 {% block title %}My Profile | NoteSphere{% endblock %}
 {% block content %}
-<div class="max-w-3xl mx-auto bg-white shadow rounded-lg p-6">
+<div class="max-w-3xl mx-auto bg-white shadow rounded-lg p-6 dark:bg-slate-800">
   <h1 class="text-2xl font-bold mb-6">My Profile</h1>
 
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-    <div class="bg-slate-50 border rounded-lg p-4">
-      <p class="text-sm text-slate-500">Full Name</p>
+    <div class="bg-slate-50 border rounded-lg p-4 dark:bg-slate-700 dark:border-slate-600">
+      <p class="text-sm text-slate-500 dark:text-slate-300">Full Name</p>
       <p class="font-medium">{{ profile_user.full_name }}</p>
     </div>
-    <div class="bg-slate-50 border rounded-lg p-4">
-      <p class="text-sm text-slate-500">Role</p>
+    <div class="bg-slate-50 border rounded-lg p-4 dark:bg-slate-700 dark:border-slate-600">
+      <p class="text-sm text-slate-500 dark:text-slate-300">Role</p>
       <p class="font-medium">{{ profile_user.get_role_display }}</p>
     </div>
-    <div class="bg-slate-50 border rounded-lg p-4">
-      <p class="text-sm text-slate-500">Email</p>
+    <div class="bg-slate-50 border rounded-lg p-4 dark:bg-slate-700 dark:border-slate-600">
+      <p class="text-sm text-slate-500 dark:text-slate-300">Email</p>
       <p class="font-medium">{{ profile_user.email }}</p>
     </div>
-    <div class="bg-slate-50 border rounded-lg p-4">
-      <p class="text-sm text-slate-500">Phone</p>
+    <div class="bg-slate-50 border rounded-lg p-4 dark:bg-slate-700 dark:border-slate-600">
+      <p class="text-sm text-slate-500 dark:text-slate-300">Phone</p>
       <p class="font-medium">{{ profile_user.phone }}</p>
     </div>
-    <div class="bg-slate-50 border rounded-lg p-4">
-      <p class="text-sm text-slate-500">Status</p>
+    <div class="bg-slate-50 border rounded-lg p-4 dark:bg-slate-700 dark:border-slate-600">
+      <p class="text-sm text-slate-500 dark:text-slate-300">Status</p>
       <p class="font-medium">{{ profile_user.get_status_display }}</p>
     </div>
-    <div class="bg-slate-50 border rounded-lg p-4">
-      <p class="text-sm text-slate-500">Member Since</p>
+    <div class="bg-slate-50 border rounded-lg p-4 dark:bg-slate-700 dark:border-slate-600">
+      <p class="text-sm text-slate-500 dark:text-slate-300">Member Since</p>
       <p class="font-medium">{{ profile_user.created_at|date:"d M Y" }}</p>
     </div>
-    <div class="bg-slate-50 border rounded-lg p-4">
-      <p class="text-sm text-slate-500">Email Verified</p>
+    <div class="bg-slate-50 border rounded-lg p-4 dark:bg-slate-700 dark:border-slate-600">
+      <p class="text-sm text-slate-500 dark:text-slate-300">Email Verified</p>
       <p class="font-medium">{% if profile_user.is_email_verified %}Yes{% else %}No{% endif %}</p>
     </div>
-    <div class="bg-slate-50 border rounded-lg p-4">
-      <p class="text-sm text-slate-500">Phone Verified</p>
+    <div class="bg-slate-50 border rounded-lg p-4 dark:bg-slate-700 dark:border-slate-600">
+      <p class="text-sm text-slate-500 dark:text-slate-300">Phone Verified</p>
       <p class="font-medium">{% if profile_user.is_phone_verified %}Yes{% else %}No{% endif %}</p>
     </div>
   </div>
@@ -43,23 +43,23 @@
     <h2 class="text-lg font-semibold mt-8 mb-3">Recent Activity</h2>
     <div class="overflow-x-auto">
       <table class="min-w-full text-sm">
-        <thead class="bg-slate-50 text-left">
+        <thead class="bg-slate-50 dark:bg-slate-700 text-left">
           <tr>
-            <th class="px-4 py-2 text-slate-500">Action</th>
-            <th class="px-4 py-2 text-slate-500">Detail</th>
-            <th class="px-4 py-2 text-slate-500">Device</th>
-            <th class="px-4 py-2 text-slate-500">IP</th>
-            <th class="px-4 py-2 text-slate-500">When</th>
+            <th class="px-4 py-2 text-slate-500 dark:text-slate-300">Action</th>
+            <th class="px-4 py-2 text-slate-500 dark:text-slate-300">Detail</th>
+            <th class="px-4 py-2 text-slate-500 dark:text-slate-300">Device</th>
+            <th class="px-4 py-2 text-slate-500 dark:text-slate-300">IP</th>
+            <th class="px-4 py-2 text-slate-500 dark:text-slate-300">When</th>
           </tr>
         </thead>
-        <tbody class="divide-y">
+        <tbody class="divide-y dark:divide-slate-700">
           {% for activity in profile_user.activities.all|slice:":10" %}
             <tr>
               <td class="px-4 py-2 font-medium">{{ activity.get_action_display }}</td>
-              <td class="px-4 py-2 text-slate-600">{{ activity.detail|default:"-" }}</td>
-              <td class="px-4 py-2 text-slate-600">{{ activity.device|default:"-" }}</td>
-              <td class="px-4 py-2 text-slate-600">{{ activity.ip_address|default:"-" }}</td>
-              <td class="px-4 py-2 text-slate-600">{{ activity.created_at|date:"d M Y H:i" }}</td>
+              <td class="px-4 py-2 text-slate-600 dark:text-slate-300">{{ activity.detail|default:"-" }}</td>
+              <td class="px-4 py-2 text-slate-600 dark:text-slate-300">{{ activity.device|default:"-" }}</td>
+              <td class="px-4 py-2 text-slate-600 dark:text-slate-300">{{ activity.ip_address|default:"-" }}</td>
+              <td class="px-4 py-2 text-slate-600 dark:text-slate-300">{{ activity.created_at|date:"d M Y H:i" }}</td>
             </tr>
           {% endfor %}
         </tbody>
