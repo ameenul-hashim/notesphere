@@ -223,6 +223,9 @@ def subject_create(request):
         selected_semester = Semester.objects.filter(pk=int(semester_id)).first()
 
     form = SubjectForm(request.POST or None, request.FILES or None, initial=initial)
+    if selected_semester:
+        form.fields["semester"].disabled = True
+
     if request.method == "POST" and form.is_valid():
         subject = form.save()
         messages.success(request, f'Subject "{subject.name}" has been created.')
@@ -279,7 +282,12 @@ def subject_edit(request, pk):
     return render(
         request,
         "academics/subject_form.html",
-        {"form": form, "title": "Edit Subject", "subject": subject},
+        {
+            "form": form,
+            "title": "Edit Subject",
+            "subject": subject,
+            "selected_semester": subject.semester,
+        },
     )
 
 
@@ -306,6 +314,9 @@ def chapter_create(request):
         selected_subject = Subject.objects.select_related("semester").filter(pk=int(subject_id)).first()
 
     form = ChapterForm(request.POST or None, request.FILES or None, initial=initial)
+    if selected_subject:
+        form.fields["subject"].disabled = True
+
     if request.method == "POST" and form.is_valid():
         chapter = form.save()
         messages.success(request, f'Chapter "{chapter.title}" has been created.')
@@ -327,6 +338,8 @@ def chapter_create(request):
 def chapter_edit(request, pk):
     chapter = get_object_or_404(Chapter.objects.select_related("subject"), pk=pk)
     form = ChapterForm(request.POST or None, request.FILES or None, instance=chapter)
+    form.fields["subject"].disabled = True
+
     if request.method == "POST" and form.is_valid():
         chapter = form.save()
         messages.success(request, f'Chapter "{chapter.title}" has been updated.')
