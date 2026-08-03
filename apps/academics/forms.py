@@ -81,6 +81,7 @@ class ChapterForm(forms.ModelForm):
         fields = [
             "subject",
             "title",
+            "subname",
             "chapter_number",
             "description",
             "pdf_url",
@@ -91,7 +92,10 @@ class ChapterForm(forms.ModelForm):
         widgets = {
             "subject": forms.Select(attrs={"class": INPUT_CLASS}),
             "title": forms.TextInput(
-                attrs={"class": INPUT_CLASS, "placeholder": "Module 1: Introduction", "maxlength": "150"}
+                attrs={"class": INPUT_CLASS, "placeholder": "Chapter Name (e.g. Module 1)", "maxlength": "150"}
+            ),
+            "subname": forms.TextInput(
+                attrs={"class": INPUT_CLASS, "placeholder": "Subname (e.g. Introduction & Basic Concepts)", "maxlength": "200"}
             ),
             "chapter_number": forms.NumberInput(
                 attrs={"class": INPUT_CLASS, "min": "1", "placeholder": "1"}
@@ -106,7 +110,7 @@ class ChapterForm(forms.ModelForm):
             "pdf_url": forms.URLInput(
                 attrs={
                     "class": INPUT_CLASS,
-                    "placeholder": "https://supabase-storage-url.pdf or Google Drive link",
+                    "placeholder": "https://supabase-storage-url.pdf or direct PDF URL",
                 }
             ),
             "pdf_file": forms.FileInput(attrs={"class": INPUT_CLASS, "accept": ".pdf,application/pdf"}),

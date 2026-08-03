@@ -80,7 +80,8 @@ class Chapter(models.Model):
         INACTIVE = "INACTIVE", "Inactive"
 
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name="chapters")
-    title = models.CharField(max_length=150)
+    title = models.CharField(max_length=150, help_text="Chapter name / main title")
+    subname = models.CharField(max_length=200, blank=True, help_text="Subname or subtitle (e.g. Unit 1 / Topic)")
     description = models.TextField(blank=True)
     chapter_number = models.PositiveIntegerField(default=1, help_text="Chapter number or module index")
     pdf_url = models.URLField(max_length=500, blank=True, help_text="Direct URL to PDF (Supabase, Drive, CDN)")
