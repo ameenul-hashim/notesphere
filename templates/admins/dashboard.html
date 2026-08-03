@@ -7,7 +7,7 @@
   <p class="page-subtitle">Overview of student accounts and academic content.</p>
 </div>
 
-<div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
   {% include "_stat_card.html" with label="Total Students" value=total_students url=student_list_url %}
   {% include "_stat_card.html" with label="Active" value=active_students url=active_list_url %}
   {% include "_stat_card.html" with label="Inactive" value=inactive_students url=inactive_list_url %}

@@ -2048,5 +2048,102 @@ p {
   .card-pad {
     padding: 16px;
   }
+
+  /* Page head stacks vertically with full-width actions */
+  .page-head {
+    gap: 10px;
+  }
+  .page-head .btn {
+    width: 100%;
+    justify-content: center;
+  }
+  /* Action rows wrap and distribute on mobile */
+  .action-row {
+    flex-direction: column;
+  }
+  .action-row .btn,
+  .action-row form {
+    width: 100%;
+  }
+  .action-row .btn {
+    justify-content: center;
+  }
+
+  /* Form cancel/submit buttons go full-width & stack on very small screens */
+  .flex.items-center.gap-3.pt-2,
+  .flex.items-center.gap-3.pt-4 {
+    flex-direction: column;
+  }
+  .flex.items-center.gap-3.pt-2 .btn,
+  .flex.items-center.gap-3.pt-4 .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Table: hide less critical columns */
+  .table .col-hide-sm {
+    display: none;
+  }
+
+  /* Modal card: ensure no overflow on tiny phones */
+  .modal-card {
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  /* Media-card-lg: reduce min-height on mobile */
+  .media-card-lg {
+    min-height: 260px;
+  }
+  .media-card-lg .media-thumb {
+    min-height: 140px;
+  }
+
+  /* Subject & chapter cards: stack footer row */
+  .card .flex.items-center.justify-between.pt-4 {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .card .flex.items-center.justify-between.pt-4 .flex.items-center.gap-2 {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  /* Language selection cards: make text smaller */
+  .card.card-pad.transition-all.duration-200.flex.items-center {
+    padding: 14px;
+  }
+
+  /* Breadcrumb title: truncate properly on small screens */
+  .breadcrumb-current {
+    max-width: 140px;
+  }
+
+  /* Stat cards: 1 per row on tiny screens (below 400px) */
 }
+
+@media (max-width: 399px) {
+  .grid.grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Medium screens (tablet) improvements */
+@media (min-width: 640px) and (max-width: 1023px) {
+  .app-main {
+    padding: 22px 18px 48px;
+  }
+  .media-card-lg {
+    min-height: 290px;
+  }
+}
+
+/* Desktop: ensure sidebar + content don't overflow */
+@media (min-width: 1024px) {
+  .app-main {
+    padding: 28px 32px 60px;
+  }
+}
+
 
