@@ -19,6 +19,8 @@ urlpatterns = [
     path("", include("accounts.urls")),
     # Academic features (semesters, later subjects).
     path("", include("academics.urls")),
+    # Community Chat & Active Members.
+    path("community/", include("community.urls")),
 ]
 
 # Serve static/media files during development only.

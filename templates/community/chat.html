@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% load community_tags %}
+
+{% block title %}Community Chat | NoteSphere{% endblock %}
+{% block topbar_title %}Community Chat{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+
+  {# Top Banner Navigation #}
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 card card-pad bg-gradient-to-r from-surface to-surface-2 border border-border rounded-2xl shadow-xs">
+    <div>
+      <div class="flex items-center gap-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+        <h1 class="text-xl sm:text-2xl font-extrabold text-foreground">Community Chat & Discussion</h1>
+      </div>
+      <p class="text-xs sm:text-sm text-muted mt-1">
+        Ask questions, share study notes, and connect with fellow students & teachers.
+      </p>
+    </div>
+
+    <a href="{% url 'community:members' %}" class="btn btn-ghost btn-sm inline-flex items-center gap-2 border border-border hover:bg-surface-2 self-start sm:self-auto">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      View Active Members
+    </a>
+  </div>
+
+  {# Create Post Form Card #}
+  <div class="card card-pad bg-surface border border-border shadow-sm rounded-2xl">
+    <h2 class="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      Post a Question or Topic
+    </h2>
+    <form method="post" class="space-y-3">
+      {% csrf_token %}
+      <div>
+        <input
+          type="text"
+          name="title"
+          placeholder="Topic Title (Optional)..."
+          class="input text-sm rounded-xl"
+        />
+      </div>
+      <div>
+        <textarea
+          name="content"
+          rows="3"
+          required
+          placeholder="Write your question or thoughts here..."
+          class="textarea text-sm rounded-xl"
+        ></textarea>
+      </div>
+      <div class="flex justify-end">
+        <button type="submit" class="btn btn-primary btn-sm px-5 inline-flex items-center gap-1.5">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          Post Question
+        </button>
+      </div>
+    </form>
+  </div>
+
+  {# Discussion Threads Feed #}
+  <div class="space-y-4">
+    {% for post in posts %}
+      <div class="card card-pad bg-surface border border-border rounded-2xl shadow-xs transition-all hover:border-border-strong">
+        
+        {# Author header row #}
+        <div class="flex items-start justify-between gap-3 mb-3">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl overflow-hidden border border-border bg-surface-2 flex items-center justify-center flex-shrink-0">
+              {% include "_avatar.html" with user=post.author size="md" %}
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-bold text-foreground">{{ post.author.full_name|clean_name }}</span>
+                {% if post.author.is_admin %}
+                  <span class="badge badge-warning text-[10px] py-0.5">Admin</span>
+                {% else %}
+                  <span class="badge badge-neutral text-[10px] py-0.5">Student</span>
+                {% endif %}
+              </div>
+              <span class="text-[11px] text-muted block">{{ post.created_at|date:"d M Y, h:i A" }} {% if post.is_edited %}<span class="italic text-muted/70">(edited)</span>{% endif %}</span>
+            </div>
+          </div>
+
+          {# Actions menu for Author or Admin #}
+          {% if user == post.author or user.is_admin %}
+            <div class="flex items-center gap-2">
+              <a href="{% url 'community:post_edit' post.pk %}" class="btn btn-xs btn-ghost text-muted hover:text-foreground" title="Edit Post">Edit</a>
+              <form method="post" action="{% url 'community:post_delete' post.pk %}"
+                    data-confirm="Are you sure you want to delete this post and all its replies?"
+                    data-confirm-title="Delete Post" data-confirm-label="Delete" data-confirm-danger class="inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-xs btn-ghost text-danger hover:bg-danger-bg">Delete</button>
+              </form>
+            </div>
+          {% endif %}
+        </div>
+
+        {# Post Title & Content #}
+        {% if post.title %}
+          <h3 class="text-base font-bold text-foreground mb-1.5">{{ post.title }}</h3>
+        {% endif %}
+        <p class="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap mb-4">{{ post.content }}</p>
+
+        {# Replies list #}
+        <div class="pt-3 border-t border-border/80 space-y-3">
+          {% if post.replies.all %}
+            <div class="space-y-2.5 pl-2 sm:pl-4 border-l-2 border-primary/20">
+              {% for reply in post.replies.all %}
+                <div class="p-3 rounded-xl bg-surface-2/60 border border-border/60 text-xs space-y-1">
+                  <div class="flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                      <span class="font-bold text-foreground">{{ reply.author.full_name|clean_name }}</span>
+                      {% if reply.author.is_admin %}
+                        <span class="badge badge-warning text-[9px] px-1.5 py-0">Admin</span>
+                      {% endif %}
+                      <span class="text-[10px] text-muted">{{ reply.created_at|date:"d M Y, h:i A" }}</span>
+                    </div>
+
+                    {% if user == reply.author or user.is_admin %}
+                      <form method="post" action="{% url 'community:reply_delete' reply.pk %}"
+                            data-confirm="Delete this reply?"
+                            data-confirm-title="Delete Reply" data-confirm-label="Delete" data-confirm-danger class="inline">
+                        {% csrf_token %}
+                        <button type="submit" class="text-danger hover:underline text-[10px] font-semibold">Delete</button>
+                      </form>
+                    {% endif %}
+                  </div>
+                  <p class="text-foreground/90 leading-normal whitespace-pre-wrap">{{ reply.content }}</p>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          {# Reply Form #}
+          <form method="post" action="{% url 'community:reply_create' post.pk %}" class="flex gap-2 pt-1">
+            {% csrf_token %}
+            <input
+              type="text"
+              name="content"
+              required
+              placeholder="Write a reply..."
+              class="input input-sm text-xs rounded-xl flex-1"
+            />
+            <button type="submit" class="btn btn-primary btn-sm text-xs px-4">Reply</button>
+          </form>
+        </div>
+
+      </div>
+    {% empty %}
+      <div class="card card-pad empty-state text-center py-12">
+        <div class="w-14 h-14 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-3">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        </div>
+        <h3 class="empty-title text-base font-bold">No community posts yet</h3>
+        <p class="empty-desc text-xs text-muted mt-1">Be the first student to post a topic or ask a question above!</p>
+      </div>
+    {% endfor %}
+  </div>
+
+</div>
+{% endblock %}

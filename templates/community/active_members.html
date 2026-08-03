@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% load community_tags %}
+
+{% block title %}Active Members | NoteSphere{% endblock %}
+{% block topbar_title %}Active Members{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-6">
+
+  {# Header inspired by the screenshot layout #}
+  <div class="text-center py-6 px-4 card card-pad bg-gradient-to-b from-surface-2/80 to-surface border border-border/80 shadow-sm rounded-2xl relative overflow-hidden">
+    <div class="absolute -top-12 -right-12 w-40 h-40 bg-primary/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute -bottom-12 -left-12 w-40 h-40 bg-secondary/20 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
+      <div class="text-left">
+        <span class="text-[11px] font-extrabold uppercase tracking-widest text-primary/80">WELCOME</span>
+        <h1 class="text-2xl sm:text-3xl font-black text-foreground tracking-tight mt-0.5">
+          Active Student Community
+        </h1>
+      </div>
+      
+      {# Top right Realtime Chat button matching screenshot #}
+      <a href="{% url 'community:chat' %}" class="btn btn-primary shadow-lg hover:shadow-xl transition-all duration-200 group inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold">
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:scale-110 transition-transform">
+          <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+        </svg>
+        REALTIME CHAT
+      </a>
+    </div>
+
+    <p class="text-sm text-muted max-w-2xl text-left">
+      Registered students and community members in NoteSphere. All names are neatly formatted for easy viewing.
+    </p>
+
+    {# Search & Filter bar #}
+    <form method="get" class="mt-6 flex flex-col sm:flex-row items-center gap-3">
+      <div class="input-wrap w-full">
+        <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+        </svg>
+        <input
+          type="text"
+          name="q"
+          value="{{ query }}"
+          placeholder="Search student members by name..."
+          class="input pl-10 pr-4 py-2.5 text-sm rounded-xl border border-border shadow-inner focus:border-primary"
+        />
+      </div>
+      <div class="flex items-center gap-2 w-full sm:w-auto">
+        <button type="submit" class="btn btn-primary btn-md w-full sm:w-auto justify-center px-6">Search</button>
+        {% if query %}
+          <a href="{% url 'community:members' %}" class="btn btn-ghost btn-md w-full sm:w-auto justify-center">Clear</a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+
+  {# Student Cards Grid - matching screenshot's pill badge grid #}
+  <div class="card card-pad bg-surface/50 border border-border">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-base font-bold text-foreground flex items-center gap-2">
+        <span>Active Members</span>
+        <span class="badge badge-neutral text-xs font-bold">{{ total_count }}</span>
+      </h2>
+    </div>
+
+    {% if students %}
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+        {% for student in students %}
+          <div class="group relative flex flex-col items-center justify-center p-3.5 rounded-2xl bg-surface-2/90 border border-border/80 hover:border-primary/40 hover:bg-primary/10 transition-all duration-200 hover:-translate-y-1 hover:shadow-md text-center cursor-default">
+            
+            {# Mini avatar badge #}
+            <div class="w-8 h-8 rounded-full overflow-hidden bg-primary/10 flex items-center justify-center mb-1.5 shadow-xs border border-primary/20 group-hover:scale-110 transition-transform">
+              {% include "_avatar.html" with user=student size="sm" %}
+            </div>
+
+            {# Clean formatted full name #}
+            <span class="text-xs font-bold text-foreground leading-tight line-clamp-2 group-hover:text-primary transition-colors">
+              {{ student.clean_name }}
+            </span>
+
+            {# Role sub-badge #}
+            <span class="text-[10px] font-semibold text-muted opacity-75 mt-1">
+              {% if student.is_admin %}Admin{% else %}Student{% endif %}
+            </span>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state py-12 text-center">
+        <div class="w-14 h-14 rounded-full bg-surface-2 flex items-center justify-center mx-auto mb-3 text-muted">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+        </div>
+        <h3 class="empty-title text-base font-bold">No members found</h3>
+        <p class="empty-desc text-xs text-muted mt-1">Try adjusting your search filter.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
