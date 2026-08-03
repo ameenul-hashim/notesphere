@@ -244,10 +244,14 @@ def subject_create(request):
 
 @login_required
 def subject_detail(request, pk):
-    """View a subject and list its chapter/module cards."""
+    """View a subject and list its English and Malayalam chapter/module cards."""
+    selected_lang = request.GET.get("lang", Chapter.Language.ENGLISH).upper()
+    if selected_lang not in Chapter.Language.values:
+        selected_lang = Chapter.Language.ENGLISH
+
     if request.user.is_admin:
         subject = get_object_or_404(Subject.objects.select_related("semester"), pk=pk)
-        chapters = subject.chapters.all()
+        base_chapters = subject.chapters.all()
     else:
         subject = get_object_or_404(
             Subject.objects.select_related("semester"),
@@ -255,7 +259,12 @@ def subject_detail(request, pk):
             status=Subject.Status.ACTIVE,
             semester__status=Semester.Status.ACTIVE,
         )
-        chapters = subject.chapters.filter(status=Chapter.Status.ACTIVE)
+        base_chapters = subject.chapters.filter(status=Chapter.Status.ACTIVE)
+
+    english_count = base_chapters.filter(language=Chapter.Language.ENGLISH).count()
+    malayalam_count = base_chapters.filter(language=Chapter.Language.MALAYALAM).count()
+
+    chapters = base_chapters.filter(language=selected_lang)
 
     return render(
         request,
@@ -264,6 +273,9 @@ def subject_detail(request, pk):
             "subject": subject,
             "semester": subject.semester,
             "chapters": chapters,
+            "selected_lang": selected_lang,
+            "english_count": english_count,
+            "malayalam_count": malayalam_count,
             "is_admin": request.user.is_admin,
         },
     )
@@ -308,6 +320,10 @@ def subject_delete(request, pk):
 def chapter_create(request):
     initial = {}
     subject_id = request.GET.get("subject")
+    language = request.GET.get("language", "").upper()
+    if language in Chapter.Language.values:
+        initial["language"] = language
+
     selected_subject = None
     if subject_id and subject_id.isdigit():
         initial["subject"] = int(subject_id)
@@ -319,8 +335,8 @@ def chapter_create(request):
 
     if request.method == "POST" and form.is_valid():
         chapter = form.save()
-        messages.success(request, f'Chapter "{chapter.title}" has been created.')
-        return redirect("academics:subject_detail", pk=chapter.subject.pk)
+        messages.success(request, f'Chapter "{chapter.title}" ({chapter.get_language_display()}) has been created.')
+        return redirect(f"{reverse('academics:subject_detail', kwargs={'pk': chapter.subject.pk})}?lang={chapter.language}")
 
     return render(
         request,
@@ -343,7 +359,7 @@ def chapter_edit(request, pk):
     if request.method == "POST" and form.is_valid():
         chapter = form.save()
         messages.success(request, f'Chapter "{chapter.title}" has been updated.')
-        return redirect("academics:subject_detail", pk=chapter.subject.pk)
+        return redirect(f"{reverse('academics:subject_detail', kwargs={'pk': chapter.subject.pk})}?lang={chapter.language}")
 
     return render(
         request,

@@ -36,15 +36,60 @@
     </div>
 
     {% if is_admin %}
-      <div class="flex items-center gap-3">
-        <a href="{% url 'academics:chapter_create' %}?subject={{ subject.pk }}" class="btn btn-primary inline-flex items-center gap-2">
+      <div class="flex flex-wrap items-center gap-2">
+        <a href="{% url 'academics:chapter_create' %}?subject={{ subject.pk }}&language={{ selected_lang }}" class="btn btn-primary inline-flex items-center gap-2">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
           </svg>
-          Add Chapter / Module
+          Add {% if selected_lang == 'MALAYALAM' %}Malayalam{% else %}English{% endif %} Chapter
         </a>
       </div>
     {% endif %}
+  </div>
+
+  {# Language Selection Medium Cards #}
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    {# English Medium Card #}
+    <a href="?lang=ENGLISH" class="card card-pad transition-all duration-200 flex items-center justify-between group {% if selected_lang == 'ENGLISH' %}border-2 border-primary bg-primary/5 shadow-md{% else %}hover:border-border-strong hover:bg-surface-2/60{% endif %}">
+      <div class="flex items-center gap-3.5">
+        <div class="w-11 h-11 rounded-xl flex items-center justify-center font-bold text-base {% if selected_lang == 'ENGLISH' %}bg-primary text-primary-contrast shadow-sm{% else %}bg-surface-2 text-foreground group-hover:bg-primary/10 group-hover:text-primary{% endif %}">
+          🇬🇧
+        </div>
+        <div>
+          <h3 class="font-bold text-base text-foreground group-hover:text-primary transition-colors flex items-center gap-2">
+            English Medium Notes
+            {% if selected_lang == 'ENGLISH' %}
+              <span class="badge badge-success text-[10px] py-0.5 px-2">Active</span>
+            {% endif %}
+          </h3>
+          <p class="text-xs text-muted mt-0.5">{{ english_count }} chapter{{ english_count|pluralize }} available</p>
+        </div>
+      </div>
+      <div class="text-right">
+        <span class="text-xs font-semibold text-primary group-hover:translate-x-0.5 transition-transform inline-block">Select &rarr;</span>
+      </div>
+    </a>
+
+    {# Malayalam Medium Card #}
+    <a href="?lang=MALAYALAM" class="card card-pad transition-all duration-200 flex items-center justify-between group {% if selected_lang == 'MALAYALAM' %}border-2 border-primary bg-primary/5 shadow-md{% else %}hover:border-border-strong hover:bg-surface-2/60{% endif %}">
+      <div class="flex items-center gap-3.5">
+        <div class="w-11 h-11 rounded-xl flex items-center justify-center font-bold text-base {% if selected_lang == 'MALAYALAM' %}bg-primary text-primary-contrast shadow-sm{% else %}bg-surface-2 text-foreground group-hover:bg-primary/10 group-hover:text-primary{% endif %}">
+          🇮🇳
+        </div>
+        <div>
+          <h3 class="font-bold text-base text-foreground group-hover:text-primary transition-colors flex items-center gap-2">
+            Malayalam Medium Notes
+            {% if selected_lang == 'MALAYALAM' %}
+              <span class="badge badge-success text-[10px] py-0.5 px-2">Active</span>
+            {% endif %}
+          </h3>
+          <p class="text-xs text-muted mt-0.5">{{ malayalam_count }} chapter{{ malayalam_count|pluralize }} available</p>
+        </div>
+      </div>
+      <div class="text-right">
+        <span class="text-xs font-semibold text-primary group-hover:translate-x-0.5 transition-transform inline-block">Select &rarr;</span>
+      </div>
+    </a>
   </div>
 
   {# Chapters Cards Grid #}
@@ -54,9 +99,14 @@
         <div class="card card-pad flex flex-col justify-between transition-all hover:border-primary/50 hover:shadow-lg group">
           <div class="space-y-3">
             <div class="flex items-center justify-between">
-              <span class="px-2.5 py-1 rounded-md text-xs font-bold bg-primary/10 text-primary uppercase tracking-wider">
-                Module {{ chapter.chapter_number }}
-              </span>
+              <div class="flex items-center gap-2">
+                <span class="px-2.5 py-1 rounded-md text-xs font-bold bg-primary/10 text-primary uppercase tracking-wider">
+                  Module {{ chapter.chapter_number }}
+                </span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold border border-border text-muted uppercase">
+                  {{ chapter.get_language_display }}
+                </span>
+              </div>
               {% include "_status_badge.html" with status=chapter.status label=chapter.get_status_display %}
             </div>
 
@@ -126,13 +176,15 @@
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
         </svg>
       </div>
-      <h3 class="empty-title text-lg font-bold text-foreground">No chapters available</h3>
+      <h3 class="empty-title text-lg font-bold text-foreground">
+        No {% if selected_lang == 'MALAYALAM' %}Malayalam{% else %}English{% endif %} notes available
+      </h3>
       <p class="empty-desc text-sm text-muted max-w-md mx-auto mt-1 mb-6">
-        No modules or PDF chapters have been uploaded for {{ subject.name }} yet.
+        No modules or PDF chapters have been uploaded for {{ subject.name }} in {% if selected_lang == 'MALAYALAM' %}Malayalam{% else %}English{% endif %} medium yet.
       </p>
       {% if is_admin %}
-        <a href="{% url 'academics:chapter_create' %}?subject={{ subject.pk }}" class="btn btn-primary">
-          + Add First Chapter
+        <a href="{% url 'academics:chapter_create' %}?subject={{ subject.pk }}&language={{ selected_lang }}" class="btn btn-primary">
+          + Add First {% if selected_lang == 'MALAYALAM' %}Malayalam{% else %}English{% endif %} Chapter
         </a>
       {% endif %}
     </div>

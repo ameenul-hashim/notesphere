@@ -79,7 +79,17 @@ class Chapter(models.Model):
         ACTIVE = "ACTIVE", "Active"
         INACTIVE = "INACTIVE", "Inactive"
 
+    class Language(models.TextChoices):
+        ENGLISH = "ENGLISH", "English Notes"
+        MALAYALAM = "MALAYALAM", "Malayalam Notes"
+
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name="chapters")
+    language = models.CharField(
+        max_length=15,
+        choices=Language.choices,
+        default=Language.ENGLISH,
+        help_text="Language medium of this chapter (English or Malayalam)",
+    )
     title = models.CharField(max_length=150, help_text="Chapter name / main title")
     subname = models.CharField(max_length=200, blank=True, help_text="Subname or subtitle (e.g. Unit 1 / Topic)")
     description = models.TextField(blank=True)
@@ -96,6 +106,7 @@ class Chapter(models.Model):
         ordering = ["display_order", "chapter_number", "id"]
         indexes = [
             models.Index(fields=["subject", "status"]),
+            models.Index(fields=["subject", "language", "status"]),
         ]
 
     def __str__(self):

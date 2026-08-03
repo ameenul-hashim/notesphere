@@ -25,7 +25,10 @@
   <form method="post" enctype="multipart/form-data" novalidate class="space-y-4">
     {% csrf_token %}
 
-    {% include "_field.html" with field=form.subject %}
+    <div class="grid grid-cols-2 gap-4">
+      {% include "_field.html" with field=form.subject %}
+      {% include "_field.html" with field=form.language %}
+    </div>
 
     <div class="grid grid-cols-3 gap-4">
       <div class="col-span-2">
@@ -62,9 +65,14 @@
       {% include "_field.html" with field=form.display_order %}
     </div>
 
-    <button type="submit" class="btn btn-primary btn-block btn-lg mt-6">
-      {% if chapter %}Save Changes{% else %}Create Chapter / Module{% endif %}
-    </button>
+    <div class="flex items-center gap-3 pt-4">
+      <a href="{% if selected_subject %}{% url 'academics:subject_detail' selected_subject.pk %}{% else %}{% url 'academics:subject_list' %}{% endif %}" class="btn btn-ghost border border-border text-foreground hover:bg-surface-2 flex-1 justify-center">
+        Cancel
+      </a>
+      <button type="submit" class="btn btn-primary flex-1 justify-center btn-lg">
+        {% if chapter %}Save Changes{% else %}Create Chapter / Module{% endif %}
+      </button>
+    </div>
   </form>
 </div>
 {% endblock %}
