@@ -6,6 +6,7 @@ No per-student activity logs are stored — user data lives only on `User`.
 
 import secrets
 
+from django.conf import settings
 from django.contrib.auth.hashers import make_password
 from django.core.mail import send_mail
 from django.db import transaction
@@ -56,10 +57,11 @@ def create_and_send_otp(user, request=None):
         f"<p>It expires in {OTP_LIFETIME_MINUTES} minutes and can be used once.</p>"
         f'<p><a href="{link}">Verify your OTP here</a></p>'
     )
+    _from = f"NoteSphere <{settings.EMAIL_HOST_USER}>"
     send_mail(
         subject,
         message,
-        "NoteSphere <noreply@notesphere.local>",
+        _from,
         [user.email],
         html_message=html_message,
         fail_silently=False,
