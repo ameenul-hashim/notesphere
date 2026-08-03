@@ -48,7 +48,7 @@
   {% if page_obj.object_list %}
     <div class="media-grid">
       {% for semester in page_obj %}
-        <article class="media-card card-hover">
+        <article class="media-card media-card-lg card-hover">
           <a href="{% url 'academics:semester_detail' semester.pk %}" class="media-thumb block">
             {% if semester.thumbnail %}
               <img src="{{ semester.thumbnail.url }}" alt="{{ semester.name }}">

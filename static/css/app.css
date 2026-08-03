@@ -1907,6 +1907,22 @@ p {
   box-shadow: var(--shadow);
   border-color: var(--border-strong);
 }
+
+/* Larger card length for main semester cards */
+.media-card-lg {
+  min-height: 310px;
+}
+.media-card-lg .media-thumb {
+  min-height: 175px;
+}
+.media-card-lg .media-body {
+  padding: 20px 18px;
+  gap: 10px;
+}
+.media-card-lg .media-title {
+  font-size: 17.5px;
+}
+
 .media-thumb {
   position: relative;
   aspect-ratio: 16 / 9;
@@ -1943,6 +1959,7 @@ p {
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
 }
 .media-meta {

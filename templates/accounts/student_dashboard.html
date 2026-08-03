@@ -10,7 +10,7 @@
 {% if active_semesters %}
   <div class="media-grid">
     {% for semester in active_semesters %}
-      <a href="{% url 'academics:semester_detail' semester.pk %}" class="media-card card-hover">
+      <a href="{% url 'academics:semester_detail' semester.pk %}" class="media-card media-card-lg card-hover">
         <div class="media-thumb">
           {% if semester.thumbnail %}
             <img src="{{ semester.thumbnail.url }}" alt="{{ semester.name }}">
