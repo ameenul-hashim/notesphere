@@ -48,8 +48,8 @@
   {% if page_obj.object_list %}
     <div class="media-grid">
       {% for semester in page_obj %}
-        <article class="media-card">
-          <div class="media-thumb">
+        <article class="media-card card-hover">
+          <a href="{% url 'academics:semester_detail' semester.pk %}" class="media-thumb block">
             {% if semester.thumbnail %}
               <img src="{{ semester.thumbnail.url }}" alt="{{ semester.name }}">
             {% else %}
@@ -59,19 +59,26 @@
                 </svg>
               </span>
             {% endif %}
-          </div>
+          </a>
           <div class="media-body">
             <div class="flex items-start justify-between gap-2">
-              <h3 class="media-title">{{ semester.name }}</h3>
+              <h3 class="media-title">
+                <a href="{% url 'academics:semester_detail' semester.pk %}" class="hover:text-primary transition-colors">
+                  {{ semester.name }}
+                </a>
+              </h3>
               {% include "_status_badge.html" with status=semester.status label=semester.get_status_display %}
             </div>
             <p class="media-desc">{{ semester.description|default:"No description provided." }}</p>
             <div class="media-meta">
-              <span class="muted">{{ semester.subject_count }} subject{{ semester.subject_count|pluralize }}</span>
+              <a href="{% url 'academics:semester_detail' semester.pk %}" class="font-semibold text-primary hover:underline inline-flex items-center gap-1">
+                <span>{{ semester.subject_count }} subject{{ semester.subject_count|pluralize }}</span>
+                <span>&rarr;</span>
+              </a>
               <span class="ml-auto flex gap-3">
                 <a href="{% url 'academics:semester_edit' semester.pk %}" class="link">Edit</a>
                 <form method="post" action="{% url 'academics:semester_delete' semester.pk %}"
-                      data-confirm="Delete \"{{ semester.name }}\" and all of its subjects? This cannot be undone."
+                      data-confirm="Delete &quot;{{ semester.name }}&quot; and all of its subjects? This cannot be undone."
                       data-confirm-title="Delete semester" data-confirm-label="Delete" data-confirm-danger>
                   {% csrf_token %}
                   <button type="submit" class="link link-danger">Delete</button>

@@ -44,7 +44,7 @@
       {% for subject in subjects %}
         <div class="card card-pad flex flex-col justify-between transition-all hover:border-primary/50 hover:shadow-lg group">
           <div>
-            <div class="aspect-video rounded-xl bg-muted/30 border border-border overflow-hidden mb-4 relative flex items-center justify-center">
+            <a href="{% url 'academics:subject_detail' subject.pk %}" class="aspect-video rounded-xl bg-muted/30 border border-border overflow-hidden mb-4 relative flex items-center justify-center block">
               {% if subject.thumbnail %}
                 <img src="{{ subject.thumbnail.url }}" alt="{{ subject.name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
               {% else %}
@@ -57,7 +57,7 @@
               <div class="absolute top-3 right-3">
                 {% include "_status_badge.html" with status=subject.status label=subject.get_status_display %}
               </div>
-            </div>
+            </a>
 
             <div class="space-y-2">
               <h3 class="text-lg font-bold text-foreground group-hover:text-primary transition-colors">
