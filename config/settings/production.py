@@ -19,11 +19,15 @@ if not os.environ.get("DJANGO_SECRET_KEY"):
         "DJANGO_SECRET_KEY is required in production. Set it in the environment or .env."
     )
 
+raw_allowed_hosts = os.environ.get("DJANGO_ALLOWED_HOSTS", "*")
 ALLOWED_HOSTS = [
-    host.strip()
-    for host in os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(",")
+    host.strip().strip('"').strip("'")
+    for host in raw_allowed_hosts.split(",")
     if host.strip()
 ]
+if not ALLOWED_HOSTS:
+    ALLOWED_HOSTS = ["*"]
+
 
 # Collected static files live here (run: manage.py collectstatic).
 STATIC_ROOT = BASE_DIR / "staticfiles"

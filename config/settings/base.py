@@ -27,11 +27,22 @@ SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", get_random_secret_key())
 
 DEBUG = os.environ.get("DJANGO_DEBUG", "True").lower() == "true"
 
+raw_allowed_hosts = os.environ.get("DJANGO_ALLOWED_HOSTS", "*")
 ALLOWED_HOSTS = [
-    host.strip()
-    for host in os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+    host.strip().strip('"').strip("'")
+    for host in raw_allowed_hosts.split(",")
     if host.strip()
 ]
+if not ALLOWED_HOSTS:
+    ALLOWED_HOSTS = ["*"]
+
+raw_csrf_origins = os.environ.get("CSRF_TRUSTED_ORIGINS", "https://*.up.railway.app,https://*.railway.app")
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip().strip('"').strip("'")
+    for origin in raw_csrf_origins.split(",")
+    if origin.strip()
+]
+
 
 # ---------------------------------------------------------------------------
 # Application definition
