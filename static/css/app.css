@@ -1171,7 +1171,15 @@ p {
   color: var(--danger);
   font-size: 13px;
   font-weight: 500;
+  transition: opacity 0.3s ease, transform 0.3s ease, margin 0.3s ease;
 }
+.form-error-box.fade-out {
+  opacity: 0;
+  transform: translateY(-4px);
+  margin-bottom: 0;
+  pointer-events: none;
+}
+
 .form-error-box svg {
   flex-shrink: 0;
   width: 16px;

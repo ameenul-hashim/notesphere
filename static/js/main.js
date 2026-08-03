@@ -111,7 +111,8 @@
   }
 
   /* ---------- Toasts ---------- */
-  var TOAST_DURATIONS = { success: 5000, info: 6000, warning: 7000, error: 9000 };
+  var TOAST_DURATIONS = { success: 4000, info: 4500, warning: 5000, error: 5000 };
+
   var TOAST_ICONS = {
     success:
       '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>',
@@ -367,9 +368,9 @@
     });
   }
 
-  /* ---------- Form Field Errors (auto-dismiss & clear on typing) ---------- */
+  /* ---------- Form & Field Validation Errors (auto-dismiss 5s & clear on typing) ---------- */
   function initFieldErrors() {
-    var errorEls = document.querySelectorAll(".field-error, [data-field-error]");
+    var errorEls = document.querySelectorAll(".field-error, .form-error-box, [data-field-error], .alert-danger, .alert-error");
     errorEls.forEach(function (errEl) {
       function dismissError() {
         if (errEl.classList.contains("fade-out")) return;
@@ -379,11 +380,11 @@
         }, 300);
       }
 
-      // Auto-dismiss after 6 seconds
-      var timer = setTimeout(dismissError, 6000);
+      // Auto-dismiss after 5 seconds
+      var timer = setTimeout(dismissError, 5000);
 
       // Dismiss immediately when user types/changes any field in the same container or form
-      var parent = errEl.closest(".field, .field-wrap, form, td, div") || errEl.parentNode;
+      var parent = errEl.closest(".field, .field-wrap, form, .auth-card, .card, td, div") || errEl.parentNode;
       if (parent) {
         var inputs = parent.querySelectorAll("input, select, textarea");
         inputs.forEach(function (input) {
@@ -399,6 +400,7 @@
       }
     });
   }
+
 
   document.addEventListener("DOMContentLoaded", function () {
     modalEl = document.getElementById("modal");
