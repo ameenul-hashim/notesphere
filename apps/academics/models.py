@@ -69,4 +69,40 @@ class Subject(models.Model):
         ]
 
     def __str__(self):
-        return self.name
+        return f"{self.name} ({self.semester.name})"
+
+
+class Chapter(models.Model):
+    """A chapter or module belonging to a subject."""
+
+    class Status(models.TextChoices):
+        ACTIVE = "ACTIVE", "Active"
+        INACTIVE = "INACTIVE", "Inactive"
+
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name="chapters")
+    title = models.CharField(max_length=150)
+    description = models.TextField(blank=True)
+    chapter_number = models.PositiveIntegerField(default=1, help_text="Chapter number or module index")
+    pdf_url = models.URLField(max_length=500, blank=True, help_text="Direct URL to PDF (Supabase, Drive, CDN)")
+    pdf_file = models.FileField(upload_to="chapters/pdfs/", null=True, blank=True, help_text="Upload local PDF file")
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.ACTIVE)
+    display_order = models.PositiveIntegerField(default=0)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["display_order", "chapter_number", "id"]
+        indexes = [
+            models.Index(fields=["subject", "status"]),
+        ]
+
+    def __str__(self):
+        return f"{self.subject.name} - Chapter {self.chapter_number}: {self.title}"
+
+    @property
+    def document_url(self):
+        if self.pdf_file:
+            return self.pdf_file.url
+        return self.pdf_url or ""
+

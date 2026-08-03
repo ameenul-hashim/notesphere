@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} | NoteSphere{% endblock %}
+{% block topbar_title %}Chapters{% endblock %}
+{% block content %}
+<div class="max-w-xl mx-auto card card-pad">
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="page-title">{{ title }}</h1>
+      {% if selected_subject %}
+        <p class="text-xs text-muted mt-1">
+          Belongs to: <span class="font-semibold text-foreground">{{ selected_subject.name }}</span> ({{ selected_subject.semester.name }})
+        </p>
+      {% endif %}
+    </div>
+    <a href="{% if selected_subject %}{% url 'academics:subject_detail' selected_subject.pk %}{% else %}{% url 'academics:subject_list' %}{% endif %}" class="btn btn-ghost btn-sm">Back</a>
+  </div>
+
+  {% include "_form_errors.html" %}
+
+  <form method="post" enctype="multipart/form-data" novalidate class="space-y-4">
+    {% csrf_token %}
+
+    {% include "_field.html" with field=form.subject %}
+
+    <div class="grid grid-cols-3 gap-4">
+      <div class="col-span-2">
+        {% include "_field.html" with field=form.title %}
+      </div>
+      <div>
+        {% include "_field.html" with field=form.chapter_number %}
+      </div>
+    </div>
+
+    {% include "_field.html" with field=form.description %}
+
+    <div class="p-4 rounded-xl bg-card border border-border space-y-4">
+      <div class="border-b border-border pb-2">
+        <h3 class="text-sm font-bold text-foreground">PDF Document Source</h3>
+        <p class="text-xs text-muted">Provide a direct URL (e.g. Supabase, Google Drive) OR upload a PDF file.</p>
+      </div>
+
+      {% include "_field.html" with field=form.pdf_url %}
+
+      <div class="relative flex py-1 items-center">
+        <div class="flex-grow border-t border-border"></div>
+        <span class="flex-shrink mx-4 text-xs font-semibold text-muted uppercase">Or Upload File</span>
+        <div class="flex-grow border-t border-border"></div>
+      </div>
+
+      {% include "_field.html" with field=form.pdf_file %}
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      {% include "_field.html" with field=form.status %}
+      {% include "_field.html" with field=form.display_order %}
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-block btn-lg mt-6">
+      {% if chapter %}Save Changes{% else %}Create Chapter / Module{% endif %}
+    </button>
+  </form>
+</div>
+{% endblock %}

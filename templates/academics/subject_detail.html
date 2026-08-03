@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block title %}{{ subject.name }} - {{ semester.name }} | NoteSphere{% endblock %}
+{% block topbar_title %}{{ subject.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-6">
+  {# Header and Navigation Breadcrumbs #}
+  <div class="page-head lg:flex-row lg:items-center lg:justify-between">
+    <div>
+      <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted mb-2">
+        <a href="{% if is_admin %}{% url 'academics:semester_list' %}{% else %}{% url 'accounts:student_dashboard' %}{% endif %}" class="hover:text-primary transition-colors">
+          Semesters
+        </a>
+        <span>&rsaquo;</span>
+        <a href="{% url 'academics:semester_detail' semester.pk %}" class="hover:text-primary transition-colors">
+          {{ semester.name }}
+        </a>
+        <span>&rsaquo;</span>
+        <span class="text-primary">{{ subject.name }}</span>
+      </div>
+      <h1 class="page-title flex items-center gap-3">
+        {{ subject.name }}
+        {% include "_status_badge.html" with status=subject.status label=subject.get_status_display %}
+      </h1>
+      <p class="page-subtitle mt-1">
+        {% if subject.description %}{{ subject.description }}{% else %}Modules and course notes for {{ subject.name }}.{% endif %}
+      </p>
+    </div>
+
+    <div class="flex items-center gap-3">
+      {% if is_admin %}
+        <a href="{% url 'academics:chapter_create' %}?subject={{ subject.pk }}" class="btn btn-primary inline-flex items-center gap-2">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Add Chapter / Module
+        </a>
+      {% endif %}
+      <a href="{% url 'academics:semester_detail' semester.pk %}" class="btn btn-ghost">
+        &larr; Back to {{ semester.name }}
+      </a>
+    </div>
+  </div>
+
+  {# Chapters Cards Grid #}
+  {% if chapters %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {% for chapter in chapters %}
+        <div class="card card-pad flex flex-col justify-between transition-all hover:border-primary/50 hover:shadow-lg group">
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="px-2.5 py-1 rounded-md text-xs font-bold bg-primary/10 text-primary uppercase tracking-wider">
+                Module {{ chapter.chapter_number }}
+              </span>
+              {% include "_status_badge.html" with status=chapter.status label=chapter.get_status_display %}
+            </div>
+
+            <h3 class="text-lg font-bold text-foreground group-hover:text-primary transition-colors leading-snug">
+              {{ chapter.title }}
+            </h3>
+
+            <p class="text-sm text-muted line-clamp-3">
+              {{ chapter.description|default:"No notes or overview provided for this chapter." }}
+            </p>
+          </div>
+
+          <div class="pt-5 mt-5 border-t border-border space-y-3">
+            {# Primary Chapter Actions: Read & Download #}
+            <div class="flex items-center gap-2">
+              <a href="{% url 'academics:chapter_read' chapter.pk %}" class="btn btn-primary flex-1 inline-flex items-center justify-center gap-2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                </svg>
+                Read PDF
+              </a>
+
+              {% if chapter.document_url %}
+                <a href="{{ chapter.document_url }}" target="_blank" download class="btn btn-outline inline-flex items-center gap-1.5" title="Download PDF document">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                  </svg>
+                  Download
+                </a>
+              {% endif %}
+            </div>
+
+            {# Admin Controls #}
+            {% if is_admin %}
+              <div class="flex items-center justify-between pt-2 border-t border-border/50 text-xs">
+                <span class="text-muted">Order: #{{ chapter.display_order }}</span>
+                <div class="flex items-center gap-2">
+                  <a href="{% url 'academics:chapter_edit' chapter.pk %}" class="link">Edit</a>
+                  <form method="post" action="{% url 'academics:chapter_delete' chapter.pk %}"
+                        data-confirm="Are you sure you want to delete '{{ chapter.title }}'?"
+                        data-confirm-title="Delete Chapter" data-confirm-label="Delete" data-confirm-danger class="inline">
+                    {% csrf_token %}
+                    <button type="submit" class="link link-danger">Delete</button>
+                  </form>
+                </div>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state card card-pad text-center py-12">
+      <div class="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-4">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+        </svg>
+      </div>
+      <h3 class="empty-title text-lg font-bold text-foreground">No chapters available</h3>
+      <p class="empty-desc text-sm text-muted max-w-md mx-auto mt-1 mb-6">
+        No modules or PDF chapters have been uploaded for {{ subject.name }} yet.
+      </p>
+      {% if is_admin %}
+        <a href="{% url 'academics:chapter_create' %}?subject={{ subject.pk }}" class="btn btn-primary">
+          + Add First Chapter
+        </a>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
