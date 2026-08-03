@@ -367,6 +367,39 @@
     });
   }
 
+  /* ---------- Form Field Errors (auto-dismiss & clear on typing) ---------- */
+  function initFieldErrors() {
+    var errorEls = document.querySelectorAll(".field-error, [data-field-error]");
+    errorEls.forEach(function (errEl) {
+      function dismissError() {
+        if (errEl.classList.contains("fade-out")) return;
+        errEl.classList.add("fade-out");
+        setTimeout(function () {
+          if (errEl.parentNode) errEl.parentNode.removeChild(errEl);
+        }, 300);
+      }
+
+      // Auto-dismiss after 6 seconds
+      var timer = setTimeout(dismissError, 6000);
+
+      // Dismiss immediately when user types/changes any field in the same container or form
+      var parent = errEl.closest(".field, .field-wrap, form, td, div") || errEl.parentNode;
+      if (parent) {
+        var inputs = parent.querySelectorAll("input, select, textarea");
+        inputs.forEach(function (input) {
+          function onUserEdit() {
+            clearTimeout(timer);
+            dismissError();
+            input.removeEventListener("input", onUserEdit);
+            input.removeEventListener("change", onUserEdit);
+          }
+          input.addEventListener("input", onUserEdit);
+          input.addEventListener("change", onUserEdit);
+        });
+      }
+    });
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
     modalEl = document.getElementById("modal");
     initPasswordToggles();
@@ -379,5 +412,7 @@
     initImagePreviews();
     initFilterSelects();
     initAvatarOptions();
+    initFieldErrors();
   });
 })();
+

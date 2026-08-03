@@ -302,7 +302,16 @@ p {
   font-size: 12.5px;
   font-weight: 500;
   color: var(--danger);
+  transition: opacity 0.3s ease, transform 0.3s ease, max-height 0.3s ease, margin 0.3s ease;
 }
+
+.field-error.fade-out {
+  opacity: 0;
+  transform: translateY(-4px);
+  margin-top: 0;
+  pointer-events: none;
+}
+
 
 .form-note {
   margin-top: 16px;
