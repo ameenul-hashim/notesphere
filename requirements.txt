@@ -3,3 +3,6 @@ psycopg[binary]==3.3.4
 python-dotenv==1.2.2
 Pillow==11.*
 firebase-admin>=6.0.0
+gunicorn>=21.2.0
+whitenoise>=6.6.0
+
