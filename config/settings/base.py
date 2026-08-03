@@ -1,0 +1,174 @@
+"""
+Base settings shared by every environment.
+
+Environment variables (see `.env.example`) are read here. Common configuration
+lives in this module; environment-specific overrides live in
+`development.py` and `production.py`.
+"""
+
+import os
+import sys
+from pathlib import Path
+
+from django.core.management.utils import get_random_secret_key
+
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+
+# Make the `apps/` package importable, e.g. `accounts` instead of `apps.accounts`.
+sys.path.append(str(BASE_DIR / "apps"))
+
+# ---------------------------------------------------------------------------
+# Security
+# ---------------------------------------------------------------------------
+
+# Fallback to a generated key so the project runs out of the box in
+# development. Production MUST set DJANGO_SECRET_KEY in the environment.
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", get_random_secret_key())
+
+DEBUG = os.environ.get("DJANGO_DEBUG", "True").lower() == "true"
+
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+    if host.strip()
+]
+
+# ---------------------------------------------------------------------------
+# Application definition
+# ---------------------------------------------------------------------------
+
+INSTALLED_APPS = [
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    # NoteSphere apps
+    "accounts",
+    "students",
+    "admins",
+    "academics",
+    "community",
+]
+
+MIDDLEWARE = [
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+]
+
+ROOT_URLCONF = "config.urls"
+
+TEMPLATES = [
+    {
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [BASE_DIR / "templates"],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
+            ],
+        },
+    },
+]
+
+WSGI_APPLICATION = "config.wsgi.application"
+
+# ---------------------------------------------------------------------------
+# Authentication
+# ---------------------------------------------------------------------------
+
+# Custom user model (accounts.User) - set before the one-time schema reset.
+AUTH_USER_MODEL = "accounts.User"
+
+LOGIN_URL = "accounts:login"
+LOGIN_REDIRECT_URL = "accounts:student_dashboard"
+LOGOUT_REDIRECT_URL = "accounts:login"
+
+# ---------------------------------------------------------------------------
+# Database
+#
+# Neon PostgreSQL - credentials are read from .env via
+# config/integrations/neon.py. SQLite is no longer used.
+# ---------------------------------------------------------------------------
+
+from config.integrations.neon import get_database_config  # noqa: E402
+
+DATABASES = {"default": get_database_config()}
+
+# ---------------------------------------------------------------------------
+# Password validation
+# ---------------------------------------------------------------------------
+
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
+    },
+]
+
+# ---------------------------------------------------------------------------
+# Internationalization
+# ---------------------------------------------------------------------------
+
+LANGUAGE_CODE = "en-us"
+
+TIME_ZONE = "UTC"
+
+USE_I18N = True
+
+USE_TZ = True
+
+# ---------------------------------------------------------------------------
+# Static files & media
+# ---------------------------------------------------------------------------
+
+STATIC_URL = "static/"
+
+STATICFILES_DIRS = [BASE_DIR / "static"]
+
+MEDIA_URL = "media/"
+
+MEDIA_ROOT = BASE_DIR / "media"
+
+# ---------------------------------------------------------------------------
+# Email
+#
+# Development defaults to the console backend (OTP codes are printed in the
+# terminal). Production must set EMAIL_* values in .env / the environment.
+# ---------------------------------------------------------------------------
+
+EMAIL_BACKEND = os.environ.get(
+    "EMAIL_BACKEND",
+    "django.core.mail.backends.console.EmailBackend",
+)
+EMAIL_HOST = os.environ.get("EMAIL_HOST", "")
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
+EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "True").lower() == "true"
+DEFAULT_FROM_EMAIL = os.environ.get(
+    "DEFAULT_FROM_EMAIL",
+    "NoteSphere <noreply@notesphere.local>",
+)
+
+# ---------------------------------------------------------------------------
+# Default primary key field type
+# ---------------------------------------------------------------------------
+
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

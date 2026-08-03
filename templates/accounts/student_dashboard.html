@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Student Dashboard | NoteSphere{% endblock %}
+{% block content %}
+<div class="bg-white shadow rounded-lg p-6">
+  <h1 class="text-2xl font-bold">Welcome, {{ user.full_name }}</h1>
+  <p class="text-sm text-slate-500 mt-1">This is your student dashboard. Academic features will appear here soon.</p>
+
+  <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="bg-slate-50 border rounded-lg p-4">
+      <p class="text-sm text-slate-500">Email</p>
+      <p class="font-medium">{{ user.email }}</p>
+    </div>
+    <div class="bg-slate-50 border rounded-lg p-4">
+      <p class="text-sm text-slate-500">Phone</p>
+      <p class="font-medium">{{ user.phone }}</p>
+    </div>
+    <div class="bg-slate-50 border rounded-lg p-4">
+      <p class="text-sm text-slate-500">Status</p>
+      <p class="font-medium">{{ user.get_status_display }}</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

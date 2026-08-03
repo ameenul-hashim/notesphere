@@ -1,0 +1,84 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}NoteSphere{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: 'class' };</script>
+  <script>
+    // Apply theme before paint to avoid flash of wrong theme.
+    (function () {
+      var stored = localStorage.getItem('notesphere-theme');
+      var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (stored === 'dark' || (!stored && prefersDark)) {
+        document.documentElement.classList.add('dark');
+      }
+    })();
+  </script>
+</head>
+<body class="bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col">
+
+  <nav class="bg-slate-900 text-white dark:bg-slate-800">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+      <span class="text-lg font-semibold">NoteSphere</span>
+
+      <div class="hidden md:flex items-center gap-4">
+        {% include "_nav_links.html" %}
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button
+          id="theme-toggle"
+          type="button"
+          aria-label="Toggle dark mode"
+          class="p-2 rounded hover:bg-slate-700 dark:hover:bg-slate-600"
+        >
+          <svg class="icon-dark hidden w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+          </svg>
+          <svg class="icon-light hidden w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+          </svg>
+        </button>
+
+        <button
+          id="menu-toggle"
+          type="button"
+          aria-label="Toggle navigation menu"
+          aria-expanded="false"
+          class="md:hidden p-2 rounded hover:bg-slate-700 dark:hover:bg-slate-600"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div id="mobile-menu" class="hidden md:hidden border-t border-slate-700 dark:border-slate-600 px-4 py-3">
+      <div class="flex flex-col gap-3">
+        {% include "_nav_links.html" %}
+      </div>
+    </div>
+  </nav>
+
+  {% if messages %}
+    <div class="max-w-6xl w-full mx-auto px-4 mt-4">
+      {% for message in messages %}
+        <div class="p-3 rounded mb-2 text-sm {% if message.tags == 'error' %}bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100{% elif message.tags == 'success' %}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100{% else %}bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100{% endif %}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <main class="max-w-6xl w-full mx-auto px-4 py-8 flex-grow">
+    {% block content %}{% endblock %}
+  </main>
+
+  <script src="{% static 'js/theme.js' %}"></script>
+  <script src="{% static 'js/main.js' %}"></script>
+</body>
+</html>

@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Student Detail | NoteSphere{% endblock %}
+{% block content %}
+<div class="max-w-3xl mx-auto bg-white shadow rounded-lg p-6">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold">{{ student.full_name }}</h1>
+    <span class="text-sm px-3 py-1 rounded-full bg-slate-100 text-slate-700">{{ student.get_status_display }}</span>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="bg-slate-50 border rounded-lg p-4">
+      <p class="text-sm text-slate-500">Full Name</p>
+      <p class="font-medium">{{ student.full_name }}</p>
+    </div>
+    <div class="bg-slate-50 border rounded-lg p-4">
+      <p class="text-sm text-slate-500">Email</p>
+      <p class="font-medium">{{ student.email }}</p>
+    </div>
+    <div class="bg-slate-50 border rounded-lg p-4">
+      <p class="text-sm text-slate-500">Phone</p>
+      <p class="font-medium">{{ student.phone }}</p>
+    </div>
+    <div class="bg-slate-50 border rounded-lg p-4">
+      <p class="text-sm text-slate-500">Created</p>
+      <p class="font-medium">{{ student.created_at|date:"d M Y H:i" }}</p>
+    </div>
+    <div class="bg-slate-50 border rounded-lg p-4">
+      <p class="text-sm text-slate-500">Updated</p>
+      <p class="font-medium">{{ student.updated_at|date:"d M Y H:i" }}</p>
+    </div>
+    <div class="bg-slate-50 border rounded-lg p-4">
+      <p class="text-sm text-slate-500">Last Login</p>
+      <p class="font-medium">{{ student.last_login|date:"d M Y H:i"|default:"Never" }}</p>
+    </div>
+    <div class="bg-slate-50 border rounded-lg p-4">
+      <p class="text-sm text-slate-500">Email Verified</p>
+      <p class="font-medium">{% if student.is_email_verified %}Yes{% else %}No{% endif %}</p>
+    </div>
+    <div class="bg-slate-50 border rounded-lg p-4">
+      <p class="text-sm text-slate-500">Phone Verified</p>
+      <p class="font-medium">{% if student.is_phone_verified %}Yes{% else %}No{% endif %}</p>
+    </div>
+  </div>
+
+  <div class="mt-8 flex flex-wrap gap-3">
+    {% if student.status == 'BLOCKED' %}
+      <form method="post" action="{% url 'admins:unblock_student' student.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm">Unblock</button>
+      </form>
+    {% else %}
+      <form method="post" action="{% url 'admins:block_student' student.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm">Block</button>
+      </form>
+    {% endif %}
+
+    <a href="{% url 'admins:initiate_student_password_reset' student.pk %}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm">
+      Reset Password
+    </a>
+    <a href="{% url 'admins:student_list' %}" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded-md text-sm">Back</a>
+  </div>
+
+  <div class="mt-8 border-t pt-4">
+    <a href="{% url 'admins:delete_student' student.pk %}" class="text-red-600 hover:underline text-sm">Delete this student</a>
+  </div>
+</div>
+{% endblock %}

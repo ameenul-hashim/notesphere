@@ -1,0 +1,22 @@
+{% if user.is_authenticated %}
+  <span class="text-sm text-slate-300 dark:text-slate-400">Welcome, {{ user.full_name }}</span>
+  {% if user.role == 'ADMIN' %}
+    <a href="{% url 'admins:dashboard' %}" class="text-sm hover:text-slate-300">Dashboard</a>
+    <a href="{% url 'admins:student_list' %}" class="text-sm hover:text-slate-300">Students</a>
+    <a href="{% url 'admins:profile' %}" class="text-sm hover:text-slate-300">Profile</a>
+    <form method="post" action="{% url 'admins:admin_logout' %}" class="inline">
+      {% csrf_token %}
+      <button type="submit" class="text-sm bg-red-600 hover:bg-red-700 px-3 py-1 rounded">Logout</button>
+    </form>
+  {% else %}
+    <a href="{% url 'accounts:student_dashboard' %}" class="text-sm hover:text-slate-300">Dashboard</a>
+    <a href="{% url 'admins:profile' %}" class="text-sm hover:text-slate-300">Profile</a>
+    <form method="post" action="{% url 'accounts:logout' %}" class="inline">
+      {% csrf_token %}
+      <button type="submit" class="text-sm bg-red-600 hover:bg-red-700 px-3 py-1 rounded">Logout</button>
+    </form>
+  {% endif %}
+{% else %}
+  <a href="{% url 'accounts:login' %}" class="text-sm hover:text-slate-300">Login</a>
+  <a href="{% url 'accounts:signup' %}" class="text-sm bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded">Sign Up</a>
+{% endif %}
