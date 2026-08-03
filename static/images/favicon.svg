@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4F46E5" />
+      <stop offset="50%" stop-color="#6366F1" />
+      <stop offset="100%" stop-color="#8B5CF6" />
+    </linearGradient>
+    <linearGradient id="glowGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.25" />
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.3" />
+    </filter>
+  </defs>
+
+  <!-- Background Card -->
+  <rect x="32" y="32" width="448" height="448" rx="112" fill="url(#bgGrad)" filter="url(#shadow)" />
+  <rect x="32" y="32" width="448" height="224" rx="112" fill="url(#glowGrad)" />
+
+  <!-- Outer Sphere Orbit Ring -->
+  <circle cx="256" cy="256" r="160" fill="none" stroke="#FFFFFF" stroke-opacity="0.2" stroke-width="12" stroke-dasharray="16 12" />
+
+  <!-- Bold 'N' Mark with Book Curve -->
+  <path d="M160 352 V 160 L 268 310 V 160 H 304 V 352 L 196 202 V 352 Z" fill="#FFFFFF" />
+
+  <!-- Floating Orbital Sphere Dot -->
+  <circle cx="352" cy="160" r="28" fill="#F43F5E" />
+  <circle cx="352" cy="160" r="20" fill="#FB7185" />
+</svg>
