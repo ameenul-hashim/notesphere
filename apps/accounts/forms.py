@@ -8,7 +8,7 @@ from django.contrib.auth.hashers import check_password
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
-from .models import PasswordResetOTP, User
+from .models import Avatar, PasswordResetOTP, User
 from .validators import (
     validate_full_name,
     validate_password_strength,
@@ -79,6 +79,7 @@ class SignUpForm(forms.Form):
 
     def save(self):
         data = self.cleaned_data
+        default_avatar = Avatar.objects.filter(is_active=True).first()
         user = User.objects.create_user(
             username=data["username"],
             email=data["email"],
@@ -87,6 +88,7 @@ class SignUpForm(forms.Form):
             password=data["password"],
             role=User.Role.STUDENT,
             status=User.Status.ACTIVE,
+            avatar=default_avatar,
         )
         user.password_changed_at = timezone.now()
         user.save(update_fields=["password_changed_at", "updated_at"])
@@ -249,8 +251,8 @@ class SetNewPasswordForm(forms.Form):
         return cleaned
 
 
-class ProfileForm(forms.ModelForm):
-    """Edit profile details for the logged-in user (admin or student)."""
+class AdminProfileForm(forms.ModelForm):
+    """Admin account details: identity + contact information."""
 
     full_name = forms.CharField(
         widget=forms.TextInput(attrs={"class": INPUT_CLASS, "placeholder": "John Smith"}),
@@ -271,20 +273,10 @@ class ProfileForm(forms.ModelForm):
         validators=[validate_phone],
         error_messages={"required": "Phone number is required."},
     )
-    profile_image = forms.ImageField(
-        required=False,
-        label="Profile Image",
-        widget=forms.FileInput(attrs={"class": INPUT_CLASS, "accept": "image/*", "data-preview": ""}),
-    )
-    theme = forms.ChoiceField(
-        choices=User.Theme.choices,
-        widget=forms.Select(attrs={"class": INPUT_CLASS}),
-        label="Theme Preference",
-    )
 
     class Meta:
         model = User
-        fields = ["full_name", "username", "email", "phone", "profile_image", "theme"]
+        fields = ["full_name", "username", "email", "phone"]
 
     def clean_username(self):
         username = self.cleaned_data.get("username")
@@ -312,6 +304,182 @@ class ProfileForm(forms.ModelForm):
         if queryset.exists():
             raise ValidationError("Phone number already exists.")
         return phone
+
+
+class StudentContactForm(forms.ModelForm):
+    """Student contact details: email and phone."""
+
+    email = forms.EmailField(
+        widget=forms.EmailInput(attrs={"class": INPUT_CLASS, "placeholder": "john@example.com"}),
+        error_messages={"required": "Email is required.", "invalid": "Invalid email address."},
+    )
+    phone = forms.CharField(
+        widget=forms.TextInput(attrs={"class": INPUT_CLASS, "placeholder": "1234567890", "maxlength": "10"}),
+        validators=[validate_phone],
+        error_messages={"required": "Phone number is required."},
+    )
+
+    class Meta:
+        model = User
+        fields = ["email", "phone"]
+
+    def clean_email(self):
+        email = self.cleaned_data.get("email")
+        queryset = User.objects.filter(email__iexact=email)
+        if self.instance.pk is not None:
+            queryset = queryset.exclude(pk=self.instance.pk)
+        if queryset.exists():
+            raise ValidationError("Email already exists.")
+        return email
+
+    def clean_phone(self):
+        phone = self.cleaned_data.get("phone")
+        queryset = User.objects.filter(phone=phone)
+        if self.instance.pk is not None:
+            queryset = queryset.exclude(pk=self.instance.pk)
+        if queryset.exists():
+            raise ValidationError("Phone number already exists.")
+        return phone
+
+
+class StudentUsernameForm(forms.ModelForm):
+    """Student login username (changeable, with uniqueness check)."""
+
+    username = forms.CharField(
+        widget=forms.TextInput(attrs={"class": INPUT_CLASS, "placeholder": "john_123"}),
+        validators=[validate_username],
+        error_messages={"required": "Username is required."},
+    )
+
+    class Meta:
+        model = User
+        fields = ["username"]
+
+    def clean_username(self):
+        username = self.cleaned_data.get("username")
+        queryset = User.objects.filter(username__iexact=username)
+        if self.instance.pk is not None:
+            queryset = queryset.exclude(pk=self.instance.pk)
+        if queryset.exists():
+            raise ValidationError("Username already exists.")
+        return username
+
+
+class AvatarSelectionForm(forms.ModelForm):
+    """Profile picture: pick from the curated avatar library."""
+
+    avatar = forms.ModelChoiceField(
+        queryset=Avatar.objects.filter(is_active=True),
+        required=False,
+        label="Avatar",
+    )
+
+    class Meta:
+        model = User
+        fields = ["avatar"]
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.photo = None
+        if commit:
+            user.save()
+        return user
+
+
+class AdminPictureForm(forms.ModelForm):
+    """Admin profile picture: custom photo upload only (clears the curated avatar)."""
+
+    photo = forms.ImageField(
+        required=False,
+        label="Upload a photo",
+        widget=forms.ClearableFileInput(attrs={"class": INPUT_CLASS, "data-preview": "photo"}),
+        error_messages={"required": "Please choose a photo."},
+    )
+
+    class Meta:
+        model = User
+        fields = ["photo"]
+
+    def get_initial_for_field(self, field, field_name):
+        if field_name == "photo":
+            return None
+        return super().get_initial_for_field(field, field_name)
+
+    def clean(self):
+        cleaned = super().clean()
+        if not cleaned.get("photo"):
+            raise ValidationError("Please choose a photo to upload.")
+        return cleaned
+
+    def save(self, commit=True):
+        old_photo = self.instance.photo
+        user = super().save(commit=False)
+        user.avatar = None
+        if commit:
+            user.save()
+        if old_photo and old_photo.name != user.photo.name:
+            old_photo.delete(save=False)
+        return user
+
+
+class AvatarForm(forms.ModelForm):
+    """Admin CRUD for the avatar library (create, edit, delete)."""
+
+    name = forms.CharField(
+        required=False,
+        widget=forms.TextInput(
+            attrs={"class": INPUT_CLASS, "placeholder": "Professional Woman 1"}
+        ),
+    )
+    image = forms.ImageField(
+        required=False,
+        label="Upload image",
+        widget=forms.ClearableFileInput(
+            attrs={"class": INPUT_CLASS, "data-preview": "avatar_image"}
+        ),
+    )
+    display_order = forms.IntegerField(
+        widget=forms.NumberInput(attrs={"class": INPUT_CLASS}),
+        help_text="Female: 1-5 and Male: 11-15 map to the built-in static illustrations.",
+    )
+
+    class Meta:
+        model = Avatar
+        fields = ["name", "gender", "image", "display_order", "is_active", "color_from", "color_to"]
+        widgets = {
+            "gender": forms.Select(attrs={"class": "select"}),
+            "is_active": forms.CheckboxInput(),
+            "color_from": forms.TextInput(attrs={"class": INPUT_CLASS, "type": "color"}),
+            "color_to": forms.TextInput(attrs={"class": INPUT_CLASS, "type": "color"}),
+        }
+
+    def clean(self):
+        cleaned = super().clean()
+        if self.instance.pk is None and not cleaned.get("image"):
+            raise ValidationError("Please upload an image for a new avatar.")
+        return cleaned
+
+
+class StudentPasswordForm(forms.Form):
+    """Admin sets a new password for a student directly (no current password)."""
+
+    new_password = forms.CharField(
+        widget=forms.PasswordInput(attrs={"class": INPUT_CLASS, "data-toggle": "password"}),
+        validators=[validate_password_strength],
+        error_messages={"required": "New password is required."},
+    )
+    confirm_password = forms.CharField(
+        widget=forms.PasswordInput(attrs={"class": INPUT_CLASS, "data-toggle": "password"}),
+        error_messages={"required": "Confirm password is required."},
+    )
+
+    def clean(self):
+        cleaned = super().clean()
+        new_password = cleaned.get("new_password")
+        confirm_password = cleaned.get("confirm_password")
+        if new_password and confirm_password and new_password != confirm_password:
+            raise ValidationError("Passwords do not match.")
+        return cleaned
 
 
 class ChangePasswordForm(forms.Form):

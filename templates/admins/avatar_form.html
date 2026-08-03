@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{% if mode == 'add' %}Add Avatar | NoteSphere{% else %}Edit Avatar | NoteSphere{% endif %}{% endblock %}
+{% block topbar_title %}Avatars{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto">
+  <div class="page-head">
+    <div>
+      <h1 class="page-title">{% if mode == 'add' %}Add Avatar{% else %}Edit Avatar{% endif %}</h1>
+      <p class="page-subtitle">
+        {% if mode == 'add' %}Upload a new avatar to the library.{% else %}Update {{ avatar.name|default:avatar.get_gender_display }}.{% endif %}
+      </p>
+    </div>
+  </div>
+
+  <form method="post" class="card card-pad space-y-4" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+    {% include "_form_errors.html" with form=form %}
+
+    {% if mode == 'edit' %}
+      <div class="field">
+        <span class="field-label">Current image</span>
+        <div class="avatar-picker" style="max-width: 120px;">
+          {% include "_avatar_picture.html" with avatar=avatar img_class="avatar-option-img" fallback_class="avatar-face" %}
+        </div>
+      </div>
+    {% endif %}
+
+    <div class="grid sm:grid-cols-2 gap-4">
+      {% include "_field.html" with field=form.name %}
+      {% include "_field.html" with field=form.gender %}
+    </div>
+
+    <div class="field">
+      <span class="field-label">Upload image</span>
+      <input type="file" name="image" accept="image/*" data-preview="avatar_image" class="input">
+      <p class="field-hint">Optional for existing avatars. When set, it replaces the built-in illustration.</p>
+      <div class="image-preview" data-preview-target>
+        {% if avatar.image %}
+          <img src="{{ avatar.image.url }}" alt="Current image">
+        {% endif %}
+      </div>
+      {% for error in form.image.errors %}
+        <p class="field-error">{{ error }}</p>
+      {% endfor %}
+    </div>
+
+    <div class="grid sm:grid-cols-2 gap-4">
+      {% include "_field.html" with field=form.display_order %}
+      {% include "_field.html" with field=form.color_from %}
+      {% include "_field.html" with field=form.color_to %}
+    </div>
+
+    <div class="field">
+      <label class="flex items-center gap-2" for="{{ form.is_active.id_for_label }}">
+        {{ form.is_active }}
+        <span class="field-label mb-0">Active — users can select this avatar</span>
+      </label>
+      {% for error in form.is_active.errors %}
+        <p class="field-error">{{ error }}</p>
+      {% endfor %}
+    </div>
+
+    <div class="flex justify-end gap-3">
+      <a href="{% url 'admins:avatar_list' %}" class="btn btn-ghost">Cancel</a>
+      <button type="submit" class="btn btn-primary">{% if mode == 'add' %}Add Avatar{% else %}Save Changes{% endif %}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

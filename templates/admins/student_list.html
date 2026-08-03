@@ -6,7 +6,7 @@
   <div class="page-head lg:flex-row lg:items-center lg:justify-between">
     <div>
       <h1 class="page-title">Students</h1>
-      <p class="page-subtitle">Manage student accounts, filters and activity.</p>
+      <p class="page-subtitle">Manage student accounts and filters.</p>
     </div>
     <form method="get" class="flex flex-col sm:flex-row gap-2">
       {% if status_filter %}
@@ -31,46 +31,32 @@
 
   <div class="chips">
     <p class="chip-static">Status</p>
-    <a href="{% url 'admins:student_list' %}{% if query %}?q={{ query|urlencode }}{% endif %}{% if filter_key %}{% if query %}&{% else %}?{% endif %}filter={{ filter_key }}{% endif %}"
-       class="chip {% if not status_filter %}chip-active{% endif %}">
-      All ({{ filter_counts.all }})
-    </a>
-    <a href="{% url 'admins:student_list' %}?{% if query %}q={{ query|urlencode }}&{% endif %}{% if filter_key %}filter={{ filter_key }}&{% endif %}status=ACTIVE"
-       class="chip {% if status_filter == 'ACTIVE' %}chip-active{% endif %}">
-      Active ({{ counts.ACTIVE|default:0 }})
-    </a>
-    <a href="{% url 'admins:student_list' %}?{% if query %}q={{ query|urlencode }}&{% endif %}{% if filter_key %}filter={{ filter_key }}&{% endif %}status=INACTIVE"
-       class="chip {% if status_filter == 'INACTIVE' %}chip-active{% endif %}">
-      Inactive ({{ counts.INACTIVE|default:0 }})
-    </a>
-    <a href="{% url 'admins:student_list' %}?{% if query %}q={{ query|urlencode }}&{% endif %}{% if filter_key %}filter={{ filter_key }}&{% endif %}status=BLOCKED"
-       class="chip {% if status_filter == 'BLOCKED' %}chip-active{% endif %}">
-      Blocked ({{ counts.BLOCKED|default:0 }})
-    </a>
+    <form method="get" class="filter-form">
+      {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+      {% if filter_key %}<input type="hidden" name="filter" value="{{ filter_key }}">{% endif %}
+      <select name="status" class="filter-select" data-auto-submit aria-label="Filter by status">
+        <option value="" {% if not status_filter %}selected{% endif %}>All ({{ filter_counts.all }})</option>
+        <option value="ACTIVE" {% if status_filter == 'ACTIVE' %}selected{% endif %}>Active ({{ counts.ACTIVE|default:0 }})</option>
+        <option value="INACTIVE" {% if status_filter == 'INACTIVE' %}selected{% endif %}>Inactive ({{ counts.INACTIVE|default:0 }})</option>
+        <option value="BLOCKED" {% if status_filter == 'BLOCKED' %}selected{% endif %}>Blocked ({{ counts.BLOCKED|default:0 }})</option>
+      </select>
+    </form>
   </div>
 
   <div class="chips">
     <p class="chip-static">Joined / Activity</p>
-    <a href="{% url 'admins:student_list' %}?{% if query %}q={{ query|urlencode }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}filter=latest_joined"
-       class="chip {% if filter_key == 'latest_joined' %}chip-active{% endif %}">
-      Latest Joined
-    </a>
-    <a href="{% url 'admins:student_list' %}?{% if query %}q={{ query|urlencode }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}filter=oldest_joined"
-       class="chip {% if filter_key == 'oldest_joined' %}chip-active{% endif %}">
-      Oldest Joined
-    </a>
-    <a href="{% url 'admins:student_list' %}?{% if query %}q={{ query|urlencode }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}filter=login_today"
-       class="chip {% if filter_key == 'login_today' %}chip-active{% endif %}">
-      Last Login Today ({{ filter_counts.login_today }})
-    </a>
-    <a href="{% url 'admins:student_list' %}?{% if query %}q={{ query|urlencode }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}filter=login_yesterday"
-       class="chip {% if filter_key == 'login_yesterday' %}chip-active{% endif %}">
-      Last Login Yesterday ({{ filter_counts.login_yesterday }})
-    </a>
-    <a href="{% url 'admins:student_list' %}?{% if query %}q={{ query|urlencode }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}filter=inactive_30d"
-       class="chip {% if filter_key == 'inactive_30d' %}chip-active{% endif %}">
-      Inactive for 30 Days ({{ filter_counts.inactive_30d }})
-    </a>
+    <form method="get" class="filter-form">
+      {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+      {% if status_filter %}<input type="hidden" name="status" value="{{ status_filter }}">{% endif %}
+      <select name="filter" class="filter-select" data-auto-submit aria-label="Filter by join or activity">
+        <option value="" {% if not filter_key %}selected{% endif %}>All Students</option>
+        <option value="latest_joined" {% if filter_key == 'latest_joined' %}selected{% endif %}>Latest Joined</option>
+        <option value="oldest_joined" {% if filter_key == 'oldest_joined' %}selected{% endif %}>Oldest Joined</option>
+        <option value="login_today" {% if filter_key == 'login_today' %}selected{% endif %}>Last Login Today ({{ filter_counts.login_today }})</option>
+        <option value="login_yesterday" {% if filter_key == 'login_yesterday' %}selected{% endif %}>Last Login Yesterday ({{ filter_counts.login_yesterday }})</option>
+        <option value="inactive_30d" {% if filter_key == 'inactive_30d' %}selected{% endif %}>Inactive for 30 Days ({{ filter_counts.inactive_30d }})</option>
+      </select>
+    </form>
   </div>
 
   {% if page_obj.object_list %}

@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Profile Picture | NoteSphere{% endblock %}
+{% block topbar_title %}Profile Picture{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+  <div class="page-head">
+    <h1 class="page-title">Profile Picture</h1>
+    <p class="page-subtitle">
+      Select your preferred avatar to represent your account across NoteSphere.
+    </p>
+  </div>
+
+  <div class="grid gap-6 lg:grid-cols-[280px_1fr] lg:items-start">
+    <aside>
+      <div class="card card-pad lg:sticky lg:top-6 flex flex-col items-center text-center">
+        <span class="text-xs font-semibold text-muted uppercase tracking-wider mb-3">Current Avatar</span>
+        <div class="w-28 h-32 rounded-2xl border-2 border-primary/30 shadow-md overflow-hidden bg-card flex items-center justify-center mb-3 p-1">
+          {% include "_avatar.html" with user=profile_user shape="passport" %}
+        </div>
+        <h2 class="text-base font-bold text-foreground leading-tight">{{ profile_user.full_name }}</h2>
+        <p class="text-xs text-muted font-medium mt-0.5">@{{ profile_user.username }}</p>
+        <span class="inline-block mt-3 text-[11px] font-bold uppercase tracking-wider text-primary bg-primary/10 px-2.5 py-1 rounded-full">
+          {{ profile_user.get_role_display }}
+        </span>
+      </div>
+    </aside>
+
+    <div class="card card-pad">
+      <div class="card-head-row mb-4">
+        <div>
+          <h2 class="text-lg font-bold">Choose Your Avatar</h2>
+          <p class="text-muted text-sm">Select an avatar from the female or male collection below and click Save.</p>
+        </div>
+      </div>
+
+      <form method="post" class="space-y-6" novalidate>
+        {% csrf_token %}
+        {% include "_form_errors.html" with form=avatar_form %}
+
+        <div class="field mb-0">
+          {% regroup avatars by get_gender_display as avatar_groups %}
+          {% for group in avatar_groups %}
+            <p class="avatar-group-label text-xs font-extrabold uppercase tracking-wider text-primary border-b border-border pb-1 mb-3">
+              {{ group.grouper }} Avatars
+            </p>
+            <div class="avatar-picker mb-6" data-avatar-picker>
+              {% for avatar in group.list %}
+                <label class="avatar-option {% if avatar_value|stringformat:"s" == avatar.pk|stringformat:"s" %}selected{% endif %} cursor-pointer">
+                  <input type="radio" name="avatar" value="{{ avatar.pk }}"
+                         {% if avatar_value|stringformat:"s" == avatar.pk|stringformat:"s" %}checked{% endif %}
+                         class="avatar-radio">
+                  {% include "_avatar_picture.html" with avatar=avatar img_class="avatar-option-img rounded-xl" fallback_class="avatar-face" %}
+                </label>
+              {% endfor %}
+            </div>
+          {% endfor %}
+
+          {% if avatar_form.avatar.errors %}
+            {% for error in avatar_form.avatar.errors %}
+              <p class="field-error">{{ error }}</p>
+            {% endfor %}
+          {% endif %}
+        </div>
+
+        <div class="flex justify-end pt-3 border-t border-border">
+          <button type="submit" class="btn btn-primary px-6">Save Profile Avatar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,6 +1,6 @@
 """Custom admin interface views (under /dashboard/ - NOT Django's /admin/)."""
 
-from datetime import timedelta
+from datetime import datetime, time, timedelta
 
 from django.contrib import messages
 from django.contrib.auth import login, logout
@@ -12,13 +12,22 @@ from django.urls import reverse
 from django.utils import timezone
 
 from accounts.decorators import admin_required
-from accounts.forms import ChangePasswordForm, LoginForm, ProfileForm
-from accounts.models import User, UserActivity
-from accounts.services import create_and_send_otp, log_activity, set_password_and_track
+from accounts.forms import (
+    AdminPictureForm,
+    AdminProfileForm,
+    AvatarForm,
+    AvatarSelectionForm,
+    ChangePasswordForm,
+    LoginForm,
+    StudentContactForm,
+    StudentPasswordForm,
+    StudentUsernameForm,
+)
+from accounts.models import Avatar, User
+from accounts.services import set_password_and_track
 from academics.models import Semester, Subject
 
 STUDENTS_PER_PAGE = 20
-ACTIVITIES_PER_PAGE = 10
 REGISTRATION_MONTHS = 6
 
 # Whitelist of sortable columns -> model field.
@@ -87,8 +96,8 @@ def dashboard(request):
     current_month = timezone.localdate().replace(day=1)
     months = []
     for i in range(REGISTRATION_MONTHS - 1, -1, -1):
-        start = _shift_month(current_month, -i)
-        end = _shift_month(current_month, -i + 1)
+        start = timezone.make_aware(datetime.combine(_shift_month(current_month, -i), time.min))
+        end = timezone.make_aware(datetime.combine(_shift_month(current_month, -i + 1), time.min))
         months.append(
             {
                 "label": start.strftime("%b"),
@@ -220,13 +229,34 @@ def student_list(request):
 @admin_required
 def student_detail(request, pk):
     student = get_object_or_404(User.objects, pk=pk, role=User.Role.STUDENT)
-    activities = student.activities.all()
-    paginator = Paginator(activities, ACTIVITIES_PER_PAGE)
-    activities_page = paginator.get_page(request.GET.get("activity_page"))
+    username_form = StudentUsernameForm(instance=student)
+    password_form = StudentPasswordForm()
+
+    if request.method == "POST":
+        if "save_username" in request.POST:
+            username_form = StudentUsernameForm(instance=student, data=request.POST)
+            if username_form.is_valid():
+                username_form.save()
+                messages.success(
+                    request,
+                    f"Username updated to @{username_form.cleaned_data['username']}.",
+                )
+                return redirect("admins:student_detail", pk=pk)
+        elif "save_password" in request.POST:
+            password_form = StudentPasswordForm(data=request.POST)
+            if password_form.is_valid():
+                set_password_and_track(student, password_form.cleaned_data["new_password"])
+                messages.success(request, f"Password updated for {student.full_name}.")
+                return redirect("admins:student_detail", pk=pk)
+
     return render(
         request,
         "admins/student_detail.html",
-        {"student": student, "activities_page": activities_page},
+        {
+            "student": student,
+            "username_form": username_form,
+            "password_form": password_form,
+        },
     )
 
 
@@ -238,12 +268,6 @@ def block_student(request, pk):
         if student.status in (User.Status.ACTIVE, User.Status.INACTIVE):
             student.status = User.Status.BLOCKED
             student.save(update_fields=["status", "updated_at"])
-            log_activity(
-                student,
-                UserActivity.Action.ACCOUNT_BLOCKED,
-                request,
-                detail=f"Blocked by {request.user.full_name}",
-            )
             messages.success(request, f"{student.full_name} has been blocked.")
         else:
             messages.error(request, "This student cannot be blocked in their current state.")
@@ -258,12 +282,6 @@ def unblock_student(request, pk):
         if student.status == User.Status.BLOCKED:
             student.status = User.Status.ACTIVE
             student.save(update_fields=["status", "updated_at"])
-            log_activity(
-                student,
-                UserActivity.Action.ACCOUNT_UNBLOCKED,
-                request,
-                detail=f"Unblocked by {request.user.full_name}",
-            )
             messages.success(request, f"{student.full_name} has been unblocked.")
         else:
             messages.error(request, "Only blocked students can be unblocked.")
@@ -276,12 +294,6 @@ def delete_student(request, pk):
     student = get_object_or_404(User.objects, pk=pk, role=User.Role.STUDENT)
     if request.method == "POST":
         full_name = student.full_name
-        log_activity(
-            request.user,
-            UserActivity.Action.ACCOUNT_DELETED,
-            request,
-            detail=f"Deleted student \"{full_name}\" (username: {student.username})",
-        )
         student.delete()
         messages.success(request, f"{full_name} has been permanently deleted.")
         return redirect("admins:student_list")
@@ -290,56 +302,109 @@ def delete_student(request, pk):
 
 @login_required
 @admin_required
-def initiate_student_password_reset(request, pk):
-    """Admins never set passwords directly.
-
-    This initiates the reset: an OTP is emailed to the student, who completes
-    the password change themselves through the shared OTP flow.
-    """
-    student = get_object_or_404(User.objects, pk=pk, role=User.Role.STUDENT)
+def avatar_add(request):
+    """Create a new avatar in the library."""
     if request.method == "POST":
-        create_and_send_otp(student, request)
-        log_activity(
-            student,
-            UserActivity.Action.PASSWORD_RESET,
+        form = AvatarForm(data=request.POST, files=request.FILES)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Avatar added successfully.")
+            return redirect("admins:avatar_list")
+    else:
+        form = AvatarForm()
+    return render(request, "admins/avatar_form.html", {"form": form, "mode": "add"})
+
+
+@login_required
+@admin_required
+def avatar_edit(request, pk):
+    """Edit an existing avatar."""
+    avatar = get_object_or_404(Avatar, pk=pk)
+    if request.method == "POST":
+        form = AvatarForm(instance=avatar, data=request.POST, files=request.FILES)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Avatar updated successfully.")
+            return redirect("admins:avatar_list")
+    else:
+        form = AvatarForm(instance=avatar)
+    return render(
+        request,
+        "admins/avatar_form.html",
+        {"form": form, "avatar": avatar, "mode": "edit"},
+    )
+
+
+@login_required
+@admin_required
+def avatar_delete(request, pk):
+    """Permanently delete an avatar from the library."""
+    avatar = get_object_or_404(Avatar, pk=pk)
+    if request.method == "POST":
+        label = str(avatar)
+        avatar.delete()
+        messages.success(request, f"Avatar deleted.")
+    return redirect("admins:avatar_list")
+
+
+@login_required
+@admin_required
+def avatar_list(request):
+    """Admin avatar management: view the library and toggle avatars on/off."""
+    if request.method == "POST":
+        avatar = get_object_or_404(Avatar, pk=request.POST.get("pk"))
+        avatar.is_active = not avatar.is_active
+        avatar.save(update_fields=["is_active"])
+        messages.success(
             request,
-            detail=f"Password reset initiated by {request.user.full_name}",
+            f"{avatar} is now {'active' if avatar.is_active else 'inactive'}.",
         )
-        messages.success(request, f"A password reset OTP has been sent to {student.email}.")
-        return redirect("admins:student_detail", pk=pk)
-    return render(request, "admins/student_reset_password.html", {"student": student})
+        return redirect("admins:avatar_list")
+
+    avatars = Avatar.objects.all()
+    context = {
+        "avatars": avatars,
+        "active_count": avatars.filter(is_active=True).count(),
+        "total_count": avatars.count(),
+        "male_count": avatars.filter(gender=Avatar.Gender.MALE).count(),
+        "female_count": avatars.filter(gender=Avatar.Gender.FEMALE).count(),
+    }
+    return render(request, "admins/avatar_list.html", context)
 
 
 @login_required
 def profile(request):
-    """Edit the logged-in user's profile and password (shared by admins and students)."""
-    profile_form = ProfileForm(
-        instance=request.user,
-        data=request.POST or None,
-        files=request.FILES or None,
-    )
-    password_form = ChangePasswordForm(user=request.user, data=request.POST or None)
+    """Admin profile page. Students are redirected to their own profile page."""
+    if not request.user.is_admin:
+        return redirect("accounts:student_profile")
+
+    details_form = AdminProfileForm(instance=request.user)
+    picture_form = AdminPictureForm(instance=request.user)
+    password_form = ChangePasswordForm(user=request.user)
 
     if request.method == "POST":
-        if "save_profile" in request.POST:
-            if profile_form.is_valid():
-                profile_form.save()
-                log_activity(
-                    request.user,
-                    UserActivity.Action.PROFILE_UPDATED,
-                    request,
-                    detail="Profile details updated",
-                )
-                messages.success(request, "Profile updated successfully.")
+        if "save_details" in request.POST:
+            details_form = AdminProfileForm(instance=request.user, data=request.POST)
+            if details_form.is_valid():
+                details_form.save()
+                messages.success(request, "Profile details updated successfully.")
+                return redirect("admins:profile")
+        elif "save_picture" in request.POST:
+            picture_form = AdminPictureForm(
+                instance=request.user,
+                data=request.POST,
+                files=request.FILES,
+            )
+            if picture_form.is_valid():
+                picture_form.save()
+                messages.success(request, "Profile picture updated successfully.")
                 return redirect("admins:profile")
         elif "change_password" in request.POST:
+            password_form = ChangePasswordForm(user=request.user, data=request.POST)
             if password_form.is_valid():
                 set_password_and_track(
                     request.user,
                     password_form.cleaned_data["new_password"],
-                    request,
-                    action=UserActivity.Action.PASSWORD_RESET,
-                    detail="Password changed from profile",
                 )
                 messages.success(request, "Password changed successfully.")
                 return redirect("admins:profile")
@@ -349,7 +414,15 @@ def profile(request):
         "admins/profile.html",
         {
             "profile_user": request.user,
-            "profile_form": profile_form,
+            "is_admin": True,
+            "details_form": details_form,
+            "picture_form": picture_form,
             "password_form": password_form,
         },
     )
+
+
+@login_required
+def appearance(request):
+    """Appearance settings: pick the color theme (separate from avatar/profile)."""
+    return render(request, "accounts/settings.html", {"settings_user": request.user})

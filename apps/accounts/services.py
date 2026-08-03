@@ -1,6 +1,7 @@
 """Business services for the authentication module.
 
-Keeps views thin and centralizes OTP, email, and activity-logging behaviour.
+Keeps views thin and centralizes OTP, email, and password-change behaviour.
+No per-student activity logs are stored — user data lives only on `User`.
 """
 
 import secrets
@@ -11,7 +12,7 @@ from django.db import transaction
 from django.urls import reverse
 from django.utils import timezone
 
-from .models import PasswordResetOTP, UserActivity
+from .models import PasswordResetOTP
 
 OTP_LENGTH = 6
 OTP_LIFETIME_MINUTES = 5
@@ -66,81 +67,10 @@ def create_and_send_otp(user, request=None):
     return otp_obj
 
 
-def get_client_ip(request):
-    if request is None:
-        return None
-    forwarded = request.META.get("HTTP_X_FORWARDED_FOR")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    return request.META.get("REMOTE_ADDR")
-
-
-def parse_user_agent(user_agent):
-    """Minimal, dependency-free browser/OS/device detection.
-
-    Future-ready: swap for a dedicated parser (e.g. django-user-agents) when
-    richer auditing is needed; the model fields already store the result.
-    """
-    ua = (user_agent or "").lower()
-
-    if "edg/" in ua:
-        browser = "Edge"
-    elif "chrome/" in ua or "crios/" in ua:
-        browser = "Chrome"
-    elif "firefox/" in ua or "fxios/" in ua:
-        browser = "Firefox"
-    elif "safari/" in ua:
-        browser = "Safari"
-    elif "trident" in ua or "msie" in ua:
-        browser = "Internet Explorer"
-    else:
-        browser = "Unknown"
-
-    if "windows" in ua:
-        os_name = "Windows"
-    elif "android" in ua:
-        os_name = "Android"
-    elif "iphone" in ua or "ipad" in ua or "ios" in ua:
-        os_name = "iOS"
-    elif "mac os" in ua or "macintosh" in ua:
-        os_name = "macOS"
-    elif "linux" in ua:
-        os_name = "Linux"
-    else:
-        os_name = "Unknown"
-
-    if "ipad" in ua or "tablet" in ua:
-        device = "Tablet"
-    elif "mobile" in ua or "android" in ua or "iphone" in ua:
-        device = "Mobile"
-    elif "bot" in ua or "crawler" in ua or "spider" in ua:
-        device = "Bot"
-    else:
-        device = "Desktop"
-
-    return browser, os_name, device
-
-
-def log_activity(user, action, request=None, detail=""):
-    """Record an auditable action for a user."""
-    user_agent = request.META.get("HTTP_USER_AGENT", "") if request is not None else ""
-    browser, os_name, device = parse_user_agent(user_agent)
-    return UserActivity.objects.create(
-        user=user,
-        action=action,
-        detail=detail,
-        ip_address=get_client_ip(request),
-        browser=browser,
-        os=os_name,
-        device=device,
-    )
-
-
 @transaction.atomic
-def set_password_and_track(user, raw_password, request=None, action=UserActivity.Action.PASSWORD_RESET, detail=""):
-    """Hash and persist a new password, record when it changed, and log it."""
+def set_password_and_track(user, raw_password):
+    """Hash and persist a new password and record when it changed."""
     user.set_password(raw_password)
     user.password_changed_at = timezone.now()
     user.save(update_fields=["password", "password_changed_at", "updated_at"])
-    log_activity(user, action, request, detail)
     return user

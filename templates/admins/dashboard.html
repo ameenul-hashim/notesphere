@@ -76,7 +76,7 @@
 
   <div class="chart-card">
     <p class="chart-title">Latest Logins</p>
-    <p class="chart-sub">Most recent student activity</p>
+    <p class="chart-sub">Most recent student logins</p>
     <div class="mini-list mt-4">
       {% for student in recent_logins %}
         <a href="{% url 'admins:student_detail' student.pk %}" class="mini-item">

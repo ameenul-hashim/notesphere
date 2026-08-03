@@ -6,6 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}NoteSphere{% endblock %}</title>
   <meta name="csrf-token" content="{{ csrf_token }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'css/themes.css' %}">
   <link rel="stylesheet" href="{% static 'css/app.css' %}">
   <script src="https://cdn.tailwindcss.com"></script>
@@ -33,7 +36,7 @@
   <div class="{% if user.is_authenticated %}app-shell{% else %}auth-page{% endif %}">
 
     {% if user.is_authenticated %}
-      <header class="topbar">
+      <header class="topbar" data-topbar>
         <button
           type="button"
           class="icon-btn mobile-only"
@@ -45,13 +48,53 @@
             <path d="M4 6h16M4 12h16M4 18h16"/>
           </svg>
         </button>
-        {% block topbar_title %}
-          <span class="topbar-title">NoteSphere</span>
-        {% endblock %}
-        {% include "_theme_picker.html" %}
-        <a href="{% url 'admins:profile' %}" class="ml-1 hidden lg:inline-flex items-center gap-2" aria-label="Profile">
-          {% include "_avatar.html" with user=user %}
-        </a>
+
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="{% if user.is_admin %}{% url 'admins:dashboard' %}{% else %}{% url 'accounts:student_dashboard' %}{% endif %}" class="breadcrumb-root" aria-label="Home">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9.5L12 3l9 6.5"/><path d="M5 8.5V21h14V8.5"/>
+            </svg>
+          </a>
+          <svg class="breadcrumb-sep" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 6l6 6-6 6"/>
+          </svg>
+          <span class="breadcrumb-current">{% block topbar_title %}Dashboard{% endblock %}</span>
+        </nav>
+
+        <div class="topbar-actions">
+          <div class="nav-pop" data-nav-pop>
+            <button
+              type="button"
+              class="icon-btn"
+              data-bell-trigger
+              aria-haspopup="dialog"
+              aria-expanded="false"
+              aria-label="Notifications"
+            >
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+              </svg>
+            </button>
+            <div class="nav-pop-menu" data-bell-menu aria-hidden="true">
+              <div class="nav-pop-head">
+                <p class="nav-pop-title">Notifications</p>
+              </div>
+              <div class="nav-pop-empty">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+                </svg>
+                <p class="nav-pop-empty-title">You're all caught up</p>
+                <span class="nav-pop-empty-sub">Notifications will appear here.</span>
+              </div>
+            </div>
+          </div>
+
+          {% include "_theme_picker.html" %}
+
+          <a href="{% if user.is_admin %}{% url 'admins:profile' %}{% else %}{% url 'accounts:student_profile' %}{% endif %}" class="topbar-avatar" aria-label="My profile">
+            {% include "_avatar.html" with user=user %}
+          </a>
+        </div>
       </header>
     {% else %}
       <header class="auth-header">

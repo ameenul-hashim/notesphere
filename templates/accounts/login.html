@@ -9,8 +9,8 @@
 
   <form method="post" novalidate>
     {% csrf_token %}
-    {% include "_field.html" with field=form.username %}
-    {% include "_field.html" with field=form.password %}
+    {% include "_field.html" with field=form.username icon="id" %}
+    {% include "_field.html" with field=form.password icon="lock" %}
     <button type="submit" class="btn btn-primary btn-block btn-lg">Log In</button>
   </form>
 

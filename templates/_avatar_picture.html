@@ -1,0 +1,12 @@
+{% load static %}
+{% if avatar.image %}
+  <img class="{{ img_class }}" src="{{ avatar.image.url }}" alt="{{ avatar.name|default:avatar.get_gender_display }}" loading="lazy">
+{% elif avatar.gender == 'female' and avatar.display_order >= 1 and avatar.display_order <= 5 %}
+  <img class="{{ img_class }}" src="{% static 'images/avatars/avatar_female_' %}{{ avatar.display_order }}.png" alt="{{ avatar.name|default:avatar.get_gender_display }}" loading="lazy">
+{% elif avatar.gender == 'male' and avatar.display_order >= 11 and avatar.display_order <= 15 %}
+  <img class="{{ img_class }}" src="{% static 'images/avatars/avatar_male_' %}{{ avatar.display_order|add:'-10' }}.png" alt="{{ avatar.name|default:avatar.get_gender_display }}" loading="lazy">
+{% else %}
+  <span class="{{ fallback_class }}" style="background: {{ avatar.gradient }};">
+    <span class="avatar-mono">{{ fallback_label|default:avatar.name|default:avatar.get_gender_display|first|upper }}</span>
+  </span>
+{% endif %}

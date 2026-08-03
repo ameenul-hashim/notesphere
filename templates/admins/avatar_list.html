@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Avatars | NoteSphere{% endblock %}
+{% block topbar_title %}Avatars{% endblock %}
+{% block content %}
+
+  <div class="page-head sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h1 class="page-title">Avatar Library</h1>
+      <p class="page-subtitle">
+        {{ active_count }} of {{ total_count }} avatars active — {{ male_count }} male, {{ female_count }} female.
+        Add new avatars, or edit, deactivate and delete existing ones.
+      </p>
+    </div>
+    <a href="{% url 'admins:avatar_add' %}" class="btn btn-primary">Add Avatar</a>
+  </div>
+
+  <div class="media-grid">
+    {% for avatar in avatars %}
+      <article class="media-card">
+        <div class="media-thumb avatar-thumb">
+          {% include "_avatar_picture.html" with avatar=avatar img_class="avatar-option-img" fallback_class="avatar-face" %}
+        </div>
+        <div class="media-body">
+          <div class="flex items-start justify-between gap-2">
+            <h3 class="media-title">{{ avatar.name|default:avatar.get_gender_display }}</h3>
+            {% if avatar.is_active %}
+              <span class="badge badge-success">Active</span>
+            {% else %}
+              <span class="badge badge-neutral">Inactive</span>
+            {% endif %}
+          </div>
+          <p class="media-desc">{{ avatar.get_gender_display }}{% if avatar.image %} &middot; custom upload{% else %} &middot; built-in{% endif %}</p>
+          <div class="media-meta">
+            {% if avatar.is_active %}
+              <form method="post"
+                    data-confirm="Deactivate this avatar? Users currently using it will fall back to the default avatar."
+                    data-confirm-title="Deactivate avatar" data-confirm-label="Deactivate" data-confirm-danger>
+                {% csrf_token %}
+                <input type="hidden" name="pk" value="{{ avatar.pk }}">
+                <button type="submit" class="link link-danger">Deactivate</button>
+              </form>
+            {% else %}
+              <form method="post"
+                    data-confirm="Re-enable this avatar so users can select it?"
+                    data-confirm-title="Activate avatar" data-confirm-label="Activate">
+                {% csrf_token %}
+                <input type="hidden" name="pk" value="{{ avatar.pk }}">
+                <button type="submit" class="link">Activate</button>
+              </form>
+            {% endif %}
+            <span class="muted">&middot;</span>
+            <a href="{% url 'admins:avatar_edit' avatar.pk %}" class="link">Edit</a>
+            <span class="muted">&middot;</span>
+            <form method="post" action="{% url 'admins:avatar_delete' avatar.pk %}"
+                  data-confirm="Delete this avatar permanently? Users using it will fall back to the default avatar."
+                  data-confirm-title="Delete avatar" data-confirm-label="Delete" data-confirm-danger>
+              {% csrf_token %}
+              <button type="submit" class="link link-danger">Delete</button>
+            </form>
+          </div>
+        </div>
+      </article>
+    {% endfor %}
+  </div>
+{% endblock %}

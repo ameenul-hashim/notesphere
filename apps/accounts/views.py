@@ -1,22 +1,28 @@
 """Student-facing authentication views."""
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
+from django.core.mail import send_mail
 from django.db.models import Count, Q
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 
 from .decorators import student_required
 from .forms import (
+    AvatarSelectionForm,
+    ChangePasswordForm,
     ForgotPasswordForm,
     LoginForm,
     OTPVerifyForm,
     SetNewPasswordForm,
     SignUpForm,
+    StudentContactForm,
+    StudentUsernameForm,
 )
 from academics.models import Semester
-from .models import PasswordResetOTP, User, UserActivity
+from .models import Avatar, PasswordResetOTP, User
 from .services import create_and_send_otp, set_password_and_track
 
 
@@ -106,13 +112,7 @@ def reset_password(request):
     form = SetNewPasswordForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
         user = otp_obj.user
-        set_password_and_track(
-            user,
-            form.cleaned_data["password"],
-            request,
-            action=UserActivity.Action.PASSWORD_RESET,
-            detail="Password reset via OTP flow",
-        )
+        set_password_and_track(user, form.cleaned_data["password"])
         otp_obj.is_used = True
         otp_obj.save(update_fields=["is_used"])
         messages.success(request, "Password reset successfully. Please log in.")
@@ -141,3 +141,134 @@ def student_dashboard(request):
         .annotate(subject_count=Count("subjects", filter=Q(subjects__status="ACTIVE")))
     )
     return render(request, "accounts/student_dashboard.html", {"active_semesters": active_semesters})
+
+
+@login_required
+@student_required
+def student_profile(request):
+    """Student-only profile page: contact details, username, avatar and password.
+
+    The profile picture (avatar picker) sits in a separate aside column and
+    always shows the current image + username at the top.
+    """
+    contact_form = StudentContactForm(instance=request.user)
+    username_form = StudentUsernameForm(instance=request.user)
+    avatar_form = AvatarSelectionForm(instance=request.user)
+    password_form = ChangePasswordForm(user=request.user)
+
+    if request.method == "POST":
+        if "save_contact" in request.POST:
+            contact_form = StudentContactForm(instance=request.user, data=request.POST)
+            if contact_form.is_valid():
+                contact_form.save()
+                messages.success(request, "Contact details updated successfully.")
+                return redirect("accounts:student_profile")
+        elif "save_username" in request.POST:
+            username_form = StudentUsernameForm(instance=request.user, data=request.POST)
+            if username_form.is_valid():
+                username_form.save()
+                messages.success(request, "Username updated successfully.")
+                return redirect("accounts:student_profile")
+        elif "save_avatar" in request.POST:
+            avatar_form = AvatarSelectionForm(instance=request.user, data=request.POST)
+            if avatar_form.is_valid():
+                avatar_form.save()
+                messages.success(request, "Avatar updated successfully.")
+                return redirect("accounts:student_profile")
+        elif "change_password" in request.POST:
+            password_form = ChangePasswordForm(user=request.user, data=request.POST)
+            if password_form.is_valid():
+                set_password_and_track(
+                    request.user,
+                    password_form.cleaned_data["new_password"],
+                )
+                messages.success(request, "Password changed successfully.")
+                return redirect("accounts:student_profile")
+
+    return render(
+        request,
+        "accounts/student_profile.html",
+        {
+            "profile_user": request.user,
+            "contact_form": contact_form,
+            "username_form": username_form,
+            "avatar_form": avatar_form,
+            "avatar_value": avatar_form["avatar"].value(),
+            "avatars": Avatar.objects.filter(is_active=True),
+            "password_form": password_form,
+        },
+    )
+
+
+@login_required
+@student_required
+def student_avatar(request):
+    """Dedicated page for selecting and updating student profile avatar."""
+    if not request.user.avatar:
+        default_avatar = Avatar.objects.filter(is_active=True).first()
+        if default_avatar:
+            request.user.avatar = default_avatar
+            request.user.save(update_fields=["avatar", "updated_at"])
+
+    avatar_form = AvatarSelectionForm(instance=request.user)
+    if request.method == "POST":
+        avatar_form = AvatarSelectionForm(instance=request.user, data=request.POST)
+        if avatar_form.is_valid():
+            avatar_form.save()
+            messages.success(request, "Profile avatar updated successfully.")
+            return redirect("accounts:student_avatar")
+
+    return render(
+        request,
+        "accounts/student_avatar.html",
+        {
+            "profile_user": request.user,
+            "avatar_form": avatar_form,
+            "avatar_value": avatar_form["avatar"].value(),
+            "avatars": Avatar.objects.filter(is_active=True),
+        },
+    )
+
+
+@login_required
+@student_required
+def student_support(request):
+    """Student support page: allows sending email inquiries to admin/support."""
+    if request.method == "POST":
+        subject = request.POST.get("subject", "").strip()
+        message = request.POST.get("message", "").strip()
+
+        if not subject or not message:
+            messages.error(request, "Please fill out both subject and description.")
+        else:
+            email_body = (
+                f"Support Request from Student:\n"
+                f"Name: {request.user.full_name}\n"
+                f"Username: {request.user.username}\n"
+                f"Email: {request.user.email}\n"
+                f"Phone: {request.user.phone}\n\n"
+                f"Subject: {subject}\n\n"
+                f"Message:\n{message}"
+            )
+            recipient = getattr(settings, "SUPPORT_EMAIL", "noreply@notesphere.com")
+            sender = getattr(settings, "EMAIL_HOST_USER", recipient)
+            try:
+                send_mail(
+                    subject=f"[NoteSphere Support] {subject} — from {request.user.full_name}",
+                    message=email_body,
+                    from_email=sender,
+                    recipient_list=[recipient],
+                    fail_silently=False,
+                )
+                messages.success(request, "Your support message has been sent successfully!")
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).error("Support email failed: %s", e)
+                messages.error(
+                    request,
+                    f"Failed to send email. Please try again or contact support directly at {recipient}."
+                )
+            return redirect("accounts:student_support")
+
+    return render(request, "accounts/support.html", {"profile_user": request.user})
+

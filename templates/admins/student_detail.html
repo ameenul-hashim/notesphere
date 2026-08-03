@@ -70,56 +70,47 @@
         </form>
       {% endif %}
 
-      <a href="{% url 'admins:initiate_student_password_reset' student.pk %}" class="btn btn-primary">
-        Reset Password
-      </a>
       <a href="{% url 'admins:delete_student' student.pk %}" class="btn btn-danger-ghost">Delete</a>
 
       <a href="{% url 'admins:student_list' %}" class="btn btn-ghost">Back</a>
     </div>
   </div>
 
-  <div class="card card-pad mt-6">
-    <h2 class="text-lg font-semibold mb-4">Activity Log</h2>
-
-    {% if activities_page.object_list %}
-      <div class="table-wrap">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Action</th>
-              <th>Detail</th>
-              <th>Browser</th>
-              <th>OS</th>
-              <th>Device</th>
-              <th>IP</th>
-              <th>When</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for activity in activities_page %}
-              <tr>
-                <td class="font-medium whitespace-nowrap">{{ activity.get_action_display }}</td>
-                <td class="text-muted">{{ activity.detail|default:"-" }}</td>
-                <td class="text-muted">{{ activity.browser|default:"-" }}</td>
-                <td class="text-muted">{{ activity.os|default:"-" }}</td>
-                <td class="text-muted">{{ activity.device|default:"-" }}</td>
-                <td class="text-muted">{{ activity.ip_address|default:"-" }}</td>
-                <td class="text-muted whitespace-nowrap">{{ activity.created_at|date:"d M Y H:i" }}</td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+  <div class="card card-pad mb-6">
+    <div class="card-head-row">
+      <div>
+        <h2 class="text-lg font-semibold">Login Username</h2>
+        <p class="text-muted text-sm">Change the student's login username.</p>
       </div>
-
-      {% include "_pagination.html" with page_obj=activities_page qs="" %}
-
-    {% else %}
-      <div class="empty-state">
-        <p class="empty-title">No activity recorded yet</p>
-        <p class="empty-desc">Actions by this student will appear here.</p>
+    </div>
+    <form method="post" class="space-y-4 max-w-sm" novalidate>
+      {% csrf_token %}
+      <input type="hidden" name="save_username" value="1">
+      {% include "_form_errors.html" with form=username_form %}
+      {% include "_field.html" with field=username_form.username %}
+      <div class="flex justify-end">
+        <button type="submit" class="btn btn-primary">Save Username</button>
       </div>
-    {% endif %}
+    </form>
+  </div>
+
+  <div class="card card-pad mb-6">
+    <div class="card-head-row">
+      <div>
+        <h2 class="text-lg font-semibold">Password</h2>
+        <p class="text-muted text-sm">Set a new password for the student directly. The student's other sessions will be signed out.</p>
+      </div>
+    </div>
+    <form method="post" class="space-y-4 max-w-lg" novalidate>
+      {% csrf_token %}
+      <input type="hidden" name="save_password" value="1">
+      {% include "_form_errors.html" with form=password_form %}
+      {% include "_field.html" with field=password_form.new_password %}
+      {% include "_field.html" with field=password_form.confirm_password %}
+      <div class="flex justify-end">
+        <button type="submit" class="btn btn-primary">Update Password</button>
+      </div>
+    </form>
   </div>
 </div>
 {% endblock %}

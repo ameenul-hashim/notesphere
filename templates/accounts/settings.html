@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Appearance | NoteSphere{% endblock %}
+{% block topbar_title %}Appearance{% endblock %}
+{% block content %}
+<div class="max-w-5xl mx-auto">
+  <div class="page-head">
+    <h1 class="page-title">Appearance</h1>
+    <p class="page-subtitle">
+      Pick a color theme. Your choice is saved instantly — 15 themes with both light and dark options.
+    </p>
+  </div>
+
+  <div class="card card-pad" data-theme-page>
+    <div class="card-head-row">
+      <div>
+        <h2 class="text-lg font-semibold">Color Theme</h2>
+        <p class="text-muted text-sm">Click a card to preview and apply it. Applied automatically.</p>
+      </div>
+    </div>
+    <div class="theme-page-grid" role="listbox" aria-label="Choose theme">
+      <!-- Preview cards are rendered by theme.js -->
+    </div>
+  </div>
+</div>
+{% endblock %}

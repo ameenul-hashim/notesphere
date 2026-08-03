@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}My Profile | NoteSphere{% endblock %}
+{% block topbar_title %}Profile{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto">
+  <div class="page-head">
+    <h1 class="page-title">My Profile</h1>
+    <p class="page-subtitle">
+      Manage your contact details, username and avatar.
+      Color themes are handled separately on the <a href="{% url 'admins:appearance' %}" class="link">Appearance</a> page.
+    </p>
+  </div>
+
+  <div class="grid gap-6 lg:grid-cols-[300px_1fr] lg:items-start">
+    <aside>
+      <div class="card card-pad lg:sticky lg:top-6">
+        <div class="flex flex-col items-center text-center">
+          <div class="w-28 h-32 rounded-2xl border-2 border-primary/20 shadow-md overflow-hidden bg-card flex items-center justify-center mb-3 p-1">
+            {% include "_avatar.html" with user=profile_user shape="passport" %}
+          </div>
+          <h2 class="text-lg font-bold text-foreground leading-tight">{{ profile_user.full_name }}</h2>
+          <p class="text-xs text-muted font-medium mt-0.5">@{{ profile_user.username }}</p>
+          <span class="inline-block mt-2 text-[11px] font-bold uppercase tracking-wider text-primary bg-primary/10 px-2.5 py-1 rounded-full">
+            {{ profile_user.get_role_display }}
+          </span>
+
+          <a href="{% url 'accounts:student_avatar' %}" class="btn btn-ghost btn-block mt-5 flex items-center justify-center gap-2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            Change Profile Avatar
+          </a>
+        </div>
+      </div>
+    </aside>
+
+    <div class="space-y-6">
+      <div class="card card-pad">
+        <div class="card-head-row">
+          <div>
+            <h2 class="text-lg font-semibold">Contact Details</h2>
+            <p class="text-muted text-sm">Email and phone number.</p>
+          </div>
+        </div>
+        <form method="post" class="space-y-4" novalidate>
+          {% csrf_token %}
+          <input type="hidden" name="save_contact" value="1">
+          {% include "_form_errors.html" with form=contact_form %}
+          <div class="grid sm:grid-cols-2 gap-4">
+            {% include "_field.html" with field=contact_form.email %}
+            {% include "_field.html" with field=contact_form.phone %}
+          </div>
+          <div class="flex justify-end">
+            <button type="submit" class="btn btn-primary">Save Contact Details</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card card-pad">
+        <div class="card-head-row">
+          <div>
+            <h2 class="text-lg font-semibold">Username</h2>
+            <p class="text-muted text-sm">Your login username.</p>
+          </div>
+        </div>
+        <form method="post" class="space-y-4" novalidate>
+          {% csrf_token %}
+          <input type="hidden" name="save_username" value="1">
+          {% include "_form_errors.html" with form=username_form %}
+          <div class="max-w-sm">
+            {% include "_field.html" with field=username_form.username %}
+          </div>
+          <div class="flex justify-end">
+            <button type="submit" class="btn btn-primary">Save Username</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card card-pad">
+        <div class="card-head-row">
+          <div>
+            <h2 class="text-lg font-semibold">Change Password</h2>
+            <p class="text-muted text-sm">Set a new password for your account.</p>
+          </div>
+        </div>
+        <form method="post" class="max-w-lg space-y-4" novalidate>
+          {% csrf_token %}
+          <input type="hidden" name="change_password" value="1">
+          {% include "_form_errors.html" with form=password_form %}
+          {% include "_field.html" with field=password_form.current_password %}
+          {% include "_field.html" with field=password_form.new_password %}
+          {% include "_field.html" with field=password_form.confirm_password %}
+          <div class="flex justify-end">
+            <button type="submit" class="btn btn-primary">Update Password</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

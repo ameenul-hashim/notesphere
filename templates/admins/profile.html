@@ -1,11 +1,15 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}My Profile | NoteSphere{% endblock %}
 {% block topbar_title %}Profile{% endblock %}
 {% block content %}
 <div class="max-w-4xl mx-auto">
   <div class="page-head">
     <h1 class="page-title">My Profile</h1>
-    <p class="page-subtitle">Manage your account details, profile photo and theme.</p>
+    <p class="page-subtitle">
+      Manage your account details and profile picture.
+      Color themes are handled separately on the <a href="{% url 'admins:appearance' %}" class="link">Appearance</a> page.
+    </p>
   </div>
 
   <div class="card card-pad mb-6">
@@ -20,46 +24,82 @@
         </div>
       </div>
     </div>
+  </div>
 
-    <form method="post" enctype="multipart/form-data" class="grid sm:grid-cols-2 gap-4">
+  <div class="card card-pad mb-6">
+    <div class="card-head-row">
+      <div>
+        <h2 class="text-lg font-semibold">Account Details</h2>
+        <p class="text-muted text-sm">Full name, username, email and phone.</p>
+      </div>
+    </div>
+    <form method="post" class="space-y-4" novalidate>
       {% csrf_token %}
-      <input type="hidden" name="save_profile" value="1">
-      {% include "_field.html" with field=profile_form.full_name %}
-      {% include "_field.html" with field=profile_form.username %}
-      {% include "_field.html" with field=profile_form.email %}
-      {% include "_field.html" with field=profile_form.phone %}
-      {% include "_field.html" with field=profile_form.theme %}
+      <input type="hidden" name="save_details" value="1">
+      {% include "_form_errors.html" with form=details_form %}
+      <div class="grid sm:grid-cols-2 gap-4">
+        {% include "_field.html" with field=details_form.full_name %}
+        {% include "_field.html" with field=details_form.username %}
+        {% include "_field.html" with field=details_form.email %}
+        {% include "_field.html" with field=details_form.phone %}
+      </div>
+      <div class="flex justify-end">
+        <button type="submit" class="btn btn-primary">Save Details</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="card card-pad mb-6">
+    <div class="card-head-row">
+      <div>
+        <h2 class="text-lg font-semibold">Profile Picture</h2>
+        <p class="text-muted text-sm">Upload your own photo. Uploading a photo replaces any curated avatar.</p>
+      </div>
+    </div>
+    <form method="post" class="space-y-4" enctype="multipart/form-data" novalidate>
+      {% csrf_token %}
+      <input type="hidden" name="save_picture" value="1">
+      {% include "_form_errors.html" with form=picture_form %}
+
       <div class="field">
-        {% if profile_form.profile_image.label %}
-          <label for="{{ profile_form.profile_image.id_for_label }}" class="field-label">{{ profile_form.profile_image.label }}</label>
-        {% endif %}
-        {{ profile_form.profile_image }}
+        <span class="field-label">Upload a photo</span>
+        <input type="file" name="photo" accept="image/*" data-preview="photo" class="input">
+        <p class="field-hint">A square photo works best. It is cropped to a circle.</p>
         <div class="image-preview" data-preview-target>
-          {% if profile_user.profile_image %}
-            <img src="{{ profile_user.profile_image.url }}" alt="Current profile image">
+          {% if profile_user.photo %}
+            <img src="{{ profile_user.photo.url }}" alt="Current photo">
           {% endif %}
         </div>
-        {% if profile_form.profile_image.errors %}
-          {% for error in profile_form.profile_image.errors %}
+        {% if picture_form.photo.errors %}
+          {% for error in picture_form.photo.errors %}
             <p class="field-error">{{ error }}</p>
           {% endfor %}
         {% endif %}
       </div>
-      <div class="sm:col-span-2">
-        <button type="submit" class="btn btn-primary">Save Changes</button>
+
+      <div class="flex justify-end">
+        <button type="submit" class="btn btn-primary">Save Picture</button>
       </div>
     </form>
   </div>
 
   <div class="card card-pad">
-    <h2 class="text-lg font-semibold mb-4">Change Password</h2>
-    <form method="post" class="max-w-lg space-y-4">
+    <div class="card-head-row">
+      <div>
+        <h2 class="text-lg font-semibold">Change Password</h2>
+        <p class="text-muted text-sm">Set a new password for your account.</p>
+      </div>
+    </div>
+    <form method="post" class="max-w-lg space-y-4" novalidate>
       {% csrf_token %}
       <input type="hidden" name="change_password" value="1">
+      {% include "_form_errors.html" with form=password_form %}
       {% include "_field.html" with field=password_form.current_password %}
       {% include "_field.html" with field=password_form.new_password %}
       {% include "_field.html" with field=password_form.confirm_password %}
-      <button type="submit" class="btn btn-primary">Update Password</button>
+      <div class="flex justify-end">
+        <button type="submit" class="btn btn-primary">Update Password</button>
+      </div>
     </form>
   </div>
 </div>

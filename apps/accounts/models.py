@@ -40,6 +40,11 @@ class User(AbstractUser):
         SLATE_GRAY = "slate_gray", "Slate Gray"
         CYBER_NEON = "cyber_neon", "Cyber Neon"
         COFFEE_BROWN = "coffee_brown", "Coffee Brown"
+        NAVY_DARK = "navy_dark", "Navy Dark"
+        FOREST_TEAL = "forest_teal", "Forest Teal"
+        CRIMSON_RED = "crimson_red", "Crimson Red"
+        LAVENDER_LIGHT = "lavender_light", "Lavender"
+        MINT_LIGHT = "mint_light", "Mint"
 
     full_name = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
@@ -57,7 +62,20 @@ class User(AbstractUser):
 
     password_changed_at = models.DateTimeField(null=True, blank=True)
 
-    profile_image = models.ImageField(upload_to="profiles/", null=True, blank=True)
+    avatar = models.ForeignKey(
+        "Avatar",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="users",
+    )
+
+    photo = models.ImageField(
+        upload_to="avatars/",
+        null=True,
+        blank=True,
+        help_text="Custom profile photo (admins). Rendered in place of the avatar.",
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -77,6 +95,56 @@ class User(AbstractUser):
     def __str__(self):
         # Display rule: the username is a login credential and is never shown.
         return self.full_name
+
+    @property
+    def is_admin(self):
+        return self.role == self.Role.ADMIN
+
+    @property
+    def is_student(self):
+        return self.role == self.Role.STUDENT
+
+
+class Avatar(models.Model):
+    """A selectable avatar from the built-in professional library.
+
+    Ten built-in avatars exist (5 male + 5 female) in a modern flat-illustration
+    style, served as static PNG images referenced by gender + display order.
+    Admins can add, edit and delete avatars; a custom avatar without an image
+    falls back to the static PNG matching its gender + display order.
+    """
+
+    class Gender(models.TextChoices):
+        MALE = "male", "Male"
+        FEMALE = "female", "Female"
+
+    name = models.CharField(
+        max_length=60,
+        blank=True,
+        help_text="Display name, e.g. \"Professional Woman 1\".",
+    )
+    image = models.ImageField(
+        upload_to="avatars/library/",
+        null=True,
+        blank=True,
+        help_text="Optional uploaded image. When set, it is used instead of the static illustration.",
+    )
+    icon_path = models.TextField(blank=True, help_text="Inline SVG portrait markup (viewBox 0 0 96 96).")
+    color_from = models.CharField(max_length=7, default="#6366f1")
+    color_to = models.CharField(max_length=7, default="#8b5cf6")
+    gender = models.CharField(max_length=10, choices=Gender.choices, default=Gender.MALE)
+    is_active = models.BooleanField(default=True)
+    display_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["display_order", "pk"]
+
+    def __str__(self):
+        return self.name or f"Avatar {self.pk} ({self.get_gender_display()})"
+
+    @property
+    def gradient(self):
+        return f"linear-gradient(135deg, {self.color_from}, {self.color_to})"
 
 
 class PasswordResetOTP(models.Model):
@@ -103,37 +171,3 @@ class PasswordResetOTP(models.Model):
     @property
     def is_expired(self):
         return timezone.now() >= self.expires_at
-
-
-class UserActivity(models.Model):
-    """Audit log reserved for important account events only.
-
-    Login timestamps live on `User.last_login`; this table intentionally does
-    NOT record every login/logout. Only password resets, profile updates and
-    block / unblock / delete actions are stored.
-    """
-
-    class Action(models.TextChoices):
-        PASSWORD_RESET = "PASSWORD_RESET", "Password Reset"
-        PROFILE_UPDATED = "PROFILE_UPDATED", "Profile Updated"
-        ACCOUNT_BLOCKED = "ACCOUNT_BLOCKED", "Account Blocked"
-        ACCOUNT_UNBLOCKED = "ACCOUNT_UNBLOCKED", "Account Unblocked"
-        ACCOUNT_DELETED = "ACCOUNT_DELETED", "Account Deleted"
-
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="activities")
-    action = models.CharField(max_length=30, choices=Action.choices)
-    detail = models.TextField(blank=True)
-    ip_address = models.GenericIPAddressField(null=True, blank=True)
-    browser = models.CharField(max_length=100, blank=True)
-    os = models.CharField(max_length=100, blank=True)
-    device = models.CharField(max_length=100, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ["-created_at"]
-        indexes = [
-            models.Index(fields=["user", "created_at"]),
-        ]
-
-    def __str__(self):
-        return f"{self.user.full_name} - {self.action}"

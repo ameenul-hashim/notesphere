@@ -1,7 +1,19 @@
-<span class="avatar {% if size == 'xl' %}avatar-xl{% elif size == 'lg' %}avatar-lg{% else %}avatar-md{% endif %}">
-  {% if user.profile_image %}
-    <img src="{{ user.profile_image.url }}" alt="{{ user.full_name }}">
+{% if shape == 'passport' or passport %}
+  <span class="avatar avatar-passport">
+{% elif size == 'xl' %}
+  <span class="avatar avatar-xl">
+{% elif size == 'lg' %}
+  <span class="avatar avatar-lg">
+{% else %}
+  <span class="avatar avatar-md">
+{% endif %}
+  {% if user.photo %}
+    <img class="avatar-img" src="{{ user.photo.url }}" alt="{{ user.full_name }}" loading="lazy">
+  {% elif user.avatar %}
+    {% include "_avatar_picture.html" with avatar=user.avatar img_class="avatar-img" fallback_class="avatar-face avatar-face-default" fallback_label=user.full_name %}
   {% else %}
-    <span>{{ user.full_name|first|upper }}</span>
+    <span class="avatar-face avatar-face-default">
+      <span class="avatar-mono">{{ user.full_name|first|upper }}</span>
+    </span>
   {% endif %}
 </span>
