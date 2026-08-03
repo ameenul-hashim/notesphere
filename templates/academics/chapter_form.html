@@ -25,13 +25,13 @@
   <form method="post" enctype="multipart/form-data" novalidate class="space-y-4">
     {% csrf_token %}
 
-    <div class="grid grid-cols-2 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       {% include "_field.html" with field=form.subject %}
       {% include "_field.html" with field=form.language %}
     </div>
 
-    <div class="grid grid-cols-3 gap-4">
-      <div class="col-span-2">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div class="sm:col-span-2">
         {% include "_field.html" with field=form.title %}
       </div>
       <div>
@@ -60,7 +60,7 @@
       {% include "_field.html" with field=form.pdf_file %}
     </div>
 
-    <div class="grid grid-cols-2 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       {% include "_field.html" with field=form.status %}
       {% include "_field.html" with field=form.display_order %}
     </div>
