@@ -86,9 +86,10 @@
               <td>{% include "_status_badge.html" with status=student.status label=student.get_status_display %}</td>
               <td class="text-muted whitespace-nowrap">{{ student.created_at|date:"d M Y" }}</td>
               <td class="text-muted whitespace-nowrap">{{ student.last_login|date:"d M Y"|default:"Never" }}</td>
-              <td class="whitespace-nowrap space-x-2">
-                <a href="{% url 'admins:student_detail' student.pk %}" class="link">View</a>
-                <a href="{% url 'admins:student_detail' student.pk %}?edit=1#edit" class="link text-primary font-medium">Edit</a>
+              <td class="whitespace-nowrap flex items-center gap-1.5 py-3">
+                <a href="{% url 'admins:student_detail' student.pk %}" class="btn btn-xs btn-ghost border border-border">View</a>
+                <a href="{% url 'admins:student_detail' student.pk %}?edit=1#edit" class="btn btn-xs btn-outline">Edit</a>
+                <a href="{% url 'admins:delete_student' student.pk %}" class="btn btn-xs btn-danger font-semibold">Delete</a>
               </td>
             </tr>
           {% endfor %}

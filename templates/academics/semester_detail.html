@@ -83,14 +83,14 @@
 
             <div class="flex items-center gap-2">
               {% if is_admin %}
-                <a href="{% url 'academics:subject_edit' subject.pk %}" class="btn btn-xs btn-outline" title="Edit Subject">
+                <a href="{% url 'academics:subject_edit' subject.pk %}" class="btn btn-xs btn-ghost border border-border text-foreground hover:bg-surface-2" title="Edit Subject">
                   Edit
                 </a>
                 <form method="post" action="{% url 'academics:subject_delete' subject.pk %}"
                       data-confirm="Are you sure you want to delete '{{ subject.name }}'? All associated chapters will be deleted."
                       data-confirm-title="Delete Subject" data-confirm-label="Delete" data-confirm-danger class="inline">
                   {% csrf_token %}
-                  <button type="submit" class="btn btn-xs btn-danger-ghost">Delete</button>
+                  <button type="submit" class="btn btn-xs btn-danger font-semibold">Delete</button>
                 </form>
               {% endif %}
               <a href="{% url 'academics:subject_detail' subject.pk %}" class="btn btn-xs btn-primary">

@@ -2,7 +2,17 @@
 {% block title %}{{ student.full_name }} | NoteSphere{% endblock %}
 {% block topbar_title %}Students{% endblock %}
 {% block content %}
-<div class="max-w-4xl mx-auto">
+<div class="max-w-4xl mx-auto space-y-6">
+
+  {# Left Back Button Navigation #}
+  <div class="flex items-center justify-between">
+    <a href="{% url 'admins:student_list' %}" class="btn btn-ghost btn-sm inline-flex items-center gap-1.5">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/>
+      </svg>
+      Back to Students
+    </a>
+  </div>
 
   <div class="card card-pad">
     <div class="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
@@ -53,12 +63,12 @@
       </div>
     </div>
 
-    <div class="action-row mt-6 flex flex-wrap items-center gap-2">
-      <button type="button" id="edit-toggle-btn" onclick="toggleEditCard()" class="btn btn-primary inline-flex items-center gap-1.5">
+    <div class="action-row mt-6 flex flex-wrap items-center gap-2 pt-4 border-t border-border">
+      <button type="button" onclick="openEditModal()" class="btn btn-primary inline-flex items-center gap-1.5">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
         </svg>
-        <span id="edit-toggle-text">{% if show_edit %}Hide Edit{% else %}Edit Credentials{% endif %}</span>
+        Edit Credentials
       </button>
 
       {% if student.status == 'BLOCKED' %}
@@ -73,56 +83,61 @@
               data-confirm="This student will not be able to log in until unblocked."
               data-confirm-title="Block student" data-confirm-label="Block" data-confirm-danger class="inline">
           {% csrf_token %}
-          <button type="submit" class="btn btn-danger">Block</button>
+          <button type="submit" class="btn btn-danger font-semibold">Block</button>
         </form>
       {% endif %}
 
-      <a href="{% url 'admins:delete_student' student.pk %}" class="btn btn-danger-ghost">Delete</a>
-
-      <a href="{% url 'admins:student_list' %}" class="btn btn-ghost">Back</a>
+      <a href="{% url 'admins:delete_student' student.pk %}" class="btn btn-danger font-semibold inline-flex items-center gap-1">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+        </svg>
+        Delete Student
+      </a>
     </div>
   </div>
+</div>
 
-  <div id="edit-card" class="card card-pad mb-6 {% if not show_edit %}hidden{% endif %}">
-    <div class="card-head-row mb-4">
-      <div>
-        <h2 class="text-lg font-semibold">Edit Credentials</h2>
-        <p class="text-muted text-sm">Update the student's login username or set a new password.</p>
-      </div>
+{# Edit Credentials Modal Overlay Popup #}
+<div id="edit-credentials-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 {% if not show_edit %}hidden{% endif %}" role="dialog" aria-modal="true">
+  <div class="card card-pad max-w-xl w-full bg-surface shadow-2xl rounded-2xl border border-border max-h-[90vh] overflow-y-auto relative">
+    <button type="button" onclick="closeEditModal()" class="absolute top-4 right-4 text-muted hover:text-foreground p-2 rounded-lg hover:bg-surface-2 transition-colors" aria-label="Close modal">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+
+    <div class="mb-5">
+      <h2 class="text-xl font-bold text-foreground">Edit Student Credentials</h2>
+      <p class="text-xs text-muted mt-1">Update login username or reset password for <span class="font-semibold text-foreground">{{ student.full_name }}</span> (@{{ student.username }}).</p>
     </div>
 
-    {# Username sub-section #}
-    <div class="border-b border-border pb-5 mb-5">
-      <h3 class="text-sm font-semibold text-foreground mb-1">Login Username</h3>
-      <p class="text-xs text-muted mb-3">Change this student's login username. Must be unique (4–30 characters, letters, numbers and underscore only).</p>
-      <form method="post" class="space-y-3 max-w-sm" novalidate>
+    {# Username Sub-section #}
+    <div class="p-4 rounded-xl bg-surface-2/50 border border-border mb-5">
+      <h3 class="text-sm font-bold text-foreground mb-1">Update Username</h3>
+      <p class="text-xs text-muted mb-3">Change login username (4–30 characters, letters, numbers, and underscore only).</p>
+      <form method="post" class="space-y-3" novalidate>
         {% csrf_token %}
         <input type="hidden" name="save_username" value="1">
         {% include "_form_errors.html" with form=username_form %}
         {% include "_field.html" with field=username_form.username %}
-        <div class="flex justify-end">
-          <button type="submit" class="btn btn-primary">Save Username</button>
+        <div class="flex justify-end pt-1">
+          <button type="submit" class="btn btn-primary btn-sm">Save Username</button>
         </div>
       </form>
     </div>
 
-    {# Password sub-section #}
-    <div>
-      <h3 class="text-sm font-semibold text-foreground mb-1">Set New Password</h3>
-      <p class="text-xs text-muted mb-1">Set a new password for this student directly — no current password required.</p>
-      <p class="text-xs text-muted mb-3">
-        Password must be at least <strong>8 characters</strong> and contain an
-        <strong>uppercase letter</strong>, <strong>lowercase letter</strong>,
-        <strong>number</strong> and <strong>special character</strong> (e.g. <code>Test@1234</code>).
-      </p>
-      <form method="post" class="space-y-3 max-w-lg" novalidate>
+    {# Password Sub-section #}
+    <div class="p-4 rounded-xl bg-surface-2/50 border border-border">
+      <h3 class="text-sm font-bold text-foreground mb-1">Set New Password</h3>
+      <p class="text-xs text-muted mb-3">Must be at least 8 characters with uppercase, lowercase, number & special char.</p>
+      <form method="post" class="space-y-3" novalidate>
         {% csrf_token %}
         <input type="hidden" name="save_password" value="1">
         {% include "_form_errors.html" with form=password_form %}
         {% include "_field.html" with field=password_form.new_password %}
         {% include "_field.html" with field=password_form.confirm_password %}
-        <div class="flex justify-end">
-          <button type="submit" class="btn btn-primary">Update Password</button>
+        <div class="flex justify-end pt-1">
+          <button type="submit" class="btn btn-primary btn-sm">Update Password</button>
         </div>
       </form>
     </div>
@@ -130,28 +145,19 @@
 </div>
 
 <script>
-  function toggleEditCard() {
-    const card = document.getElementById('edit-card');
-    const text = document.getElementById('edit-toggle-text');
-    if (card.classList.contains('hidden')) {
-      card.classList.remove('hidden');
-      if (text) text.textContent = 'Hide Edit';
-      card.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    } else {
-      card.classList.add('hidden');
-      if (text) text.textContent = 'Edit Credentials';
-    }
+  function openEditModal() {
+    const modal = document.getElementById('edit-credentials-modal');
+    if (modal) modal.classList.remove('hidden');
+  }
+
+  function closeEditModal() {
+    const modal = document.getElementById('edit-credentials-modal');
+    if (modal) modal.classList.add('hidden');
   }
 
   document.addEventListener('DOMContentLoaded', function() {
     if (window.location.hash === '#edit' || window.location.search.includes('edit=1')) {
-      const card = document.getElementById('edit-card');
-      const text = document.getElementById('edit-toggle-text');
-      if (card) {
-        card.classList.remove('hidden');
-        if (text) text.textContent = 'Hide Edit';
-        card.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
+      openEditModal();
     }
   });
 </script>

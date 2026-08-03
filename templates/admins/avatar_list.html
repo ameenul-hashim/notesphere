@@ -31,32 +31,30 @@
             {% endif %}
           </div>
           <p class="media-desc">{{ avatar.get_gender_display }}{% if avatar.image %} &middot; custom upload{% else %} &middot; built-in{% endif %}</p>
-          <div class="media-meta">
+          <div class="media-meta flex items-center gap-2 mt-2">
+            <a href="{% url 'admins:avatar_edit' avatar.pk %}" class="btn btn-xs btn-ghost border border-border">Edit</a>
             {% if avatar.is_active %}
               <form method="post"
                     data-confirm="Deactivate this avatar? Users currently using it will fall back to the default avatar."
-                    data-confirm-title="Deactivate avatar" data-confirm-label="Deactivate" data-confirm-danger>
+                    data-confirm-title="Deactivate avatar" data-confirm-label="Deactivate" data-confirm-danger class="inline">
                 {% csrf_token %}
                 <input type="hidden" name="pk" value="{{ avatar.pk }}">
-                <button type="submit" class="link link-danger">Deactivate</button>
+                <button type="submit" class="btn btn-xs btn-danger font-semibold">Deactivate</button>
               </form>
             {% else %}
               <form method="post"
                     data-confirm="Re-enable this avatar so users can select it?"
-                    data-confirm-title="Activate avatar" data-confirm-label="Activate">
+                    data-confirm-title="Activate avatar" data-confirm-label="Activate" class="inline">
                 {% csrf_token %}
                 <input type="hidden" name="pk" value="{{ avatar.pk }}">
-                <button type="submit" class="link">Activate</button>
+                <button type="submit" class="btn btn-xs btn-success font-semibold">Activate</button>
               </form>
             {% endif %}
-            <span class="muted">&middot;</span>
-            <a href="{% url 'admins:avatar_edit' avatar.pk %}" class="link">Edit</a>
-            <span class="muted">&middot;</span>
             <form method="post" action="{% url 'admins:avatar_delete' avatar.pk %}"
                   data-confirm="Delete this avatar permanently? Users using it will fall back to the default avatar."
-                  data-confirm-title="Delete avatar" data-confirm-label="Delete" data-confirm-danger>
+                  data-confirm-title="Delete avatar" data-confirm-label="Delete" data-confirm-danger class="inline">
               {% csrf_token %}
-              <button type="submit" class="link link-danger">Delete</button>
+              <button type="submit" class="btn btn-xs btn-danger font-semibold">Delete</button>
             </form>
           </div>
         </div>

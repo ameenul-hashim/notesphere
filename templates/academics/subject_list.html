@@ -83,13 +83,13 @@
                 <span>{{ subject.semester.name }} ({{ subject.chapter_count }} chapter{{ subject.chapter_count|pluralize }})</span>
                 <span>&rarr;</span>
               </a>
-              <span class="ml-auto flex gap-3">
-                <a href="{% url 'academics:subject_edit' subject.pk %}" class="link">Edit</a>
+              <span class="ml-auto flex items-center gap-2">
+                <a href="{% url 'academics:subject_edit' subject.pk %}" class="btn btn-xs btn-ghost border border-border text-foreground hover:bg-surface-2">Edit</a>
                 <form method="post" action="{% url 'academics:subject_delete' subject.pk %}"
                       data-confirm="Delete &quot;{{ subject.name }}&quot; permanently?"
-                      data-confirm-title="Delete subject" data-confirm-label="Delete" data-confirm-danger>
+                      data-confirm-title="Delete subject" data-confirm-label="Delete" data-confirm-danger class="inline">
                   {% csrf_token %}
-                  <button type="submit" class="link link-danger">Delete</button>
+                  <button type="submit" class="btn btn-xs btn-danger font-semibold">Delete</button>
                 </form>
               </span>
             </div>

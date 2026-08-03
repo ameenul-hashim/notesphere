@@ -176,6 +176,12 @@ p {
   border-radius: 7px;
 }
 
+.btn-xs {
+  padding: 4px 10px;
+  font-size: 12px;
+  border-radius: 6px;
+}
+
 .btn-lg {
   padding: 12px 22px;
   font-size: 14.5px;
