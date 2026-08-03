@@ -231,6 +231,7 @@ def student_detail(request, pk):
     student = get_object_or_404(User.objects, pk=pk, role=User.Role.STUDENT)
     username_form = StudentUsernameForm(instance=student)
     password_form = StudentPasswordForm()
+    show_edit = request.GET.get("edit") == "1"
 
     if request.method == "POST":
         if "save_username" in request.POST:
@@ -242,12 +243,16 @@ def student_detail(request, pk):
                     f"Username updated to @{username_form.cleaned_data['username']}.",
                 )
                 return redirect("admins:student_detail", pk=pk)
+            else:
+                show_edit = True
         elif "save_password" in request.POST:
             password_form = StudentPasswordForm(data=request.POST)
             if password_form.is_valid():
                 set_password_and_track(student, password_form.cleaned_data["new_password"])
                 messages.success(request, f"Password updated for {student.full_name}.")
                 return redirect("admins:student_detail", pk=pk)
+            else:
+                show_edit = True
 
     return render(
         request,
@@ -256,6 +261,7 @@ def student_detail(request, pk):
             "student": student,
             "username_form": username_form,
             "password_form": password_form,
+            "show_edit": show_edit,
         },
     )
 

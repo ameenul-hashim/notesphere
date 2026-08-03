@@ -53,18 +53,25 @@
       </div>
     </div>
 
-    <div class="action-row mt-6">
+    <div class="action-row mt-6 flex flex-wrap items-center gap-2">
+      <button type="button" id="edit-toggle-btn" onclick="toggleEditCard()" class="btn btn-primary inline-flex items-center gap-1.5">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+        </svg>
+        <span id="edit-toggle-text">{% if show_edit %}Hide Edit{% else %}Edit Credentials{% endif %}</span>
+      </button>
+
       {% if student.status == 'BLOCKED' %}
         <form method="post" action="{% url 'admins:unblock_student' student.pk %}"
               data-confirm="Allow this student to log in again?"
-              data-confirm-title="Unblock student" data-confirm-label="Unblock">
+              data-confirm-title="Unblock student" data-confirm-label="Unblock" class="inline">
           {% csrf_token %}
           <button type="submit" class="btn btn-success">Unblock</button>
         </form>
       {% else %}
         <form method="post" action="{% url 'admins:block_student' student.pk %}"
               data-confirm="This student will not be able to log in until unblocked."
-              data-confirm-title="Block student" data-confirm-label="Block" data-confirm-danger>
+              data-confirm-title="Block student" data-confirm-label="Block" data-confirm-danger class="inline">
           {% csrf_token %}
           <button type="submit" class="btn btn-danger">Block</button>
         </form>
@@ -76,7 +83,7 @@
     </div>
   </div>
 
-  <div class="card card-pad mb-6">
+  <div id="edit-card" class="card card-pad mb-6 {% if not show_edit %}hidden{% endif %}">
     <div class="card-head-row mb-4">
       <div>
         <h2 class="text-lg font-semibold">Edit Credentials</h2>
@@ -121,4 +128,31 @@
     </div>
   </div>
 </div>
+
+<script>
+  function toggleEditCard() {
+    const card = document.getElementById('edit-card');
+    const text = document.getElementById('edit-toggle-text');
+    if (card.classList.contains('hidden')) {
+      card.classList.remove('hidden');
+      if (text) text.textContent = 'Hide Edit';
+      card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      card.classList.add('hidden');
+      if (text) text.textContent = 'Edit Credentials';
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    if (window.location.hash === '#edit' || window.location.search.includes('edit=1')) {
+      const card = document.getElementById('edit-card');
+      const text = document.getElementById('edit-toggle-text');
+      if (card) {
+        card.classList.remove('hidden');
+        if (text) text.textContent = 'Hide Edit';
+        card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+  });
+</script>
 {% endblock %}
