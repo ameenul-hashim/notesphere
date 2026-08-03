@@ -9,36 +9,93 @@ from .utils import format_clean_name
 User = get_user_model()
 
 
+from .models import CommunityPost, CommunityReply, Notification
+
+
 @login_required
 def community_chat(request):
-    """Community Chat / Discussion Forum view."""
+    """Community Chat / Discussion Forum view (WhatsApp continuous chat feed)."""
     posts = (
-        CommunityPost.objects.select_related("author", "author__avatar")
-        .prefetch_related("replies__author", "replies__author__avatar")
+        CommunityPost.objects.select_related(
+            "author", "author__avatar", "parent_post", "parent_post__author"
+        )
         .all()
+        .order_by("created_at")
     )
+
+    # Include ALL users (Admin + Students) so their cards are pre-rendered in the sidebar
+    # Firebase presence will dynamically show/hide them as they come online/offline
+    active_users = list(User.objects.select_related("avatar").order_by("-is_admin", "full_name"))
+    for u in active_users:
+        u.clean_name = format_clean_name(u.full_name)
+
 
     if request.method == "POST":
         content = request.POST.get("content", "").strip()
-        title = request.POST.get("title", "").strip()
+        parent_id = request.POST.get("parent_id", "").strip()
+        
         if content:
-            CommunityPost.objects.create(
+            parent_post = None
+            if parent_id and parent_id.isdigit():
+                parent_post = CommunityPost.objects.filter(pk=int(parent_id)).first()
+
+            new_post = CommunityPost.objects.create(
                 author=request.user,
-                title=title,
                 content=content,
+                parent_post=parent_post,
             )
-            messages.success(request, "Your question / note has been posted to the community!")
+
+            notified_user_ids = set()
+
+            # Create notification for quoted user (once)
+            if parent_post and parent_post.author != request.user:
+                sender_name = format_clean_name(request.user.full_name)
+                Notification.objects.create(
+                    user=parent_post.author,
+                    sender=request.user,
+                    message=f"{sender_name} replied to your message in Community Chat: '{content[:50]}'",
+                    url="/community/chat/",
+                )
+                notified_user_ids.add(parent_post.author.id)
+
+            # Check for @mentions in content (once per user)
+            for u in active_users:
+                if u != request.user and u.id not in notified_user_ids:
+                    if f"@{u.username}" in content or f"@{u.clean_name}" in content:
+                        sender_name = format_clean_name(request.user.full_name)
+                        Notification.objects.create(
+                            user=u,
+                            sender=request.user,
+                            message=f"{sender_name} mentioned you in Community Chat: '{content[:50]}'",
+                            url="/community/chat/",
+                        )
+                        notified_user_ids.add(u.id)
+
+            messages.success(request, "Message sent to Community Chat!")
             return redirect("community:chat")
         else:
-            messages.error(request, "Post content cannot be empty.")
+            messages.error(request, "Message content cannot be empty.")
 
     return render(
         request,
         "community/chat.html",
         {
             "posts": posts,
+            "active_users": active_users,
         },
     )
+
+
+@login_required
+def notification_read(request, notif_pk):
+    """Mark a notification as read and redirect to target URL."""
+    notif = get_object_or_404(Notification, pk=notif_pk, user=request.user)
+    notif.is_read = True
+    notif.save(update_fields=["is_read"])
+    return redirect(notif.url or "community:chat")
+
+
+
 
 
 @login_required

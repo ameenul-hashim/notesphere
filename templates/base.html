@@ -61,11 +61,19 @@
           <span class="breadcrumb-current">{% block topbar_title %}Dashboard{% endblock %}</span>
         </nav>
 
-        <div class="topbar-actions">
+        <div class="topbar-actions flex items-center gap-2">
+          {# Realtime Chat Topbar Button #}
+          <a href="{% url 'community:chat' %}" class="btn btn-sm btn-ghost border border-border/80 hover:bg-surface-2 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 px-3 py-1.5" title="Community Chat">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+            <span class="hidden sm:inline">Chat</span>
+          </a>
+
+          {# Notification Bell Menu #}
           <div class="nav-pop" data-nav-pop>
             <button
               type="button"
-              class="icon-btn"
+              class="icon-btn relative"
               data-bell-trigger
               aria-haspopup="dialog"
               aria-expanded="false"
@@ -74,18 +82,41 @@
               <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
               </svg>
+              {% if unread_notifications_count > 0 %}
+                <span class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-danger text-white text-[9px] font-black flex items-center justify-center animate-bounce">
+                  {{ unread_notifications_count }}
+                </span>
+              {% endif %}
             </button>
             <div class="nav-pop-menu" data-bell-menu aria-hidden="true">
-              <div class="nav-pop-head">
-                <p class="nav-pop-title">Notifications</p>
+              <div class="nav-pop-head flex items-center justify-between border-b border-border p-3">
+                <p class="nav-pop-title text-xs font-bold uppercase tracking-wider text-foreground">Notifications</p>
+                {% if unread_notifications_count > 0 %}
+                  <span class="badge badge-primary text-[10px]">{{ unread_notifications_count }} new</span>
+                {% endif %}
               </div>
-              <div class="nav-pop-empty">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
-                </svg>
-                <p class="nav-pop-empty-title">You're all caught up</p>
-                <span class="nav-pop-empty-sub">Notifications will appear here.</span>
-              </div>
+              
+              {% if topbar_notifications %}
+                <div class="max-h-72 overflow-y-auto divide-y divide-border/60">
+                  {% for notif in topbar_notifications %}
+                    <a href="{% url 'community:notification_read' notif.pk %}" class="block p-3 hover:bg-surface-2 transition-colors text-xs space-y-1">
+                      <div class="flex items-center justify-between gap-2">
+                        <span class="font-bold text-primary">{{ notif.sender.full_name }}</span>
+                        <span class="text-[10px] text-muted">{{ notif.created_at|timesince }} ago</span>
+                      </div>
+                      <p class="text-foreground/90 leading-tight line-clamp-2">{{ notif.message }}</p>
+                    </a>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <div class="nav-pop-empty p-6 text-center">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto mb-2 text-muted">
+                    <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+                  </svg>
+                  <p class="nav-pop-empty-title text-xs font-bold text-foreground">You're all caught up</p>
+                  <span class="nav-pop-empty-sub text-[11px] text-muted block mt-0.5">Chat @mentions & replies appear here.</span>
+                </div>
+              {% endif %}
             </div>
           </div>
 
@@ -113,5 +144,13 @@
   {% include "_modal.html" %}
   <script src="{% static 'js/theme.js' %}"></script>
   <script src="{% static 'js/main.js' %}"></script>
+  {% if user.is_authenticated %}
+    <script>
+      window.FIREBASE_CONFIG = {{ FIREBASE_CONFIG_JSON|default:"{}"|safe }};
+      window.CURRENT_USER_JSON = {{ CURRENT_USER_JSON_STR|default:"null"|safe }};
+    </script>
+    <script src="{% static 'js/firebase_init.js' %}"></script>
+    <script src="{% static 'js/firebase_presence.js' %}"></script>
+  {% endif %}
 </body>
 </html>

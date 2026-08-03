@@ -75,10 +75,25 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "accounts.context_processors.active_theme",
+                "accounts.context_processors.firebase_config",
+                "accounts.context_processors.user_notifications",
             ],
         },
     },
 ]
+
+# ---------------------------------------------------------------------------
+# Firebase Realtime Database Configuration
+# ---------------------------------------------------------------------------
+FIREBASE_CONFIG = {
+    "apiKey": os.environ.get("FIREBASE_API_KEY", "your-firebase-web-api-key"),
+    "authDomain": os.environ.get("FIREBASE_AUTH_DOMAIN", "notesphere-app.firebaseapp.com"),
+    "databaseURL": os.environ.get("FIREBASE_DATABASE_URL", "https://notesphere-app-default-rtdb.firebaseio.com"),
+    "projectId": os.environ.get("FIREBASE_PROJECT_ID", "notesphere-app"),
+    "storageBucket": os.environ.get("FIREBASE_STORAGE_BUCKET", "notesphere-app.appspot.com"),
+    "messagingSenderId": os.environ.get("FIREBASE_MESSAGING_SENDER_ID", "1234567890"),
+    "appId": os.environ.get("FIREBASE_APP_ID", "1:1234567890:web:abcdef123456"),
+}
 
 WSGI_APPLICATION = "config.wsgi.application"
 
