@@ -148,26 +148,33 @@ MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 # ---------------------------------------------------------------------------
-# Email
+# Email — Brevo SMTP (transactional provider)
 #
-# Development defaults to the console backend (OTP codes are printed in the
-# terminal). Production must set EMAIL_* values in .env / the environment.
+# All outbound email (OTP, password reset, support) goes through Brevo.
+# Set BREVO_* vars in .env. The EMAIL_* aliases point to the same values so
+# Django's built-in backends work without extra configuration.
 # ---------------------------------------------------------------------------
 
 EMAIL_BACKEND = os.environ.get(
     "EMAIL_BACKEND",
     "django.core.mail.backends.console.EmailBackend",
 )
-EMAIL_HOST = os.environ.get("EMAIL_HOST", "")
-EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
-EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
-EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
-EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "True").lower() == "true"
-EMAIL_USE_SSL = os.environ.get("EMAIL_USE_SSL", "False").lower() == "true"
-DEFAULT_FROM_EMAIL = os.environ.get(
-    "DEFAULT_FROM_EMAIL",
-    "NoteSphere <noreply@notesphere.local>",
-)
+
+# Brevo SMTP relay
+EMAIL_HOST     = os.environ.get("BREVO_SMTP_HOST",     "smtp-relay.brevo.com")
+EMAIL_PORT     = int(os.environ.get("BREVO_SMTP_PORT", "587"))
+EMAIL_HOST_USER     = os.environ.get("BREVO_SMTP_USER",     "")
+EMAIL_HOST_PASSWORD = os.environ.get("BREVO_SMTP_PASSWORD", "")
+EMAIL_USE_TLS  = os.environ.get("EMAIL_USE_TLS", "True").lower()  == "true"
+EMAIL_USE_SSL  = os.environ.get("EMAIL_USE_SSL", "False").lower() == "true"
+
+# Sender identity shown in every outbound email
+BREVO_FROM_NAME  = os.environ.get("BREVO_FROM_NAME",  "NoteSphere")
+BREVO_FROM_EMAIL = os.environ.get("BREVO_FROM_EMAIL", EMAIL_HOST_USER)
+
+DEFAULT_FROM_EMAIL = f"{BREVO_FROM_NAME} <{BREVO_FROM_EMAIL}>"
+
+# Support inbox — where student help emails are delivered
 SUPPORT_EMAIL = os.environ.get("SUPPORT_EMAIL", "noreply@notesphere.com")
 
 # ---------------------------------------------------------------------------

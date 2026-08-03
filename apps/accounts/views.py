@@ -4,7 +4,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
-from django.core.mail import EmailMessage
+from django.core.mail import EmailMessage  # noqa: F401 – kept for future use
 from django.db.models import Count, Q
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
@@ -23,7 +23,7 @@ from .forms import (
 )
 from academics.models import Semester
 from .models import Avatar, PasswordResetOTP, User
-from .services import create_and_send_otp, set_password_and_track
+from .services import create_and_send_otp, send_transactional_email, set_password_and_track
 
 
 def redirect_after_login(user):
@@ -233,23 +233,17 @@ def student_avatar(request):
 @login_required
 @student_required
 def student_support(request):
-    """Student support page: allows sending email inquiries to admin/support.
-
-    Email is sent FROM the system account (EMAIL_HOST_USER) TO the support
-    inbox, with Reply-To set to the student's own email so the admin can
-    reply directly. This avoids Gmail silently dropping self-to-self mail.
-    """
+    """Student support page — emails sent via Brevo through send_transactional_email()."""
     if request.method == "POST":
-        subject = request.POST.get("subject", "").strip()
+        subject      = request.POST.get("subject", "").strip()
         message_text = request.POST.get("message", "").strip()
 
         if not subject or not message_text:
             messages.error(request, "Please fill out both subject and description.")
         else:
-            host_user = getattr(settings, "EMAIL_HOST_USER", "")
-            recipient = getattr(settings, "SUPPORT_EMAIL", host_user)
+            support_email = getattr(settings, "SUPPORT_EMAIL", settings.EMAIL_HOST_USER)
 
-            email_body = (
+            text_body = (
                 f"Support Request from Student\n"
                 f"{'=' * 40}\n"
                 f"Name     : {request.user.full_name}\n"
@@ -260,23 +254,36 @@ def student_support(request):
                 f"Subject  : {subject}\n\n"
                 f"Message:\n{message_text}"
             )
+            html_body = f"""
+<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;padding:24px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;">
+  <h2 style="color:#111827;margin-top:0;">Support Request</h2>
+  <table style="width:100%;font-size:14px;color:#374151;margin-bottom:16px;">
+    <tr><td style="padding:4px 0;"><strong>Name</strong></td><td>{request.user.full_name}</td></tr>
+    <tr><td style="padding:4px 0;"><strong>Username</strong></td><td>@{request.user.username}</td></tr>
+    <tr><td style="padding:4px 0;"><strong>Email</strong></td><td>{request.user.email}</td></tr>
+    <tr><td style="padding:4px 0;"><strong>Phone</strong></td><td>{request.user.phone}</td></tr>
+    <tr><td style="padding:4px 0;"><strong>Subject</strong></td><td>{subject}</td></tr>
+  </table>
+  <div style="background:#f3f4f6;border-radius:6px;padding:16px;">
+    <p style="margin:0;color:#374151;white-space:pre-wrap;">{message_text}</p>
+  </div>
+  <p style="color:#9ca3af;font-size:12px;margin-top:16px;">Reply directly to this email to respond to the student.</p>
+</div>
+"""
 
-            try:
-                email = EmailMessage(
-                    subject=f"[NoteSphere Support] {subject} — from {request.user.full_name}",
-                    body=email_body,
-                    from_email=f"NoteSphere Support <{host_user}>",
-                    to=[recipient],
-                    reply_to=[f"{request.user.full_name} <{request.user.email}>"],
-                )
-                email.send(fail_silently=False)
+            ok = send_transactional_email(
+                to        = support_email,
+                subject   = f"[NoteSphere Support] {subject} — from {request.user.full_name}",
+                text_body = text_body,
+                html_body = html_body,
+                reply_to  = f"{request.user.full_name} <{request.user.email}>",
+            )
+            if ok:
                 messages.success(request, "Your support message has been sent successfully!")
-            except Exception as e:
-                import logging
-                logging.getLogger(__name__).error("Support email failed: %s", e)
+            else:
                 messages.error(
                     request,
-                    f"Failed to send email. Please try again or contact support at {recipient}.",
+                    f"Failed to send email. Please try again or contact support at {support_email}.",
                 )
             return redirect("accounts:student_support")
 
