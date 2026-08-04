@@ -206,20 +206,24 @@ def active_members_view(request):
 
 @login_required
 def online_users(request):
-    """Return JSON list of currently logged-in users (based on active Django sessions)."""
+    """Return JSON list of currently active users (based on recent session activity)."""
     import json
-    from datetime import timedelta
+    import time
     from django.contrib.sessions.models import Session
     from django.http import JsonResponse
-    from django.utils import timezone
 
-    cutoff = timezone.now()
-    sessions = Session.objects.filter(expire_date__gte=cutoff)
+    ACTIVE_THRESHOLD = 120  # 2 minutes — if no request in 2 min, considered offline
+    cutoff_epoch = int(time.time()) - ACTIVE_THRESHOLD
+
+    from django.utils import timezone as tz
+
+    sessions = Session.objects.filter(expire_date__gte=tz.now())
     user_ids = set()
     for session in sessions:
         data = session.get_decoded()
         uid = data.get("_auth_user_id")
-        if uid:
+        last_active = data.get("last_active") or 0
+        if uid and int(last_active) >= cutoff_epoch:
             user_ids.add(int(uid))
 
     users = User.objects.filter(id__in=user_ids, is_active=True).values(

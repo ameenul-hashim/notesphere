@@ -1,4 +1,5 @@
 import json
+import time
 
 from django import template
 from django.contrib.sessions.models import Session
@@ -18,16 +19,19 @@ def clean_name_filter(value):
 
 @register.simple_tag
 def online_users_json():
-    """Return JSON of currently logged-in users for initial page render."""
+    """Return JSON of currently active users for initial page render."""
     from accounts.models import User
 
-    cutoff = timezone.now()
-    sessions = Session.objects.filter(expire_date__gte=cutoff)
+    ACTIVE_THRESHOLD = 120  # 2 minutes
+    cutoff_epoch = int(time.time()) - ACTIVE_THRESHOLD
+
+    sessions = Session.objects.filter(expire_date__gte=timezone.now())
     user_ids = set()
     for session in sessions:
         data = session.get_decoded()
         uid = data.get("_auth_user_id")
-        if uid:
+        last_active = data.get("last_active") or 0
+        if uid and int(last_active) >= cutoff_epoch:
             user_ids.add(int(uid))
 
     users = User.objects.filter(id__in=user_ids, is_active=True).values(
