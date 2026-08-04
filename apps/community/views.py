@@ -97,8 +97,8 @@ def notification_read(request, notif_pk):
 @login_required
 def notifications_page(request):
     """Full-page notifications list (used on mobile instead of bell dropdown)."""
+    Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
     notifs = Notification.objects.filter(user=request.user).select_related("sender")[:50]
-    notifs.update(is_read=True)
     return render(request, "community/notifications.html", {"notifications": notifs})
 
 
