@@ -31,7 +31,7 @@
     </div>
 
     <p class="text-sm text-muted max-w-2xl text-left">
-      All registered students and staff. 🟢 Green = Online right now. 🔴 Red = Offline.
+      All registered students and staff.
     </p>
 
     {# Search bar #}
@@ -57,30 +57,19 @@
     </form>
   </div>
 
-  {# Members Grid — online/offline status indicators dynamically updated by Firebase #}
+  {# Members Grid #}
   <div class="card card-pad bg-surface/50 border border-border">
     <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
       <h2 class="text-base font-bold text-foreground flex items-center gap-2">
         <span>All Members</span>
         <span class="badge badge-neutral text-xs font-bold">{{ total_count }}</span>
       </h2>
-      <div class="flex items-center gap-3 text-[11px] text-muted font-semibold">
-        <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span> Online</span>
-        <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block"></span> Offline</span>
-      </div>
     </div>
 
     {% if students %}
-      {# Grid — online members will float to top via JS, offline to bottom #}
       <div id="members-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
         {% for student in students %}
-          <div
-            data-member-id="{{ student.id }}"
-            class="member-card group relative flex flex-col items-center justify-center p-3.5 rounded-2xl bg-surface-2/90 border border-border/80 hover:border-primary/40 hover:bg-primary/10 transition-all duration-200 hover:-translate-y-1 hover:shadow-md text-center cursor-default"
-          >
-            {# Status dot — starts red (offline), turns green when Firebase says online #}
-            <span class="member-status-dot absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-rose-500 border-2 border-surface-2" title="Offline"></span>
-            
+          <div class="member-card group relative flex flex-col items-center justify-center p-3.5 rounded-2xl bg-surface-2/90 border border-border/80 hover:border-primary/40 hover:bg-primary/10 transition-all duration-200 hover:-translate-y-1 hover:shadow-md text-center cursor-default">
             {# Avatar #}
             <div class="w-9 h-9 rounded-full overflow-hidden bg-primary/10 flex items-center justify-center mb-1.5 shadow-xs border border-primary/20 group-hover:scale-110 transition-transform">
               {% include "_avatar.html" with user=student size="sm" %}
@@ -91,8 +80,6 @@
               {{ student.clean_name }}
             </span>
 
-            {# Role + online status label #}
-            <span class="member-status-label text-[10px] font-semibold text-rose-400 mt-1">Offline</span>
             <span class="text-[10px] font-semibold text-muted opacity-60">
               {% if student.is_admin %}Admin{% else %}Student{% endif %}
             </span>
@@ -110,57 +97,4 @@
     {% endif %}
   </div>
 </div>
-
-{# Firebase Presence: Members Grid Online/Offline Sort Script #}
-<script>
-  document.addEventListener("NoteSphereFBReady", function () {
-    const db = window.NoteSphereFB.db;
-    db.ref("presence").on("value", function (snapshot) {
-      const data = snapshot.val() || {};
-      const onlineSet = new Set();
-
-      Object.keys(data).forEach(function (uid) {
-        const u = data[uid];
-        if (u && u.status === "online") onlineSet.add(String(uid));
-      });
-
-      if (window.CURRENT_USER_JSON && window.CURRENT_USER_JSON.id) {
-        onlineSet.add(String(window.CURRENT_USER_JSON.id));
-      }
-
-      const grid = document.getElementById("members-grid");
-      if (!grid) return;
-
-      const cards = Array.from(grid.querySelectorAll(".member-card"));
-
-      cards.forEach(function (card) {
-        const uid = card.getAttribute("data-member-id");
-        const dot = card.querySelector(".member-status-dot");
-        const label = card.querySelector(".member-status-label");
-        const isOnline = onlineSet.has(String(uid));
-
-        if (isOnline) {
-          if (dot) { dot.className = "member-status-dot absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse border-2 border-surface-2"; dot.title = "Online"; }
-          if (label) { label.textContent = "Online"; label.className = "member-status-label text-[10px] font-semibold text-emerald-500 mt-1"; }
-          card.dataset.onlineOrder = "0";
-        } else {
-          if (dot) { dot.className = "member-status-dot absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-rose-500 border-2 border-surface-2"; dot.title = "Offline"; }
-          if (label) { label.textContent = "Offline"; label.className = "member-status-label text-[10px] font-semibold text-rose-400 mt-1"; }
-          card.dataset.onlineOrder = "1";
-        }
-      });
-
-      // Sort: online members first, offline at the bottom
-      cards.sort(function (a, b) {
-        return parseInt(a.dataset.onlineOrder || "1") - parseInt(b.dataset.onlineOrder || "1");
-      });
-      cards.forEach(function (card) { grid.appendChild(card); });
-    });
-  });
-
-  // Immediate trigger if Firebase already initialized
-  if (window.NoteSphereFB && window.NoteSphereFB.isReady) {
-    document.dispatchEvent(new CustomEvent("NoteSphereFBReady"));
-  }
-</script>
 {% endblock %}

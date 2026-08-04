@@ -187,7 +187,7 @@ def active_members_view(request):
             full_name__icontains=query
         ) | User.objects.filter(status=User.Status.ACTIVE, email__icontains=query)
 
-    students = list(students_qs)
+    students = list(students_qs.order_by("role", "full_name"))
 
     # Attach formatted name property to each user object for crisp rendering
     for student in students:
