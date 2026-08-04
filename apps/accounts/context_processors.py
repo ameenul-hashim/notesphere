@@ -74,6 +74,7 @@ def firebase_config(request):
         "CURRENT_USER_JSON_STR": json.dumps(user_data),
         "FIREBASE_CUSTOM_TOKEN": custom_token,
         "FIREBASE_CUSTOM_TOKEN_JSON": json.dumps(custom_token),
+        "USER_REGISTRY": user_registry,
         "USER_REGISTRY_JSON_STR": json.dumps(user_registry),
     }
 

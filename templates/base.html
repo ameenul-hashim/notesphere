@@ -153,10 +153,10 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
-    {{ FIREBASE_CONFIG_JSON|json_script:"firebase-config-data" }}
-    {{ CURRENT_USER_JSON_STR|json_script:"current-user-data" }}
-    {{ FIREBASE_CUSTOM_TOKEN_JSON|json_script:"firebase-custom-token-data" }}
-    {{ USER_REGISTRY_JSON_STR|json_script:"user-registry-data" }}
+    {{ FIREBASE_CONFIG|json_script:"firebase-config-data" }}
+    {{ CURRENT_USER_JSON|json_script:"current-user-data" }}
+    {{ FIREBASE_CUSTOM_TOKEN|json_script:"firebase-custom-token-data" }}
+    {{ USER_REGISTRY|json_script:"user-registry-data" }}
     <script>
       (function() {
         try {
