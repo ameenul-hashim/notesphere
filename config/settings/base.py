@@ -229,10 +229,7 @@ MEDIA_ROOT = BASE_DIR / "media"
 # Django's built-in backends work without extra configuration.
 # ---------------------------------------------------------------------------
 
-EMAIL_BACKEND = os.environ.get(
-    "EMAIL_BACKEND",
-    "django.core.mail.backends.console.EmailBackend",
-)
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 # Brevo SMTP relay
 EMAIL_HOST     = os.environ.get("BREVO_SMTP_HOST",     "smtp-relay.brevo.com")

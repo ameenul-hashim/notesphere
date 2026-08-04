@@ -49,19 +49,12 @@ def send_transactional_email(to, subject, text_body, html_body=None, reply_to=No
         reply_to = [reply_to]
 
     from_name  = getattr(settings, "BREVO_FROM_NAME",  "NoteSphere").strip()
-    from_email = getattr(settings, "BREVO_FROM_EMAIL", settings.EMAIL_HOST_USER).strip()
+    from_email = getattr(settings, "BREVO_FROM_EMAIL", settings.EMAIL_HOST_USER).strip() or "noreply@notesphere.com"
     from_addr  = f"{from_name} <{from_email}>"
 
-    if not settings.EMAIL_HOST_USER or not settings.EMAIL_HOST_PASSWORD:
-        logger.warning("Brevo SMTP credentials not configured — skipping email send")
-        return False
-
-    import socket
-    old_timeout = socket.getdefaulttimeout()
     try:
-        socket.setdefaulttimeout(10)
         connection = get_connection(
-            backend  = "django.core.mail.backends.smtp.EmailBackend",
+            backend  = settings.EMAIL_BACKEND,
             host     = settings.EMAIL_HOST,
             port     = settings.EMAIL_PORT,
             username = settings.EMAIL_HOST_USER,
@@ -83,17 +76,15 @@ def send_transactional_email(to, subject, text_body, html_body=None, reply_to=No
             msg.body = html_body
 
         sent = msg.send(fail_silently=False)
-        logger.info("Email sent via Brevo | to=%s | subject=%s | accepted=%s", to, subject, sent)
+        logger.info("Email sent | to=%s | subject=%s | accepted=%s", to, subject, sent)
         return sent > 0
 
     except Exception as exc:
         logger.exception(
-            "Brevo email FAILED | to=%s | subject=%s | error=%s",
+            "Email FAILED | to=%s | subject=%s | error=%s",
             to, subject, exc,
         )
         return False
-    finally:
-        socket.setdefaulttimeout(old_timeout)
 
 
 # ---------------------------------------------------------------------------
