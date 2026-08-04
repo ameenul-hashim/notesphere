@@ -402,9 +402,30 @@
   }
 
 
+  /* ---------- Inline password toggle (from _field.html template) ---------- */
+  function initInlinePasswordToggles() {
+    document.querySelectorAll(".password-toggle").forEach(function (btn) {
+      var wrap = btn.closest(".input-wrap--password");
+      if (!wrap) return;
+      var input = wrap.querySelector("input");
+      if (!input) return;
+      var eyeOpen = btn.querySelector(".pw-eye-open");
+      var eyeClosed = btn.querySelector(".pw-eye-closed");
+      btn.addEventListener("click", function () {
+        var visible = input.type === "text";
+        input.type = visible ? "password" : "text";
+        if (eyeOpen) eyeOpen.style.display = visible ? "" : "none";
+        if (eyeClosed) eyeClosed.style.display = visible ? "none" : "";
+        input.focus();
+      });
+    });
+  }
+
+
   document.addEventListener("DOMContentLoaded", function () {
     modalEl = document.getElementById("modal");
     initPasswordToggles();
+    initInlinePasswordToggles();
     initSidebar();
     initToasts();
     initSidebarCollapse();

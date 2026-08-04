@@ -1117,6 +1117,13 @@ p {
   font-weight: 800;
 }
 
+.auth-header-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
 .auth-sub {
   margin: 4px 0 22px;
   font-size: 14px;
@@ -1156,6 +1163,65 @@ p {
 .input-wrap:focus-within .input-icon {
   color: var(--primary);
   transform: scale(1.08);
+}
+
+/* Password toggle */
+.input-wrap--password .input {
+  padding-right: 40px;
+}
+.password-toggle {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: transparent;
+  color: var(--text-faint);
+  cursor: pointer;
+  border-radius: 4px;
+  transition: color 0.15s ease, background 0.15s ease;
+  padding: 0;
+}
+.password-toggle:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+.password-toggle:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+/* Auth page mobile optimizations */
+@media (max-width: 480px) {
+  .auth-main {
+    padding: 60px 16px 24px;
+    min-height: 100dvh;
+  }
+  .auth-card {
+    padding: 24px 20px;
+    border-radius: 14px;
+  }
+  .auth-card--wide {
+    max-width: 100%;
+  }
+  .auth-title {
+    font-size: 18px;
+  }
+  .auth-sub {
+    margin-bottom: 18px;
+  }
+  .field {
+    margin-bottom: 14px;
+  }
+  .btn-lg {
+    padding: 11px 20px;
+    font-size: 14px;
+  }
 }
 
 /* Inline non-field error box */
