@@ -52,7 +52,10 @@ def send_transactional_email(to, subject, text_body, html_body=None, reply_to=No
     from_email = getattr(settings, "BREVO_FROM_EMAIL", settings.EMAIL_HOST_USER).strip() or "noreply@notesphere.com"
     from_addr  = f"{from_name} <{from_email}>"
 
+    import socket
+    old_timeout = socket.getdefaulttimeout()
     try:
+        socket.setdefaulttimeout(15)
         connection = get_connection(
             backend  = settings.EMAIL_BACKEND,
             host     = settings.EMAIL_HOST,
@@ -85,6 +88,8 @@ def send_transactional_email(to, subject, text_body, html_body=None, reply_to=No
             to, subject, exc,
         )
         return False
+    finally:
+        socket.setdefaulttimeout(old_timeout)
 
 
 # ---------------------------------------------------------------------------
