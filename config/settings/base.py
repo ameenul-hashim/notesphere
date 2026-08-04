@@ -207,7 +207,7 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
 
 STORAGES = {
     "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "BACKEND": "config.integrations.cloudinary_storage.CloudinaryAwareStorage",
     },
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
@@ -220,6 +220,15 @@ MEDIA_URL = "media/"
 
 
 MEDIA_ROOT = BASE_DIR / "media"
+
+# ---------------------------------------------------------------------------
+# Cloudinary — used for uploaded images (profile photos, thumbnails)
+# NOT used for Avatar images (those stay on local filesystem).
+# ---------------------------------------------------------------------------
+
+CLOUDINARY_CLOUD_NAME = os.environ.get("CLOUDINARY_CLOUD_NAME", "")
+CLOUDINARY_API_KEY = os.environ.get("CLOUDINARY_API_KEY", "")
+CLOUDINARY_API_SECRET = os.environ.get("CLOUDINARY_API_SECRET", "")
 
 # ---------------------------------------------------------------------------
 # Email — Brevo SMTP (transactional provider)

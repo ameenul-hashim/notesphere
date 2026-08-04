@@ -8,6 +8,11 @@ from django.contrib.auth.hashers import check_password
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
+from config.integrations.cloudinary_storage import (
+    delete_image_by_url,
+    upload_image,
+)
+
 from .models import Avatar, PasswordResetOTP, User
 from .validators import (
     validate_full_name,
@@ -413,12 +418,29 @@ class AdminPictureForm(forms.ModelForm):
 
     def save(self, commit=True):
         old_photo = self.instance.photo
+        old_photo_url = str(old_photo.url) if old_photo and hasattr(old_photo, "url") else None
         user = super().save(commit=False)
         user.avatar = None
+
+        # Upload new photo to Cloudinary
+        new_photo = self.cleaned_data.get("photo")
+        if new_photo:
+            cloudinary_url = upload_image(new_photo, folder="notesphere/profile")
+            if cloudinary_url:
+                user.photo = cloudinary_url
+        else:
+            # Photo was cleared or not provided — remove old Cloudinary image
+            user.photo = None
+
         if commit:
             user.save()
-        if old_photo and old_photo.name != user.photo.name:
-            old_photo.delete(save=False)
+
+        # Delete old Cloudinary image after successful save
+        if old_photo_url and "cloudinary.com" in old_photo_url:
+            new_url = str(user.photo) if user.photo else ""
+            if old_photo_url != new_url:
+                delete_image_by_url(old_photo_url)
+
         return user
 
 

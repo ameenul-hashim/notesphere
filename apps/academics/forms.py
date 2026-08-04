@@ -3,6 +3,7 @@
 from django import forms
 
 from accounts.forms import INPUT_CLASS
+from config.integrations.cloudinary_storage import delete_image_by_url, upload_image
 
 from .models import Chapter, Semester, Subject
 
@@ -38,6 +39,32 @@ class SemesterForm(forms.ModelForm):
             },
         }
 
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        old_thumb_url = None
+
+        # Capture old thumbnail URL before saving
+        if instance.pk and instance.thumbnail:
+            old_thumb_url = str(instance.thumbnail) if hasattr(instance.thumbnail, "url") else str(instance.thumbnail)
+
+        # Upload new thumbnail to Cloudinary
+        new_thumb = self.cleaned_data.get("thumbnail")
+        if new_thumb and hasattr(new_thumb, "read"):
+            cloudinary_url = upload_image(new_thumb, folder="notesphere/semesters")
+            if cloudinary_url:
+                instance.thumbnail = cloudinary_url
+
+        if commit:
+            instance.save()
+
+        # Delete old Cloudinary image after successful save
+        if old_thumb_url and "cloudinary.com" in old_thumb_url:
+            new_url = str(instance.thumbnail) if instance.thumbnail else ""
+            if old_thumb_url != new_url:
+                delete_image_by_url(old_thumb_url)
+
+        return instance
+
 
 class SubjectForm(forms.ModelForm):
     """Create or update a subject."""
@@ -71,6 +98,32 @@ class SubjectForm(forms.ModelForm):
                 "invalid": "Display order must be a non-negative number.",
             },
         }
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        old_thumb_url = None
+
+        # Capture old thumbnail URL before saving
+        if instance.pk and instance.thumbnail:
+            old_thumb_url = str(instance.thumbnail) if hasattr(instance.thumbnail, "url") else str(instance.thumbnail)
+
+        # Upload new thumbnail to Cloudinary
+        new_thumb = self.cleaned_data.get("thumbnail")
+        if new_thumb and hasattr(new_thumb, "read"):
+            cloudinary_url = upload_image(new_thumb, folder="notesphere/subjects")
+            if cloudinary_url:
+                instance.thumbnail = cloudinary_url
+
+        if commit:
+            instance.save()
+
+        # Delete old Cloudinary image after successful save
+        if old_thumb_url and "cloudinary.com" in old_thumb_url:
+            new_url = str(instance.thumbnail) if instance.thumbnail else ""
+            if old_thumb_url != new_url:
+                delete_image_by_url(old_thumb_url)
+
+        return instance
 
 
 class ChapterForm(forms.ModelForm):

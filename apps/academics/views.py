@@ -9,6 +9,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
 from accounts.decorators import admin_required
+from config.integrations.cloudinary_storage import delete_image_by_url
 
 from .forms import ChapterForm, SemesterForm, SubjectForm
 from .models import Chapter, Semester, Subject
@@ -119,6 +120,11 @@ def semester_edit(request, pk):
 def semester_delete(request, pk):
     if request.method == "POST":
         semester = get_object_or_404(Semester, pk=pk)
+        # Delete Cloudinary thumbnail before deleting record
+        if semester.thumbnail:
+            thumb_url = str(semester.thumbnail) if hasattr(semester.thumbnail, "url") else str(semester.thumbnail)
+            if "cloudinary.com" in thumb_url:
+                delete_image_by_url(thumb_url)
         messages.success(
             request,
             f'Semester "{semester.name}" and its subjects have been deleted.',
@@ -310,6 +316,11 @@ def subject_delete(request, pk):
     semester_pk = subject.semester.pk
     if request.method == "POST":
         name = subject.name
+        # Delete Cloudinary thumbnail before deleting record
+        if subject.thumbnail:
+            thumb_url = str(subject.thumbnail) if hasattr(subject.thumbnail, "url") else str(subject.thumbnail)
+            if "cloudinary.com" in thumb_url:
+                delete_image_by_url(thumb_url)
         subject.delete()
         messages.success(request, f'Subject "{name}" has been deleted.')
     return redirect("academics:semester_detail", pk=semester_pk)
