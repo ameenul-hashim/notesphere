@@ -237,13 +237,23 @@ def student_avatar(request):
 def student_support(request):
     """Student support page — emails sent via Brevo through send_transactional_email()."""
     if request.method == "POST":
+        import logging
+        _view_logger = logging.getLogger("accounts.views")
         subject      = request.POST.get("subject", "").strip()
         message_text = request.POST.get("message", "").strip()
+
+        _view_logger.info("=" * 60)
+        _view_logger.info("STUDENT_SUPPORT VIEW - POST RECEIVED")
+        _view_logger.info("User            = %s (pk=%s)", request.user.username, request.user.pk)
+        _view_logger.info("User Email      = %s", request.user.email)
+        _view_logger.info("Subject         = %s", subject)
+        _view_logger.info("Message Length  = %d chars", len(message_text))
+        _view_logger.info("=" * 60)
 
         if not subject or not message_text:
             messages.error(request, "Please fill out both subject and description.")
         else:
-            support_email = getattr(settings, "SUPPORT_EMAIL", settings.EMAIL_HOST_USER)
+            support_email = getattr(settings, "SUPPORT_EMAIL", getattr(settings, "EMAIL_HOST_USER", ""))
 
             text_body = (
                 f"Support Request from Student\n"
@@ -273,6 +283,11 @@ def student_support(request):
 </div>
 """
 
+            _view_logger.info("Calling send_transactional_email()...")
+            _view_logger.info("  to        = %s", support_email)
+            _view_logger.info("  subject   = [NoteSphere Support] %s -- from %s", subject, request.user.full_name)
+            _view_logger.info("  reply_to  = %s", request.user.email)
+
             ok = send_transactional_email(
                 to        = support_email,
                 subject   = f"[NoteSphere Support] {subject} — from {request.user.full_name}",
@@ -280,6 +295,9 @@ def student_support(request):
                 html_body = html_body,
                 reply_to  = [request.user.email] if request.user.email else None,
             )
+
+            _view_logger.info("send_transactional_email() returned: %s", ok)
+
             if ok:
                 messages.success(request, "Your support message has been sent successfully!")
             else:

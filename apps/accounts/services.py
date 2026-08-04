@@ -12,6 +12,8 @@ Falls back to Django SMTP if BREVO_API_KEY is not set (local development).
 import json
 import logging
 import secrets
+import socket
+import traceback
 import urllib.request
 import urllib.error
 
@@ -28,6 +30,48 @@ logger = logging.getLogger(__name__)
 OTP_LENGTH = 6
 OTP_LIFETIME_MINUTES = 5
 OTP_MAX_ATTEMPTS = 3
+
+
+def _mask_key(key):
+    """Mask API key for logging — show first 8 and last 4 chars."""
+    if not key or len(key) < 16:
+        return "***NOT_SET***"
+    return f"{key[:8]}...{key[-4:]}"
+
+
+def _log_env_diagnostics():
+    """Log all email-related env vars at runtime (secrets masked)."""
+    api_key = getattr(settings, "BREVO_API_KEY", "") or ""
+    smtp_user = getattr(settings, "EMAIL_HOST_USER", "") or ""
+    smtp_pass = getattr(settings, "EMAIL_HOST_PASSWORD", "") or ""
+    from_email = getattr(settings, "BREVO_FROM_EMAIL", "") or ""
+    from_name = getattr(settings, "BREVO_FROM_NAME", "") or ""
+    support_email = getattr(settings, "SUPPORT_EMAIL", "") or ""
+    django_env = getattr(settings, "DJANGO_ENV", "unknown") or "unknown"
+    settings_module = getattr(settings, "SETTINGS_MODULE", "unknown") or "unknown"
+
+    # Try to get the actual settings module from env
+    import os
+    settings_module = os.environ.get("DJANGO_SETTINGS_MODULE", "unknown")
+
+    logger.info("=" * 60)
+    logger.info("EMAIL ENVIRONMENT DIAGNOSTICS")
+    logger.info("=" * 60)
+    logger.info("DJANGO_ENV              = %s", django_env)
+    logger.info("SETTINGS_MODULE        = %s", settings_module)
+    logger.info("BREVO_API_KEY           = %s", "SET" if api_key else "NOT SET")
+    logger.info("BREVO_API_KEY (masked)  = %s", _mask_key(api_key))
+    logger.info("BREVO_FROM_NAME         = %s", from_name or "(empty)")
+    logger.info("BREVO_FROM_EMAIL        = %s", from_email or "(empty)")
+    logger.info("SUPPORT_EMAIL           = %s", support_email or "(empty)")
+    logger.info("EMAIL_BACKEND           = %s", getattr(settings, "EMAIL_BACKEND", "unknown"))
+    logger.info("EMAIL_HOST              = %s", getattr(settings, "EMAIL_HOST", "unknown"))
+    logger.info("EMAIL_PORT              = %s", getattr(settings, "EMAIL_PORT", "unknown"))
+    logger.info("EMAIL_HOST_USER         = %s", smtp_user or "(empty)")
+    logger.info("EMAIL_HOST_PASSWORD     = %s", "SET" if smtp_pass else "NOT SET")
+    logger.info("EMAIL_USE_TLS           = %s", getattr(settings, "EMAIL_USE_TLS", "unknown"))
+    logger.info("EMAIL_USE_SSL           = %s", getattr(settings, "EMAIL_USE_SSL", "unknown"))
+    logger.info("=" * 60)
 
 
 # ---------------------------------------------------------------------------
@@ -57,7 +101,15 @@ def send_transactional_email(to, subject, text_body, html_body=None, reply_to=No
     if isinstance(reply_to, str):
         reply_to = [reply_to]
 
+    # Run env diagnostics on every call (will repeat but ensures visibility)
+    _log_env_diagnostics()
+
     api_key = getattr(settings, "BREVO_API_KEY", "") or ""
+
+    logger.info("EMAIL PATH DECISION: api_key=%s -> %s",
+                "SET" if api_key else "NOT SET",
+                "Brevo HTTP API" if api_key else "SMTP fallback")
+
     if api_key:
         return _send_via_brevo_api(api_key, to, subject, text_body, html_body, reply_to)
     else:
@@ -80,7 +132,28 @@ def _send_via_brevo_api(api_key, to, subject, text_body, html_body, reply_to):
     if reply_to:
         payload["replyTo"] = [{"email": reply_to[0] if isinstance(reply_to, list) else reply_to}]
 
-    data = json.dumps(payload).encode("utf-8")
+    payload_json = json.dumps(payload, indent=2)
+
+    logger.info("=" * 60)
+    logger.info("BREVO HTTP API - SENDING EMAIL")
+    logger.info("=" * 60)
+    logger.info("URL             = https://api.brevo.com/v3/smtp/email")
+    logger.info("Method          = POST")
+    logger.info("API Key         = %s", _mask_key(api_key))
+    logger.info("Sender Name     = %s", from_name)
+    logger.info("Sender Email    = %s", from_email)
+    logger.info("Recipients      = %s", to)
+    logger.info("Subject         = %s", subject)
+    logger.info("Reply-To        = %s", reply_to or "(none)")
+    logger.info("Has HTML        = %s", bool(html_body))
+    logger.info("Text Length     = %d chars", len(text_body))
+    logger.info("HTML Length     = %d chars", len(html_body) if html_body else 0)
+    logger.info("Payload Size    = %d bytes", len(payload_json.encode("utf-8")))
+    logger.info("Payload (masked)= sender=%s/%s to=%s subject=%s",
+                from_name, from_email, to, subject)
+    logger.info("-" * 60)
+
+    data = payload_json.encode("utf-8")
     req = urllib.request.Request(
         "https://api.brevo.com/v3/smtp/email",
         data=data,
@@ -93,27 +166,105 @@ def _send_via_brevo_api(api_key, to, subject, text_body, html_body, reply_to):
     )
 
     try:
+        logger.info("HTTP Request sent, waiting for response (timeout=15s)...")
         with urllib.request.urlopen(req, timeout=15) as resp:
             body = resp.read().decode("utf-8", errors="replace")
-            logger.info("Email sent via Brevo API | to=%s | subject=%s | status=%s", to, subject, resp.status)
+            logger.info("-" * 60)
+            logger.info("BREVO API RESPONSE - SUCCESS")
+            logger.info("HTTP Status     = %d", resp.status)
+            logger.info("Response Headers= %s", dict(resp.headers))
+            logger.info("Response Body   = %s", body)
+            logger.info("Result          = %s", "ACCEPTED" if resp.status in (200, 201, 202) else "REJECTED")
+            logger.info("=" * 60)
             return resp.status in (200, 201, 202)
+
     except urllib.error.HTTPError as exc:
-        err_body = exc.read().decode("utf-8", errors="replace") if exc.fp else ""
-        logger.error("Brevo API HTTP %s | to=%s | subject=%s | response=%s", exc.code, to, subject, err_body)
+        err_body = ""
+        try:
+            err_body = exc.read().decode("utf-8", errors="replace")
+        except Exception:
+            pass
+        logger.error("=" * 60)
+        logger.error("BREVO API RESPONSE - HTTP ERROR")
+        logger.error("HTTP Status     = %d", exc.code)
+        logger.error("Response Headers= %s", dict(exc.headers) if exc.headers else "(none)")
+        logger.error("Response Body   = %s", err_body)
+        logger.error("Reason          = %s", exc.reason)
+        # Try to parse Brevo's error JSON
+        try:
+            err_json = json.loads(err_body)
+            logger.error("Brevo Error Code= %s", err_json.get("code", "unknown"))
+            logger.error("Brevo Error Msg = %s", err_json.get("message", "unknown"))
+        except (json.JSONDecodeError, ValueError):
+            logger.error("Could not parse Brevo error as JSON")
+        logger.error("=" * 60)
         return False
+
+    except urllib.error.URLError as exc:
+        logger.error("=" * 60)
+        logger.error("BREVO API - URL ERROR (network/DNS issue)")
+        logger.error("Error           = %s", exc.reason)
+        logger.error("Full Traceback  = %s", traceback.format_exc())
+        logger.error("=" * 60)
+        return False
+
+    except TimeoutError or socket.timeout:
+        logger.error("=" * 60)
+        logger.error("BREVO API - TIMEOUT")
+        logger.error("Could not connect to api.brevo.com:443 within 15 seconds")
+        logger.error("Full Traceback  = %s", traceback.format_exc())
+        logger.error("=" * 60)
+        return False
+
+    except ssl.SSLError as exc:
+        logger.error("=" * 60)
+        logger.error("BREVO API - SSL ERROR")
+        logger.error("Error           = %s", exc)
+        logger.error("Full Traceback  = %s", traceback.format_exc())
+        logger.error("=" * 60)
+        return False
+
+    except json.JSONDecodeError as exc:
+        logger.error("=" * 60)
+        logger.error("BREVO API - JSON DECODE ERROR")
+        logger.error("Error           = %s", exc)
+        logger.error("Full Traceback  = %s", traceback.format_exc())
+        logger.error("=" * 60)
+        return False
+
     except Exception as exc:
-        logger.exception("Brevo API FAILED | to=%s | subject=%s | error=%s", to, subject, exc)
+        logger.error("=" * 60)
+        logger.error("BREVO API - UNEXPECTED EXCEPTION")
+        logger.error("Exception Type  = %s", type(exc).__name__)
+        logger.error("Exception Value = %s", exc)
+        logger.error("Full Traceback  = %s", traceback.format_exc())
+        logger.error("=" * 60)
         return False
 
 
 def _send_via_smtp(to, subject, text_body, html_body, reply_to):
     """Fallback: send email via Django SMTP (works in local dev)."""
     from django.core.mail import EmailMessage, get_connection
-    import socket
 
     from_name  = getattr(settings, "BREVO_FROM_NAME",  "NoteSphere").strip()
     from_email = getattr(settings, "BREVO_FROM_EMAIL", settings.EMAIL_HOST_USER).strip() or "noreply@notesphere.com"
     from_addr  = f"{from_name} <{from_email}>"
+
+    logger.info("=" * 60)
+    logger.info("SMTP - SENDING EMAIL (fallback)")
+    logger.info("=" * 60)
+    logger.info("Host            = %s", getattr(settings, "EMAIL_HOST", "unknown"))
+    logger.info("Port            = %s", getattr(settings, "EMAIL_PORT", "unknown"))
+    logger.info("Username        = %s", getattr(settings, "EMAIL_HOST_USER", "(empty)"))
+    logger.info("Password        = %s", "SET" if getattr(settings, "EMAIL_HOST_PASSWORD", "") else "NOT SET")
+    logger.info("Use TLS         = %s", getattr(settings, "EMAIL_USE_TLS", "unknown"))
+    logger.info("Use SSL         = %s", getattr(settings, "EMAIL_USE_SSL", "unknown"))
+    logger.info("Backend         = %s", getattr(settings, "EMAIL_BACKEND", "unknown"))
+    logger.info("From            = %s", from_addr)
+    logger.info("To              = %s", to)
+    logger.info("Subject         = %s", subject)
+    logger.info("Reply-To        = %s", reply_to or "(none)")
+    logger.info("-" * 60)
 
     old_timeout = socket.getdefaulttimeout()
     try:
@@ -139,10 +290,16 @@ def _send_via_smtp(to, subject, text_body, html_body, reply_to):
             msg.content_subtype = "html"
             msg.body = html_body
         sent = msg.send(fail_silently=False)
-        logger.info("Email sent via SMTP | to=%s | subject=%s | accepted=%s", to, subject, sent)
+        logger.info("SMTP RESULT     = sent=%d %s", sent, "SUCCESS" if sent > 0 else "FAILED")
+        logger.info("=" * 60)
         return sent > 0
     except Exception as exc:
-        logger.exception("SMTP FAILED | to=%s | subject=%s | error=%s", to, subject, exc)
+        logger.error("=" * 60)
+        logger.error("SMTP - FAILED")
+        logger.error("Exception Type  = %s", type(exc).__name__)
+        logger.error("Exception Value = %s", exc)
+        logger.error("Full Traceback  = %s", traceback.format_exc())
+        logger.error("=" * 60)
         return False
     finally:
         socket.setdefaulttimeout(old_timeout)
@@ -175,6 +332,8 @@ def create_and_send_otp(user, request=None):
     )
 
     link = build_reset_link(request, otp_obj.flow_id)
+
+    logger.info("OTP CREATE | user=%s | flow_id=%s", user.username, otp_obj.flow_id)
 
     text_body = (
         f"Hello {user.full_name},\n\n"
@@ -210,6 +369,8 @@ def create_and_send_otp(user, request=None):
         text_body= text_body,
         html_body= html_body,
     )
+
+    logger.info("OTP EMAIL RESULT | user=%s | sent=%s", user.username, sent)
 
     if not sent:
         logger.error("OTP email failed to send for user %s (%s)", user.username, user.email)

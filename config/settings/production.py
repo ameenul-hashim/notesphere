@@ -10,6 +10,7 @@ secure defaults below and move the DATABASES block to Neon PostgreSQL
 from .base import *  # noqa: F401,F403
 
 import os  # noqa: E402
+import logging  # noqa: E402
 
 DEBUG = False
 
@@ -49,4 +50,40 @@ SECURE_REFERRER_POLICY = "same-origin"
 # Database connection: Neon PostgreSQL
 from config.integrations.neon import get_database_config  # noqa: E402
 DATABASES = {"default": get_database_config()}
+
+
+# ---------------------------------------------------------------------------
+# STARTUP DIAGNOSTICS — log email env vars once when Django loads
+# ---------------------------------------------------------------------------
+
+def _log_startup_email_diagnostics():
+    """Print email-related env var status once at startup (secrets masked)."""
+    _log = logging.getLogger("django.server")
+    api_key = os.environ.get("BREVO_API_KEY", "")
+    smtp_user = os.environ.get("BREVO_SMTP_USER", "")
+    smtp_pass = os.environ.get("BREVO_SMTP_PASSWORD", "")
+
+    def _mask(k):
+        if not k or len(k) < 16:
+            return "***NOT_SET***"
+        return f"{k[:8]}...{k[-4:]}"
+
+    _log.info("=" * 60)
+    _log.info("STARTUP EMAIL DIAGNOSTICS (production)")
+    _log.info("=" * 60)
+    _log.info("BREVO_API_KEY       = %s (masked: %s)", "SET" if api_key else "NOT SET", _mask(api_key))
+    _log.info("BREVO_SMTP_USER     = %s", smtp_user or "(empty)")
+    _log.info("BREVO_SMTP_PASSWORD = %s", "SET" if smtp_pass else "NOT SET")
+    _log.info("BREVO_FROM_EMAIL    = %s", os.environ.get("BREVO_FROM_EMAIL", "(empty)"))
+    _log.info("BREVO_FROM_NAME     = %s", os.environ.get("BREVO_FROM_NAME", "(empty)"))
+    _log.info("SUPPORT_EMAIL       = %s", os.environ.get("SUPPORT_EMAIL", "(empty)"))
+    _log.info("EMAIL_BACKEND       = %s", os.environ.get("EMAIL_BACKEND", "(not set, defaults to smtp)"))
+    _log.info("EMAIL_HOST          = %s", os.environ.get("BREVO_SMTP_HOST", "(not set)"))
+    _log.info("EMAIL_PORT          = %s", os.environ.get("BREVO_SMTP_PORT", "(not set)"))
+    _log.info("=" * 60)
+
+try:
+    _log_startup_email_diagnostics()
+except Exception:
+    pass
 
