@@ -40,37 +40,40 @@ class SemesterForm(forms.ModelForm):
         }
 
     def save(self, commit=True):
+        # 1. Read old thumbnail URL directly from DB
         old_thumb_url = None
-
-        # Capture old thumbnail URL before saving
-        if self.instance.pk and self.instance.thumbnail:
+        if self.instance.pk:
             try:
-                old_thumb_url = str(self.instance.thumbnail) if hasattr(self.instance.thumbnail, "url") else str(self.instance.thumbnail)
+                db_val = Semester.objects.filter(pk=self.instance.pk).values_list("thumbnail", flat=True).first()
+                if db_val and "cloudinary.com" in str(db_val):
+                    old_thumb_url = str(db_val)
             except Exception:
                 pass
 
-        # Upload new thumbnail to Cloudinary
+        # 2. Upload new thumbnail to Cloudinary
         new_thumb = self.cleaned_data.get("thumbnail")
         cloudinary_url = None
         if new_thumb and hasattr(new_thumb, "read"):
             cloudinary_url = upload_image(new_thumb, folder="notesphere/semesters")
 
-        # Clear thumbnail so Django doesn't save to local storage
+        # 3. Clear thumbnail so Django doesn't save to local storage
         self.instance.thumbnail = None
         instance = super().save(commit=False)
         instance.thumbnail = None
         if commit:
             instance.save()
 
-        # Set Cloudinary URL via raw update
+        # 4. Set Cloudinary URL via raw update
         if cloudinary_url and instance.pk:
             Semester.objects.filter(pk=instance.pk).update(thumbnail=cloudinary_url)
             instance.thumbnail = cloudinary_url
 
-        # Delete old Cloudinary image after successful save
-        if old_thumb_url and "cloudinary.com" in old_thumb_url:
-            if old_thumb_url != (cloudinary_url or ""):
+        # 5. Delete old Cloudinary image (always, if different)
+        if old_thumb_url and old_thumb_url != (cloudinary_url or ""):
+            try:
                 delete_image_by_url(old_thumb_url)
+            except Exception:
+                pass
 
         return instance
 
@@ -109,37 +112,40 @@ class SubjectForm(forms.ModelForm):
         }
 
     def save(self, commit=True):
+        # 1. Read old thumbnail URL directly from DB
         old_thumb_url = None
-
-        # Capture old thumbnail URL before saving
-        if self.instance.pk and self.instance.thumbnail:
+        if self.instance.pk:
             try:
-                old_thumb_url = str(self.instance.thumbnail) if hasattr(self.instance.thumbnail, "url") else str(self.instance.thumbnail)
+                db_val = Subject.objects.filter(pk=self.instance.pk).values_list("thumbnail", flat=True).first()
+                if db_val and "cloudinary.com" in str(db_val):
+                    old_thumb_url = str(db_val)
             except Exception:
                 pass
 
-        # Upload new thumbnail to Cloudinary
+        # 2. Upload new thumbnail to Cloudinary
         new_thumb = self.cleaned_data.get("thumbnail")
         cloudinary_url = None
         if new_thumb and hasattr(new_thumb, "read"):
             cloudinary_url = upload_image(new_thumb, folder="notesphere/subjects")
 
-        # Clear thumbnail so Django doesn't save to local storage
+        # 3. Clear thumbnail so Django doesn't save to local storage
         self.instance.thumbnail = None
         instance = super().save(commit=False)
         instance.thumbnail = None
         if commit:
             instance.save()
 
-        # Set Cloudinary URL via raw update
+        # 4. Set Cloudinary URL via raw update
         if cloudinary_url and instance.pk:
             Subject.objects.filter(pk=instance.pk).update(thumbnail=cloudinary_url)
             instance.thumbnail = cloudinary_url
 
-        # Delete old Cloudinary image after successful save
-        if old_thumb_url and "cloudinary.com" in old_thumb_url:
-            if old_thumb_url != (cloudinary_url or ""):
+        # 5. Delete old Cloudinary image (always, if different)
+        if old_thumb_url and old_thumb_url != (cloudinary_url or ""):
+            try:
                 delete_image_by_url(old_thumb_url)
+            except Exception:
+                pass
 
         return instance
 

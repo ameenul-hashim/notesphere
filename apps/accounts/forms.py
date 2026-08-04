@@ -417,18 +417,15 @@ class AdminPictureForm(forms.ModelForm):
         return cleaned
 
     def save(self, commit=True):
-        # 1. Capture old Cloudinary URL before anything changes
+        # 1. Read old photo URL directly from DB (bypasses FieldFile)
         old_photo_url = None
-        try:
-            old_val = self.instance.photo
-            if old_val:
-                name = getattr(old_val, "name", None) or str(old_val)
-                if name and "cloudinary.com" in str(name):
-                    old_photo_url = str(name)
-                elif old_val and hasattr(old_val, "url"):
-                    old_photo_url = str(old_val.url)
-        except Exception:
-            pass
+        if self.instance.pk:
+            try:
+                db_val = User.objects.filter(pk=self.instance.pk).values_list("photo", flat=True).first()
+                if db_val and "cloudinary.com" in str(db_val):
+                    old_photo_url = str(db_val)
+            except Exception:
+                pass
 
         # 2. Upload new photo to Cloudinary
         new_photo = self.cleaned_data.get("photo")
@@ -450,11 +447,12 @@ class AdminPictureForm(forms.ModelForm):
             User.objects.filter(pk=user.pk).update(photo=cloudinary_url)
             user.photo = cloudinary_url
 
-        # 5. Delete old Cloudinary image
-        if old_photo_url and cloudinary_url and old_photo_url != cloudinary_url:
-            delete_image_by_url(old_photo_url)
-        elif old_photo_url and not cloudinary_url:
-            delete_image_by_url(old_photo_url)
+        # 5. Delete old Cloudinary image (always, if different from new)
+        if old_photo_url and old_photo_url != (cloudinary_url or ""):
+            try:
+                delete_image_by_url(old_photo_url)
+            except Exception:
+                pass
 
         return user
 
