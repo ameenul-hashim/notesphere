@@ -85,15 +85,34 @@
     var el = document.getElementById('chat-online-users-drawer');
     if (!el) return;
     el.textContent = '';
-    Object.keys(onlineUsers).forEach(function (k) {
-      var p = onlineUsers[k];
+    var list = Object.keys(onlineUsers).map(function (k) { return onlineUsers[k]; });
+    if (list.length === 0) {
+      el.innerHTML = '<div class="p-6 text-center text-xs text-muted">No members online</div>';
+      return;
+    }
+    list.forEach(function (p) {
       var mine = String(p.id) === myId;
       var item = document.createElement('div');
-      item.className = 'drawer-member-item flex flex-shrink-0 items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-2 border border-border text-foreground text-xs font-semibold';
+      item.className = 'flex items-center justify-between p-3 rounded-xl bg-surface-2/60 hover:bg-surface-2 border border-border/50 transition-all';
       item.setAttribute('data-user-id', p.id);
+      var initial = (p.display_name || p.username || '?').charAt(0).toUpperCase();
       item.innerHTML =
-        '<span class="drawer-online-dot w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>' +
-        '<span>' + esc(p.display_name || p.username) + (mine ? ' (You)' : '') + '</span>';
+        '<div class="flex items-center gap-3 min-w-0">' +
+          '<div class="relative w-9 h-9 rounded-full bg-emerald-500/20 text-emerald-600 flex items-center justify-center font-bold text-xs flex-shrink-0 border border-emerald-500/40">' +
+            '<span>' + esc(initial) + '</span>' +
+            '<span class="online-indicator absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-surface animate-pulse"></span>' +
+          '</div>' +
+          '<div class="truncate">' +
+            '<span class="text-sm font-bold text-foreground truncate block leading-tight">' +
+              esc(p.display_name || p.username) +
+              (mine ? ' <span class="badge badge-primary text-[9px] px-1.5 py-0 font-bold ml-1">You</span>' : '') +
+            '</span>' +
+            '<span class="online-status-text text-[11px] text-emerald-500 font-medium">' +
+              (p.role === 'ADMIN' ? 'Administrator' : 'Student') + ' &middot; online' +
+            '</span>' +
+          '</div>' +
+        '</div>' +
+        (p.role === 'ADMIN' ? '<span class="badge badge-warning text-[9px] px-1.5 py-0">Admin</span>' : '');
       el.appendChild(item);
     });
   }

@@ -88,12 +88,17 @@
       ? `<span class="badge badge-warning text-[9px] px-1 py-0">Admin</span>`
       : '';
 
-    /* Edit/delete for own or admin */
+    /* Edit own / Delete admin-only */
     const currentUser = me();
-    const canModify = isMine(data.sender_id) || currentUser.is_admin;
-    const actionBtns = canModify
-      ? `<span>|</span>
-         <button type="button" class="hover:underline font-bold text-[10px] uppercase text-danger" onclick="NoteSphereChatDelete('${docId}')">Del</button>`
+    const isOwn = isMine(data.sender_id);
+    const editBtn = isOwn
+      ? `<button type="button" class="hover:underline font-bold text-[10px] uppercase ${mine ? 'text-primary-foreground' : 'text-primary'}" onclick="NoteSphereChatEdit('${docId}','${escHtml(data.message || '')}')">Edit</button>`
+      : '';
+    const deleteBtn = currentUser.is_admin
+      ? `<span>|</span><button type="button" class="hover:underline font-bold text-[10px] uppercase text-danger" onclick="NoteSphereChatDelete('${docId}')">Del</button>`
+      : '';
+    const actionBtns = (editBtn || deleteBtn)
+      ? `<span>|</span>${editBtn}${deleteBtn}`
       : '';
 
     const bubbleColor = mine
@@ -351,6 +356,15 @@
     window.NoteSphereFB.db.collection('community_chat').doc(docId)
       .update({ deleted: true })
       .catch(e => console.warn('Delete err', e));
+  };
+
+  window.NoteSphereChatEdit = function(docId, oldText) {
+    if (!window.NoteSphereFB?.isReady) return;
+    var newText = prompt('Edit message:', oldText);
+    if (newText === null || newText.trim() === '' || newText === oldText) return;
+    window.NoteSphereFB.db.collection('community_chat').doc(docId)
+      .update({ message: newText.trim(), edited: true })
+      .catch(e => console.warn('Edit err', e));
   };
 
   window.cancelReplyQuote = function() {
