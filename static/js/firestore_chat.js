@@ -186,14 +186,8 @@
     const container = document.getElementById('chat-messages-container');
     if (!container) return;
 
-    /* Clear Django-rendered messages */
-    container.innerHTML = `
-      <div class="flex justify-center my-2">
-        <span class="px-3.5 py-1 rounded-full bg-surface-2 border border-border/80 text-[11px] font-semibold text-muted shadow-xs">Live Discussion Stream</span>
-      </div>
-      <div id="load-more-wrapper" class="flex justify-center pb-2 hidden">
-        <button id="load-more-btn" class="btn btn-xs btn-ghost border border-border rounded-xl text-xs">Load earlier messages</button>
-      </div>`;
+    /* Don't clear Django-rendered messages — they are the fallback.
+       Firestore listener will add new messages on top. */
 
     const loadMoreWrapper = document.getElementById('load-more-wrapper');
     const loadMoreBtn = document.getElementById('load-more-btn');
