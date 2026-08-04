@@ -168,7 +168,6 @@
           window.CURRENT_USER_JSON = cuEl ? JSON.parse(cuEl.textContent) : null;
           window.FIREBASE_CUSTOM_TOKEN = tokEl ? JSON.parse(tokEl.textContent) : "";
           window.USER_REGISTRY = urEl ? JSON.parse(urEl.textContent) : {};
-          window.PRESENCE_WORKER_URL = "{% static 'js/presence_heartbeat.worker.js' %}";
         } catch(e) {
           console.error("Error parsing Firebase configuration:", e);
         }
