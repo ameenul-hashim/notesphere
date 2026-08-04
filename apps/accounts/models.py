@@ -4,6 +4,7 @@ import uuid
 
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.templatetags.static import static
 from django.utils import timezone
 
 from .managers import UserManager
@@ -103,6 +104,34 @@ class User(AbstractUser):
     @property
     def is_student(self):
         return self.role == self.Role.STUDENT
+
+    def get_avatar_url(self):
+        """Resolve the best available avatar image URL for this user.
+
+        Priority: custom photo > uploaded avatar image > built-in library PNG
+        (matching the `_avatar_picture.html` fallback). Never raises: any
+        missing or unreadable image falls back to a default library PNG.
+        """
+        try:
+            if self.photo and getattr(self.photo, "url", None):
+                return self.photo.url
+        except Exception:
+            pass
+
+        avatar = self.avatar
+        if avatar is not None:
+            try:
+                if avatar.image and getattr(avatar.image, "url", None):
+                    return avatar.image.url
+            except Exception:
+                pass
+
+            if avatar.gender == "female" and 1 <= avatar.display_order <= 5:
+                return static(f"images/avatars/avatar_female_{avatar.display_order}.png")
+            if avatar.gender == "male" and 11 <= avatar.display_order <= 15:
+                return static(f"images/avatars/avatar_male_{avatar.display_order - 10}.png")
+
+        return static("images/avatars/avatar_male_1.png")
 
 
 class Avatar(models.Model):
