@@ -1,31 +1,52 @@
 /**
  * NoteSphere Cloud Firestore Initializer
- * Initializes Firebase Firestore and exposes `window.NoteSphereFB` for presence and chat.
+ * Initializes Firebase, authenticates the Django-authenticated user against
+ * Firebase Auth using a server-issued custom token, and only then exposes
+ * `window.NoteSphereFB` as ready so presence/chat never fire unauthenticated.
  */
 (function () {
   if (window.NoteSphereFB) return;
   const fbConfig = window.FIREBASE_CONFIG || {};
+  const customToken = window.FIREBASE_CUSTOM_TOKEN || "";
 
-  try {
-    if (!firebase.apps.length) {
-      firebase.initializeApp(fbConfig);
+  async function init() {
+    try {
+      if (!firebase.apps.length) {
+        firebase.initializeApp(fbConfig);
+      }
+      const db = firebase.firestore();
+      const auth = firebase.auth();
+
+      window.NoteSphereFB = {
+        app: firebase.app(),
+        db: db,
+        auth: auth,
+        serverTimestamp: firebase.firestore.FieldValue.serverTimestamp,
+        arrayUnion: firebase.firestore.FieldValue.arrayUnion,
+        arrayRemove: firebase.firestore.FieldValue.arrayRemove,
+        isReady: false,
+      };
+
+      // Create random session ID for this browser tab (for multi-tab presence)
+      window.NoteSphereFB.session_id = 'sess_' + Math.random().toString(36).substr(2, 9);
+
+      if (customToken) {
+        // Sign into Firebase Auth with the custom token minted by Django.
+        await auth.signInWithCustomToken(customToken);
+        console.log("[Firebase] Signed in as", auth.currentUser && auth.currentUser.uid);
+      } else {
+        console.warn("[Firebase] No custom token available; skipping Firebase auth.");
+      }
+
+      window.NoteSphereFB.isReady = true;
+      document.dispatchEvent(new CustomEvent("NoteSphereFBReady"));
+    } catch (e) {
+      // request.auth stays null -> Firestore rules deny reads/writes, so the
+      // realtime features stay disabled rather than running unauthenticated.
+      console.error("NoteSphere Firebase init/auth error:", e);
+      window.NoteSphereFB && (window.NoteSphereFB.authError = true);
     }
-    const db = firebase.firestore();
-    
-    window.NoteSphereFB = {
-      app: firebase.app(),
-      db: db,
-      serverTimestamp: firebase.firestore.FieldValue.serverTimestamp,
-      arrayUnion: firebase.firestore.FieldValue.arrayUnion,
-      arrayRemove: firebase.firestore.FieldValue.arrayRemove,
-      isReady: true,
-    };
-    
-    // Create random session ID for this browser tab (for multi-tab presence)
-    window.NoteSphereFB.session_id = 'sess_' + Math.random().toString(36).substr(2, 9);
-
-    document.dispatchEvent(new CustomEvent("NoteSphereFBReady"));
-  } catch (e) {
-    console.warn("NoteSphere Firebase init warning:", e);
   }
+
+  init();
 })();

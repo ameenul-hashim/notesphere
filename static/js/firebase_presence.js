@@ -55,6 +55,9 @@
       form.addEventListener("submit", () => {
         isNavigatingAway = true;
         updatePresence("offline");
+        if (window.NoteSphereFB?.auth && window.NoteSphereFB.auth.currentUser) {
+          window.NoteSphereFB.auth.signOut().catch(() => {});
+        }
       });
     });
 
@@ -65,10 +68,8 @@
       snapshot.forEach(doc => {
         onlineSet.add(String(doc.data().user_id));
       });
-      // Ensure self is marked online in UI instantly
-      if (window.CURRENT_USER_JSON?.id) {
-          onlineSet.add(String(window.CURRENT_USER_JSON.id));
-      }
+
+      console.log("[Firebase Presence] Online users:", Array.from(onlineSet));
       
       const onlineCount = onlineSet.size;
       const countEl = document.getElementById("firebase-online-count");

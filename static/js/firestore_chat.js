@@ -158,7 +158,7 @@
     Object.keys(reg).forEach(uid => {
       const name = reg[uid].name || '';
       if (name && text.toLowerCase().includes('@' + name.toLowerCase())) {
-        mentioned.push(Number(uid));
+        mentioned.push(uid);
       }
     });
     return mentioned;
@@ -168,8 +168,8 @@
     const currentUser = me();
     if (String(recipientId) === String(currentUser.id)) return; // no self-notify
     db.collection('notifications').add({
-      recipient_id: recipientId,
-      sender_id: currentUser.id,
+      recipient_id: String(recipientId),
+      sender_id: String(currentUser.id),
       type: type,
       message: msg,
       chat_message_id: chatMsgId,
@@ -287,7 +287,7 @@
         }
 
         const msgDoc = {
-          sender_id: currentUser.id,
+          sender_id: String(currentUser.id),
           message: text,
           created_at: window.NoteSphereFB.serverTimestamp(),
           edited: false,
@@ -322,7 +322,7 @@
     const currentUser = me();
     if (currentUser.id) {
       db.collection('notifications')
-        .where('recipient_id', '==', currentUser.id)
+        .where('recipient_id', '==', String(currentUser.id))
         .where('read', '==', false)
         .onSnapshot(snap => {
           const count = snap.size;

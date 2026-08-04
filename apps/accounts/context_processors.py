@@ -1,6 +1,10 @@
 """Template context processors shared across all pages."""
 
+import logging
+
 from .models import User
+
+logger = logging.getLogger(__name__)
 
 DEFAULT_THEME = User.Theme.CLASSIC_WHITE
 
@@ -26,6 +30,7 @@ def firebase_config(request):
     from community.utils import format_clean_name
 
     user_data = None
+    custom_token = ""
     if request.user.is_authenticated:
         user_data = {
             "id": request.user.id,
@@ -35,6 +40,19 @@ def firebase_config(request):
             "is_admin": request.user.is_admin,
             "avatar_id": getattr(request.user, "avatar_id", None),
         }
+
+        # Mint a fresh Firebase custom token for the authenticated Django user.
+        # Django auth is the source of truth; the token maps the Django session
+        # onto a Firebase Auth identity so Firestore security rules can verify
+        # request.auth on the client. UID == str(user.id) so that Firestore
+        # rules (e.g. users/user_$(request.auth.uid)) resolve correctly.
+        try:
+            from config.integrations.firebase_admin_sdk import create_custom_token
+
+            custom_token = create_custom_token(str(request.user.id))
+        except Exception as exc:
+            logger.warning("Could not create Firebase custom token for user %s: %s", request.user.id, exc)
+            custom_token = ""
 
     fb_config = getattr(settings, "FIREBASE_CONFIG", {})
 
@@ -53,6 +71,8 @@ def firebase_config(request):
         "FIREBASE_CONFIG_JSON": json.dumps(fb_config),
         "CURRENT_USER_JSON": user_data,
         "CURRENT_USER_JSON_STR": json.dumps(user_data),
+        "FIREBASE_CUSTOM_TOKEN": custom_token,
+        "FIREBASE_CUSTOM_TOKEN_JSON": json.dumps(custom_token),
         "USER_REGISTRY_JSON_STR": json.dumps(user_registry),
     }
 

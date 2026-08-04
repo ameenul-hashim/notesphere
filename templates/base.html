@@ -150,19 +150,23 @@
   <script src="{% static 'js/main.js' %}"></script>
   {% if user.is_authenticated %}
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
     {{ FIREBASE_CONFIG_JSON|json_script:"firebase-config-data" }}
     {{ CURRENT_USER_JSON_STR|json_script:"current-user-data" }}
+    {{ FIREBASE_CUSTOM_TOKEN_JSON|json_script:"firebase-custom-token-data" }}
     {{ USER_REGISTRY_JSON_STR|json_script:"user-registry-data" }}
     <script>
       (function() {
         try {
           var fbEl = document.getElementById("firebase-config-data");
           var cuEl = document.getElementById("current-user-data");
+          var tokEl = document.getElementById("firebase-custom-token-data");
           var urEl = document.getElementById("user-registry-data");
           window.FIREBASE_CONFIG = fbEl ? JSON.parse(fbEl.textContent) : {};
           window.CURRENT_USER_JSON = cuEl ? JSON.parse(cuEl.textContent) : null;
+          window.FIREBASE_CUSTOM_TOKEN = tokEl ? JSON.parse(tokEl.textContent) : "";
           window.USER_REGISTRY = urEl ? JSON.parse(urEl.textContent) : {};
         } catch(e) {
           console.error("Error parsing Firebase configuration:", e);

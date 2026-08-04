@@ -10,7 +10,8 @@ service cloud.firestore {
     
     // Helper function to get the user's role from the users collection
     function getUserRole() {
-      return get(/databases/$(database)/documents/users/user_$(request.auth.uid)).data.role;
+      let userDoc = get(/databases/$(database)/documents/users/user_$(request.auth.uid));
+      return userDoc.exists ? userDoc.data.role : null;
     }
 
     // Helper function to check if the user is an ADMIN

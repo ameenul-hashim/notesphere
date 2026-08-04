@@ -67,3 +67,26 @@ def get_firestore_client():
         return firestore.client()
     except Exception as e:
         raise RuntimeError(f"Firebase Admin SDK initialization failed: {e}") from e
+
+
+def create_custom_token(uid: str) -> str:
+    """Mint a Firebase custom token for the given UID.
+
+    The UID is the string form of the Django user's primary key. The frontend
+    exchanges this token via `firebase.auth().signInWithCustomToken(...)`, after
+    which `request.auth.uid` in Firestore security rules equals that UID.
+
+    Django authentication remains the source of truth; this token simply maps a
+    Django-authenticated session onto a Firebase Authentication identity so the
+    Firestore security rules can be enforced.
+    """
+    try:
+        _init_app()
+        from firebase_admin import auth
+
+        token = auth.create_custom_token(uid, app=_app)
+        if isinstance(token, bytes):
+            token = token.decode("utf-8")
+        return token
+    except Exception as e:
+        raise RuntimeError(f"Failed to create Firebase custom token: {e}") from e
