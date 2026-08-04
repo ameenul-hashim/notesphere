@@ -9,8 +9,11 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
+from django.views.generic import RedirectView
 
 urlpatterns = [
+    # Root redirects to the login page.
+    path("", RedirectView.as_view(pattern_name="accounts:login", permanent=False)),
     # Reserved for future Django admin use.
     path("admin/", admin.site.urls),
     # Custom admin interface.
