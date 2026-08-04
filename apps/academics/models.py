@@ -28,7 +28,7 @@ class Semester(models.Model):
 
     name = models.CharField(max_length=50, unique=True)
     description = models.TextField(blank=True)
-    thumbnail = models.ImageField(upload_to="semesters/", null=True, blank=True)
+    thumbnail = models.ImageField(upload_to="semesters/", max_length=500, null=True, blank=True)
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.ACTIVE)
     display_order = models.PositiveIntegerField(default=0)
 
@@ -55,7 +55,7 @@ class Subject(models.Model):
     semester = models.ForeignKey(Semester, on_delete=models.CASCADE, related_name="subjects")
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
-    thumbnail = models.ImageField(upload_to="subjects/", null=True, blank=True)
+    thumbnail = models.ImageField(upload_to="subjects/", max_length=500, null=True, blank=True)
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.ACTIVE)
     display_order = models.PositiveIntegerField(default=0)
 

@@ -73,6 +73,7 @@ class User(AbstractUser):
 
     photo = models.ImageField(
         upload_to="avatars/",
+        max_length=500,
         null=True,
         blank=True,
         help_text="Custom profile photo (admins). Rendered in place of the avatar.",
