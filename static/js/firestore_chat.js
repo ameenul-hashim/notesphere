@@ -255,6 +255,13 @@
         if (!text) return;
 
         const currentUser = me();
+        if (!currentUser.id || !window.NoteSphereFB || !window.NoteSphereFB.isReady) {
+          /* Firebase not ready — fall back to Django POST */
+          form.submit();
+          return;
+        }
+
+        const db = window.NoteSphereFB.db;
         const mentions = parseMentions(text);
         let replyData = null;
 
@@ -278,22 +285,26 @@
           reactions: {},
         };
 
+        /* Disable button while sending */
+        const btn = form.querySelector('button[type="submit"]');
+        if (btn) btn.disabled = true;
+
         db.collection('community_chat').add(msgDoc).then(docRef => {
+          input.value = '';
+          if (parentInput) parentInput.value = '';
+          cancelReplyQuote();
+          if (btn) btn.disabled = false;
           /* Mention notifications */
           mentions.forEach(uid => {
             createNotification(db, uid, 'mention',
               `${currentUser.full_name} mentioned you in Community Chat`, docRef.id);
           });
-          /* Reply notification */
-          if (replyData?.post_id && replyData?.sender_id) {
-            createNotification(db, replyData.sender_id, 'reply',
-              `${currentUser.full_name} replied to your message`, docRef.id);
-          }
-        }).catch(err => console.warn('Send err', err));
-
-        input.value = '';
-        if (parentInput) parentInput.value = '';
-        cancelReplyQuote();
+        }).catch(err => {
+          console.warn('Firestore send failed, falling back to Django POST', err);
+          if (btn) btn.disabled = false;
+          /* Fall back to Django POST */
+          form.submit();
+        });
       });
     }
 

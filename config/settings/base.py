@@ -135,6 +135,10 @@ LOGIN_URL = "accounts:login"
 LOGIN_REDIRECT_URL = "accounts:student_dashboard"
 LOGOUT_REDIRECT_URL = "accounts:login"
 
+# Session settings — expire when browser closes so users go offline on close
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_COOKIE_AGE = 86400  # 1 day fallback for remember-me scenarios
+
 # ---------------------------------------------------------------------------
 # Database
 #

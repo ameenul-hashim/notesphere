@@ -12,4 +12,5 @@ urlpatterns = [
     path("chat/reply/<int:reply_pk>/delete/", views.reply_delete, name="reply_delete"),
     path("notifications/read/<int:notif_pk>/", views.notification_read, name="notification_read"),
     path("members/", views.active_members_view, name="members"),
+    path("online-users/", views.online_users, name="online_users"),
 ]
