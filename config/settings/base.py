@@ -18,6 +18,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(BASE_DIR / "apps"))
 
 # ---------------------------------------------------------------------------
+# Load .env file — must happen before any os.environ.get() calls below
+# In production, the .env file must exist alongside manage.py / wsgi.py.
+# ---------------------------------------------------------------------------
+try:
+    from dotenv import load_dotenv
+    load_dotenv(BASE_DIR / ".env", override=False)
+except ImportError:
+    pass  # python-dotenv not installed (should be in requirements.txt)
+
+
+# ---------------------------------------------------------------------------
 # Security
 # ---------------------------------------------------------------------------
 
