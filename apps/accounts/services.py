@@ -52,7 +52,14 @@ def send_transactional_email(to, subject, text_body, html_body=None, reply_to=No
     from_email = getattr(settings, "BREVO_FROM_EMAIL", settings.EMAIL_HOST_USER).strip()
     from_addr  = f"{from_name} <{from_email}>"
 
+    if not settings.EMAIL_HOST_USER or not settings.EMAIL_HOST_PASSWORD:
+        logger.warning("Brevo SMTP credentials not configured — skipping email send")
+        return False
+
+    import socket
+    old_timeout = socket.getdefaulttimeout()
     try:
+        socket.setdefaulttimeout(10)
         connection = get_connection(
             backend  = "django.core.mail.backends.smtp.EmailBackend",
             host     = settings.EMAIL_HOST,
@@ -85,6 +92,8 @@ def send_transactional_email(to, subject, text_body, html_body=None, reply_to=No
             to, subject, exc,
         )
         return False
+    finally:
+        socket.setdefaulttimeout(old_timeout)
 
 
 # ---------------------------------------------------------------------------
