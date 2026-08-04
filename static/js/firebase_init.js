@@ -33,7 +33,6 @@
       if (customToken) {
         // Sign into Firebase Auth with the custom token minted by Django.
         await auth.signInWithCustomToken(customToken);
-        console.log("[Firebase] Signed in as", auth.currentUser && auth.currentUser.uid);
       } else {
         console.warn("[Firebase] No custom token available; skipping Firebase auth.");
       }

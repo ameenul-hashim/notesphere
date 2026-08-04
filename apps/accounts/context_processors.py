@@ -39,6 +39,7 @@ def firebase_config(request):
             "role": request.user.role,
             "is_admin": request.user.is_admin,
             "avatar_id": getattr(request.user, "avatar_id", None),
+            "avatar_url": request.user.get_avatar_url(),
         }
 
         # Mint a fresh Firebase custom token for the authenticated Django user.

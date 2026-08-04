@@ -69,7 +69,10 @@
     {% if students %}
       <div id="members-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
         {% for student in students %}
-          <div class="member-card group relative flex flex-col items-center justify-center p-3.5 rounded-2xl bg-surface-2/90 border border-border/80 hover:border-primary/40 hover:bg-primary/10 transition-all duration-200 hover:-translate-y-1 hover:shadow-md text-center cursor-default">
+          <div class="member-card group relative flex flex-col items-center justify-center p-3.5 rounded-2xl bg-surface-2/90 border border-border/80 hover:border-primary/40 hover:bg-primary/10 transition-all duration-200 hover:-translate-y-1 hover:shadow-md text-center cursor-default" data-member-id="{{ student.id }}">
+            {# Realtime presence indicator (updated by static/js/presence.js) #}
+            <span class="member-status-dot absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-rose-500 border-2 border-surface-2 hidden" title="Offline"></span>
+
             {# Avatar #}
             <div class="w-9 h-9 rounded-full overflow-hidden bg-primary/10 flex items-center justify-center mb-1.5 shadow-xs border border-primary/20 group-hover:scale-110 transition-transform">
               {% include "_avatar.html" with user=student size="sm" %}
@@ -80,7 +83,7 @@
               {{ student.clean_name }}
             </span>
 
-            <span class="text-[10px] font-semibold text-muted opacity-60">
+            <span class="member-status-label text-[10px] font-semibold text-muted opacity-60">
               {% if student.is_admin %}Admin{% else %}Student{% endif %}
             </span>
           </div>
