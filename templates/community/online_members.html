@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Online Members | NoteSphere{% endblock %}
+{% block topbar_title %}Online Members{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto">
+  <div class="page-head">
+    <h1 class="page-title">Online Members</h1>
+    <p class="page-subtitle">Members who are currently active. Updates automatically every 15 seconds.</p>
+  </div>
+
+  <div class="card overflow-hidden">
+    <div id="online-page-list" class="p-3 space-y-2">
+      {% if online_users %}
+        {% for u in online_users %}
+          <div class="flex items-center justify-between p-3 rounded-xl bg-surface-2/60 hover:bg-surface-2 border border-border/50 transition-all">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="relative w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-600 flex items-center justify-center font-bold text-sm flex-shrink-0 border border-emerald-500/40">
+                <span>{{ u.display_name|truncatechars:1 }}</span>
+                <span class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-surface animate-pulse"></span>
+              </div>
+              <div class="truncate">
+                <span class="text-sm font-bold text-foreground truncate block leading-tight">{{ u.display_name }}</span>
+                <span class="text-[11px] text-emerald-500 font-medium">
+                  {% if u.role == 'ADMIN' %}Administrator{% else %}Student{% endif %} &middot; online
+                </span>
+              </div>
+            </div>
+            {% if u.role == 'ADMIN' %}
+              <span class="badge badge-warning text-[9px] px-1.5 py-0">Admin</span>
+            {% endif %}
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="p-8 text-center text-sm text-muted">
+          No members currently online.
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

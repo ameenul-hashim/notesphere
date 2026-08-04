@@ -72,6 +72,7 @@ def admin_login(request):
 
 def admin_logout(request):
     if request.method == "POST":
+        request.session.flush()
         logout(request)
         messages.success(request, "You have been logged out.")
     return redirect("admins:admin_login")

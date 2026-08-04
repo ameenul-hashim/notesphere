@@ -94,6 +94,14 @@ def notification_read(request, notif_pk):
     return redirect(notif.url or "community:chat")
 
 
+@login_required
+def notifications_page(request):
+    """Full-page notifications list (used on mobile instead of bell dropdown)."""
+    notifs = Notification.objects.filter(user=request.user).select_related("sender")[:50]
+    notifs.update(is_read=True)
+    return render(request, "community/notifications.html", {"notifications": notifs})
+
+
 
 
 
@@ -238,3 +246,34 @@ def online_users(request):
             "role": u["role"],
         })
     return JsonResponse({"online": result})
+
+
+@login_required
+def online_members_page(request):
+    """Full-page view of currently online members (for mobile sidebar link)."""
+    ACTIVE_THRESHOLD = 120
+    cutoff_epoch = int(time.time()) - ACTIVE_THRESHOLD
+
+    from django.utils import timezone as tz
+
+    sessions = Session.objects.filter(expire_date__gte=tz.now())
+    user_ids = set()
+    for session in sessions:
+        data = session.get_decoded()
+        uid = data.get("_auth_user_id")
+        last_active = data.get("last_active") or 0
+        if uid and int(last_active) >= cutoff_epoch:
+            user_ids.add(int(uid))
+
+    users = User.objects.filter(id__in=user_ids, is_active=True).select_related("avatar")
+    online_list = []
+    for u in users:
+        online_list.append({
+            "id": u.id,
+            "username": u.username,
+            "display_name": format_clean_name(u.full_name),
+            "role": u.role,
+            "avatar_url": u.get_avatar_url(),
+        })
+
+    return render(request, "community/online_members.html", {"online_users": online_list})

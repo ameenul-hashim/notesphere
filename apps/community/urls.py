@@ -11,6 +11,8 @@ urlpatterns = [
     path("chat/post/<int:post_pk>/delete/", views.post_delete, name="post_delete"),
     path("chat/reply/<int:reply_pk>/delete/", views.reply_delete, name="reply_delete"),
     path("notifications/read/<int:notif_pk>/", views.notification_read, name="notification_read"),
+    path("notifications/", views.notifications_page, name="notifications_page"),
+    path("online/", views.online_members_page, name="online_members_page"),
     path("members/", views.active_members_view, name="members"),
     path("online-users/", views.online_users, name="online_users"),
 ]

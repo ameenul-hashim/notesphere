@@ -13,8 +13,10 @@ class ActivityStampMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
+        response = self.get_response(request)
         if hasattr(request, "user") and request.user.is_authenticated:
             import time
 
             request.session["last_active"] = int(time.time())
-        return self.get_response(request)
+            request.session.save()
+        return response
