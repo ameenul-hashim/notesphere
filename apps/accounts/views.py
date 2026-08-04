@@ -233,6 +233,7 @@ def student_avatar(request):
 
 @login_required
 @student_required
+@login_required
 def student_support(request):
     """Student support page — emails sent via Brevo through send_transactional_email()."""
     if request.method == "POST":
