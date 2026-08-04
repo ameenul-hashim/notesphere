@@ -1,0 +1,10 @@
+{
+  "rules": {
+    "presence_v2": {
+      "$uid": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    }
+  }
+}

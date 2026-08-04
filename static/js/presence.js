@@ -1,163 +1,194 @@
 /**
- * NoteSphere Presence — Simple Online/Offline
+ * NoteSphere Presence — Firebase Realtime Database
  * ─────────────────────────────────────────────────────────────────────────────
- * Logged in  → status: 'online'   (shown in online sidebar)
- * Logged out → status: 'offline'  (removed from online sidebar)
+ * Uses Firebase Realtime Database (NOT Firestore) for presence tracking.
  *
- * That's it. No heartbeats, no sessions, no sweep.
- * Django is the source of truth for who is authenticated.
+ * • onDisconnect() automatically removes user when connection drops
+ * • localStorage persists identity across refreshes (portal-userId)
+ * • Heartbeat every 10s keeps lastActive fresh
+ * • Stale cleanup (>90s) removes dead nodes
+ * • Grace period (6s) prevents flickering on quick reconnects
  */
 (function () {
   'use strict';
 
   var FB = null;
-  var onlineUsers = {};
-  var callbacks = [];
+  var userName = '';
+  var userId = '';
+  var myPresenceRef = null;
+  var heartbeatTimer = null;
+  var latestPresenceData = {};
+  var staleThreshold = 90000;   // 90 seconds
+  var activeThreshold = 35000;  // 35 seconds
+  var gracePeriod = 6000;       // 6 seconds
+  var removedCache = {};        // key -> timestamp of removal (for grace period)
 
   function me() { return window.CURRENT_USER_JSON || {}; }
 
-  function uid() {
-    var id = me().id;
-    return id === undefined || id === null ? null : String(id);
-  }
+  /* ─── localStorage Identity ─────────────────────────────────── */
 
-  function userRef() {
-    return FB.db.collection('users').doc('user_' + uid());
-  }
-
-  /* ─── Mark self online ──────────────────────────────────────── */
-
-  function goOnline() {
-    if (!FB || !FB.isReady || !uid()) return;
-    userRef().set({
-      uid: uid(),
-      status: 'online',
-      role: me().role,
-      display_name: me().full_name || me().username || '',
-      avatar_url: me().avatar_url || '',
-      last_seen: FB.serverTimestamp(),
-    }, { merge: true }).catch(function (e) {
-      console.warn('[presence] goOnline failed', e);
-    });
-  }
-
-  /* ─── Mark self offline ─────────────────────────────────────── */
-
-  function goOffline() {
-    if (!FB || !FB.isReady || !uid()) return;
-    userRef().set({
-      status: 'offline',
-      last_seen: FB.serverTimestamp(),
-    }, { merge: true }).catch(function () {});
-  }
-
-  /* ─── Listen for online users ───────────────────────────────── */
-
-  function startListener() {
-    FB.db.collection('users')
-      .where('status', '==', 'online')
-      .onSnapshot(function (snap) {
-        onlineUsers = {};
-        snap.forEach(function (doc) {
-          var d = doc.data() || {};
-          var key = String(doc.id).replace('user_', '');
-          var reg = (window.USER_REGISTRY || {})[key] || {};
-          onlineUsers[key] = {
-            uid: key,
-            display_name: d.display_name || reg.name || 'User',
-            role: d.role || reg.role || 'STUDENT',
-            avatar_url: d.avatar_url || reg.avatar_url || '',
-          };
-        });
-        renderSidebar();
-        renderDrawer();
-        callbacks.forEach(function (cb) { cb(Object.keys(onlineUsers)); });
-      }, function (err) {
-        console.warn('[presence] listener error', err);
-      });
-  }
-
-  /* ─── UI Rendering ──────────────────────────────────────────── */
-
-  function esc(s) {
-    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  }
-
-  function avatarHtml(url, name) {
-    if (url) return '<img src="' + esc(url) + '" alt="" class="w-full h-full object-cover">';
-    return '<span class="flex items-center justify-center w-full h-full">' + esc((name || '?').charAt(0).toUpperCase()) + '</span>';
-  }
-
-  function renderSidebar() {
-    var el = document.getElementById('chat-online-users-sidebar');
-    if (!el) return;
-    el.textContent = '';
-    var list = Object.keys(onlineUsers).map(function (k) { return onlineUsers[k]; });
-    if (list.length === 0) {
-      el.innerHTML = '<div class="p-3 text-center text-xs text-muted">No members online</div>';
-      return;
+  function initIdentity() {
+    userName = localStorage.getItem('portal-username') || me().full_name || me().username || 'User';
+    userId = localStorage.getItem('portal-userId');
+    if (!userId) {
+      userId = 'u_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+      localStorage.setItem('portal-userId', userId);
     }
-    list.forEach(function (p) {
-      var mine = p.uid === uid();
-      var item = document.createElement('div');
-      item.className = 'online-member-item flex items-center justify-between p-2.5 rounded-xl bg-surface-2/60 hover:bg-surface-2 border border-border/50 transition-all';
-      item.setAttribute('data-user-id', p.uid);
-      item.innerHTML =
-        '<div class="flex items-center gap-2.5 min-w-0">' +
-          '<div class="relative w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-600 flex items-center justify-center font-bold text-xs flex-shrink-0 border border-emerald-500/40 overflow-hidden">' +
-            avatarHtml(p.avatar_url, p.display_name) +
-            '<span class="online-indicator absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-surface animate-pulse"></span>' +
-          '</div>' +
-          '<div class="truncate">' +
-            '<span class="text-xs font-bold text-foreground truncate block leading-tight">' +
-              esc(p.display_name) +
-              (mine ? ' <span class="badge badge-primary text-[9px] px-1.5 py-0 font-bold ml-1">You</span>' : '') +
-            '</span>' +
-            '<span class="online-status-text text-[10px] text-emerald-500 font-medium">' +
-              (p.role === 'ADMIN' ? 'Administrator' : 'Student') + ' &middot; online' +
-            '</span>' +
-          '</div>' +
-        '</div>' +
-        (p.role === 'ADMIN' ? '<span class="badge badge-warning text-[9px] px-1.5 py-0">Admin</span>' : '');
-      el.appendChild(item);
-    });
-    var sub = document.getElementById('chat-online-subtitle');
-    if (sub) sub.textContent = list.length + (list.length === 1 ? ' member online' : ' members online');
+    localStorage.setItem('portal-username', userName);
   }
 
-  function renderDrawer() {
-    var el = document.getElementById('chat-online-users-drawer');
-    if (!el) return;
-    el.textContent = '';
-    Object.keys(onlineUsers).forEach(function (k) {
-      var p = onlineUsers[k];
-      var mine = p.uid === uid();
-      var item = document.createElement('div');
-      item.className = 'drawer-member-item flex flex-shrink-0 items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-2 border border-border text-foreground text-xs font-semibold';
-      item.setAttribute('data-user-id', p.uid);
-      item.innerHTML =
-        '<span class="drawer-online-dot w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>' +
-        '<span>' + esc(p.display_name) + (mine ? ' (You)' : '') + '</span>';
-      el.appendChild(item);
+  /* ─── Presence Write ────────────────────────────────────────── */
+
+  function writePresence() {
+    if (!FB || !FB.rtdb || !myPresenceRef) return;
+    myPresenceRef.set({
+      name: userName,
+      userId: userId,
+      lastActive: firebase.database.ServerValue.TIMESTAMP,
+    }).catch(function (e) {
+      console.warn('[presence] write failed', e);
     });
+  }
+
+  /* ─── Heartbeat Loop (every 10s) ────────────────────────────── */
+
+  function startHeartbeat() {
+    heartbeatTimer = setInterval(writePresence, 10000);
+  }
+
+  /* ─── Online Count & Filtering ──────────────────────────────── */
+
+  function updateOnlineCount() {
+    var now = Date.now();
+    var activeCount = 0;
+    var keys = Object.keys(latestPresenceData);
+
+    keys.forEach(function (key) {
+      var entry = latestPresenceData[key];
+      if (!entry) return;
+      var lastActive = entry.lastActive || 0;
+
+      // Stale cleanup: remove dead nodes older than 90s
+      if (now - lastActive > staleThreshold) {
+        FB.rtdb.ref('presence_v2/' + key).remove().catch(function () {});
+        delete latestPresenceData[key];
+        return;
+      }
+
+      // Active check: count if lastActive within 35s
+      if (now - lastActive < activeThreshold) {
+        activeCount++;
+      }
+    });
+
+    renderOnlinePanel(activeCount);
+  }
+
+  /* ─── Render Online Users Panel ─────────────────────────────── */
+
+  function renderOnlinePanel(count) {
+    var el = document.getElementById('chat-online-users-sidebar');
+    if (el) {
+      el.textContent = '';
+      if (count === 0) {
+        el.innerHTML = '<div class="p-3 text-center text-xs text-muted">No members online</div>';
+      } else {
+        var now = Date.now();
+        Object.keys(latestPresenceData).forEach(function (key) {
+          var entry = latestPresenceData[key];
+          if (!entry) return;
+          if (now - (entry.lastActive || 0) > activeThreshold) return;
+
+          var item = document.createElement('div');
+          item.className = 'online-member-item flex items-center justify-between p-2.5 rounded-xl bg-surface-2/60 hover:bg-surface-2 border border-border/50 transition-all';
+          item.setAttribute('data-user-id', entry.userId || key);
+
+          var initial = (entry.name || '?').charAt(0).toUpperCase();
+          item.innerHTML =
+            '<div class="flex items-center gap-2.5 min-w-0">' +
+              '<div class="relative w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-600 flex items-center justify-center font-bold text-xs flex-shrink-0 border border-emerald-500/40">' +
+                '<span>' + escHtml(initial) + '</span>' +
+                '<span class="online-indicator absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-surface animate-pulse"></span>' +
+              '</div>' +
+              '<div class="truncate">' +
+                '<span class="text-xs font-bold text-foreground truncate block leading-tight">' + escHtml(entry.name) + '</span>' +
+                '<span class="online-status-text text-[10px] text-emerald-500 font-medium">Online</span>' +
+              '</div>' +
+            '</div>';
+          el.appendChild(item);
+        });
+      }
+    }
+
+    var drawer = document.getElementById('chat-online-users-drawer');
+    if (drawer) {
+      drawer.textContent = '';
+      var now = Date.now();
+      Object.keys(latestPresenceData).forEach(function (key) {
+        var entry = latestPresenceData[key];
+        if (!entry) return;
+        if (now - (entry.lastActive || 0) > activeThreshold) return;
+
+        var item = document.createElement('div');
+        item.className = 'drawer-member-item flex flex-shrink-0 items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-2 border border-border text-foreground text-xs font-semibold';
+        item.setAttribute('data-user-id', entry.userId || key);
+        item.innerHTML =
+          '<span class="drawer-online-dot w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>' +
+          '<span>' + escHtml(entry.name) + '</span>';
+        drawer.appendChild(item);
+      });
+    }
+
+    var sub = document.getElementById('chat-online-subtitle');
+    if (sub) sub.textContent = count + (count === 1 ? ' member online' : ' members online');
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
   /* ─── Boot ──────────────────────────────────────────────────── */
 
   function boot() {
-    if (!window.NoteSphereFB || !window.NoteSphereFB.isReady || !uid()) return;
+    if (!window.NoteSphereFB || !window.NoteSphereFB.isReady || !me().id) return;
     FB = window.NoteSphereFB;
-    goOnline();
-    startListener();
 
-    window.addEventListener('pagehide', goOffline);
-    window.addEventListener('online', goOnline);
+    initIdentity();
+    myPresenceRef = FB.rtdb.ref('presence_v2/' + userId);
 
+    // Write presence on connect
+    FB.rtdb.ref('.info/connected').on('value', function (snap) {
+      if (snap.val() === true) {
+        writePresence();
+
+        // Arm onDisconnect — Firebase server removes node if connection drops
+        myPresenceRef.onDisconnect().remove();
+
+        startHeartbeat();
+      }
+    });
+
+    // Listen for all presence changes
+    FB.rtdb.ref('presence_v2').on('value', function (snapshot) {
+      latestPresenceData = snapshot.val() || {};
+      updateOnlineCount();
+    });
+
+    // Clean up on logout
     document.querySelectorAll("form[action*='logout']").forEach(function (form) {
       form.addEventListener('submit', function () {
-        goOffline();
+        clearInterval(heartbeatTimer);
+        myPresenceRef.remove().catch(function () {});
+        localStorage.removeItem('portal-username');
+        localStorage.removeItem('portal-userId');
         if (FB.auth && FB.auth.currentUser) FB.auth.signOut().catch(function () {});
       });
+    });
+
+    // Clean up on page unload (best-effort)
+    window.addEventListener('pagehide', function () {
+      clearInterval(heartbeatTimer);
+      myPresenceRef.remove().catch(function () {});
     });
   }
 
@@ -167,11 +198,7 @@
   /* ─── Public API ────────────────────────────────────────────── */
 
   window.NoteSpherePresence = {
-    isOnline: function () { return !!onlineUsers[uid()]; },
-    getOnlineUsers: function () { return onlineUsers; },
-    onOnlineUsersChange: function (cb) {
-      if (typeof cb === 'function') callbacks.push(cb);
-      return function () { var i = callbacks.indexOf(cb); if (i >= 0) callbacks.splice(i, 1); };
-    },
+    isOnline: function () { return !!myPresenceRef; },
+    getOnlineUsers: function () { return latestPresenceData; },
   };
 })();

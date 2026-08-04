@@ -106,6 +106,7 @@ TEMPLATES = [
 FIREBASE_CONFIG = {
     "apiKey": os.environ.get("FIREBASE_API_KEY", ""),
     "authDomain": os.environ.get("FIREBASE_AUTH_DOMAIN", "your-project-id.firebaseapp.com"),
+    "databaseURL": os.environ.get("FIREBASE_DATABASE_URL", "https://your-project-id-default-rtdb.firebaseio.com"),
     "projectId": os.environ.get("FIREBASE_PROJECT_ID", "your-project-id"),
     "storageBucket": os.environ.get("FIREBASE_STORAGE_BUCKET", "your-project-id.firebasestorage.app"),
     "messagingSenderId": os.environ.get("FIREBASE_MESSAGING_SENDER_ID", ""),

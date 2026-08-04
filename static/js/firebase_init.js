@@ -15,11 +15,13 @@
         firebase.initializeApp(fbConfig);
       }
       const db = firebase.firestore();
+      const rtdb = firebase.database();
       const auth = firebase.auth();
 
       window.NoteSphereFB = {
         app: firebase.app(),
         db: db,
+        rtdb: rtdb,
         auth: auth,
         serverTimestamp: firebase.firestore.FieldValue.serverTimestamp,
         arrayUnion: firebase.firestore.FieldValue.arrayUnion,
