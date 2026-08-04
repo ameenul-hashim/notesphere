@@ -70,6 +70,17 @@ class CloudinaryAwareStorage(FileSystemStorage):
             return name
         return super().url(name)
 
+    def _save(self, name, content):
+        # Skip local save for Cloudinary URLs
+        if name and isinstance(name, str) and name.startswith("http"):
+            return name
+        return super()._save(name, content)
+
+    def exists(self, name):
+        if name and isinstance(name, str) and name.startswith("http"):
+            return False
+        return super().exists(name)
+
 
 # ---------------------------------------------------------------------------
 # Upload
