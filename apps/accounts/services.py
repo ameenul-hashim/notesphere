@@ -131,7 +131,8 @@ def _send_via_brevo_api(api_key, to, subject, text_body, html_body, reply_to):
     if html_body:
         payload["htmlContent"] = html_body
     if reply_to:
-        payload["replyTo"] = [{"email": reply_to[0] if isinstance(reply_to, list) else reply_to}]
+        reply_email = reply_to[0] if isinstance(reply_to, list) else reply_to
+        payload["replyTo"] = {"email": reply_email}
 
     payload_json = json.dumps(payload, indent=2)
 
