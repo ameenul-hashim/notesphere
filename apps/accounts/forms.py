@@ -428,6 +428,8 @@ class AdminPictureForm(forms.ModelForm):
             cloudinary_url = upload_image(new_photo, folder="notesphere/profile")
             if cloudinary_url:
                 user.photo = cloudinary_url
+                # Mark as committed so Django doesn't try to re-save to local storage
+                user.photo._committed = True
         else:
             # Photo was cleared or not provided — remove old Cloudinary image
             user.photo = None

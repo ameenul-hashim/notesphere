@@ -53,6 +53,7 @@ class SemesterForm(forms.ModelForm):
             cloudinary_url = upload_image(new_thumb, folder="notesphere/semesters")
             if cloudinary_url:
                 instance.thumbnail = cloudinary_url
+                instance.thumbnail._committed = True
 
         if commit:
             instance.save()
@@ -113,6 +114,7 @@ class SubjectForm(forms.ModelForm):
             cloudinary_url = upload_image(new_thumb, folder="notesphere/subjects")
             if cloudinary_url:
                 instance.thumbnail = cloudinary_url
+                instance.thumbnail._committed = True
 
         if commit:
             instance.save()
