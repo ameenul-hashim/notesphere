@@ -417,21 +417,26 @@ class AdminPictureForm(forms.ModelForm):
         return cleaned
 
     def save(self, commit=True):
-        old_photo = self.instance.photo
+        # 1. Capture old Cloudinary URL before anything changes
         old_photo_url = None
         try:
-            if old_photo and hasattr(old_photo, "url"):
-                old_photo_url = str(old_photo.url)
+            old_val = self.instance.photo
+            if old_val:
+                name = getattr(old_val, "name", None) or str(old_val)
+                if name and "cloudinary.com" in str(name):
+                    old_photo_url = str(name)
+                elif old_val and hasattr(old_val, "url"):
+                    old_photo_url = str(old_val.url)
         except Exception:
             pass
 
-        # Upload new photo to Cloudinary FIRST
+        # 2. Upload new photo to Cloudinary
         new_photo = self.cleaned_data.get("photo")
         cloudinary_url = None
         if new_photo:
             cloudinary_url = upload_image(new_photo, folder="notesphere/profile")
 
-        # Clear photo field so Django doesn't try to save file to local storage
+        # 3. Save user WITHOUT photo (clear it so Django doesn't touch file storage)
         self.instance.photo = None
         self.instance.avatar = None
         user = super().save(commit=False)
@@ -440,15 +445,16 @@ class AdminPictureForm(forms.ModelForm):
         if commit:
             user.save()
 
-        # Set Cloudinary URL via raw update (bypasses Django file handling)
+        # 4. Set Cloudinary URL via raw update
         if cloudinary_url and user.pk:
             User.objects.filter(pk=user.pk).update(photo=cloudinary_url)
             user.photo = cloudinary_url
 
-        # Delete old Cloudinary image after successful save
-        if old_photo_url and "cloudinary.com" in old_photo_url:
-            if old_photo_url != (cloudinary_url or ""):
-                delete_image_by_url(old_photo_url)
+        # 5. Delete old Cloudinary image
+        if old_photo_url and cloudinary_url and old_photo_url != cloudinary_url:
+            delete_image_by_url(old_photo_url)
+        elif old_photo_url and not cloudinary_url:
+            delete_image_by_url(old_photo_url)
 
         return user
 
