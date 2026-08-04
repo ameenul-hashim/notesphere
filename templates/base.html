@@ -124,7 +124,7 @@
             </div>
           </div>
 
-          {% include "_theme_picker.html" %}
+          <span class="desktop-only">{% include "_theme_picker.html" %}</span>
 
           <a href="{% if user.is_admin %}{% url 'admins:profile' %}{% else %}{% url 'accounts:student_profile' %}{% endif %}" class="topbar-avatar" aria-label="My profile">
             {% include "_avatar.html" with user=user %}

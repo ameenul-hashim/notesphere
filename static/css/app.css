@@ -2087,6 +2087,32 @@ p {
     padding: 16px;
   }
 
+  /* Topbar mobile: tighter spacing, smaller icon buttons */
+  .topbar {
+    padding: 0 12px;
+    gap: 6px;
+  }
+  .topbar-actions {
+    gap: 2px;
+  }
+  .topbar-actions .icon-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  /* Notification dropdown: full-width on mobile */
+  .nav-pop-menu {
+    position: fixed;
+    top: var(--topbar-height);
+    inset-inline-start: 0;
+    inset-inline-end: 0;
+    width: 100%;
+    max-width: 100%;
+    border-radius: 0;
+    border-top: none;
+    max-height: calc(100vh - var(--topbar-height));
+  }
+
   /* Page head stacks vertically with full-width actions */
   .page-head {
     gap: 10px;
