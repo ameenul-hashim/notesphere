@@ -39,7 +39,7 @@
   function formatTime(ts) {
     if (!ts) return '';
     const d = ts.toDate ? ts.toDate() : new Date(ts);
-    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Qatar' });
   }
 
   /* ─── Offline Banner (disabled — Django messages are the fallback) ── */
