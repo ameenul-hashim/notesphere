@@ -40,28 +40,36 @@ class SemesterForm(forms.ModelForm):
         }
 
     def save(self, commit=True):
-        instance = super().save(commit=False)
         old_thumb_url = None
 
         # Capture old thumbnail URL before saving
-        if instance.pk and instance.thumbnail:
-            old_thumb_url = str(instance.thumbnail) if hasattr(instance.thumbnail, "url") else str(instance.thumbnail)
+        if self.instance.pk and self.instance.thumbnail:
+            try:
+                old_thumb_url = str(self.instance.thumbnail) if hasattr(self.instance.thumbnail, "url") else str(self.instance.thumbnail)
+            except Exception:
+                pass
 
         # Upload new thumbnail to Cloudinary
         new_thumb = self.cleaned_data.get("thumbnail")
+        cloudinary_url = None
         if new_thumb and hasattr(new_thumb, "read"):
             cloudinary_url = upload_image(new_thumb, folder="notesphere/semesters")
-            if cloudinary_url:
-                instance.thumbnail = cloudinary_url
-                instance.thumbnail._committed = True
 
+        # Clear thumbnail so Django doesn't save to local storage
+        self.instance.thumbnail = None
+        instance = super().save(commit=False)
+        instance.thumbnail = None
         if commit:
             instance.save()
 
+        # Set Cloudinary URL via raw update
+        if cloudinary_url and instance.pk:
+            Semester.objects.filter(pk=instance.pk).update(thumbnail=cloudinary_url)
+            instance.thumbnail = cloudinary_url
+
         # Delete old Cloudinary image after successful save
         if old_thumb_url and "cloudinary.com" in old_thumb_url:
-            new_url = str(instance.thumbnail) if instance.thumbnail else ""
-            if old_thumb_url != new_url:
+            if old_thumb_url != (cloudinary_url or ""):
                 delete_image_by_url(old_thumb_url)
 
         return instance
@@ -101,28 +109,36 @@ class SubjectForm(forms.ModelForm):
         }
 
     def save(self, commit=True):
-        instance = super().save(commit=False)
         old_thumb_url = None
 
         # Capture old thumbnail URL before saving
-        if instance.pk and instance.thumbnail:
-            old_thumb_url = str(instance.thumbnail) if hasattr(instance.thumbnail, "url") else str(instance.thumbnail)
+        if self.instance.pk and self.instance.thumbnail:
+            try:
+                old_thumb_url = str(self.instance.thumbnail) if hasattr(self.instance.thumbnail, "url") else str(self.instance.thumbnail)
+            except Exception:
+                pass
 
         # Upload new thumbnail to Cloudinary
         new_thumb = self.cleaned_data.get("thumbnail")
+        cloudinary_url = None
         if new_thumb and hasattr(new_thumb, "read"):
             cloudinary_url = upload_image(new_thumb, folder="notesphere/subjects")
-            if cloudinary_url:
-                instance.thumbnail = cloudinary_url
-                instance.thumbnail._committed = True
 
+        # Clear thumbnail so Django doesn't save to local storage
+        self.instance.thumbnail = None
+        instance = super().save(commit=False)
+        instance.thumbnail = None
         if commit:
             instance.save()
 
+        # Set Cloudinary URL via raw update
+        if cloudinary_url and instance.pk:
+            Subject.objects.filter(pk=instance.pk).update(thumbnail=cloudinary_url)
+            instance.thumbnail = cloudinary_url
+
         # Delete old Cloudinary image after successful save
         if old_thumb_url and "cloudinary.com" in old_thumb_url:
-            new_url = str(instance.thumbnail) if instance.thumbnail else ""
-            if old_thumb_url != new_url:
+            if old_thumb_url != (cloudinary_url or ""):
                 delete_image_by_url(old_thumb_url)
 
         return instance

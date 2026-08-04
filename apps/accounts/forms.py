@@ -418,29 +418,36 @@ class AdminPictureForm(forms.ModelForm):
 
     def save(self, commit=True):
         old_photo = self.instance.photo
-        old_photo_url = str(old_photo.url) if old_photo and hasattr(old_photo, "url") else None
-        user = super().save(commit=False)
-        user.avatar = None
+        old_photo_url = None
+        try:
+            if old_photo and hasattr(old_photo, "url"):
+                old_photo_url = str(old_photo.url)
+        except Exception:
+            pass
 
-        # Upload new photo to Cloudinary
+        # Upload new photo to Cloudinary FIRST
         new_photo = self.cleaned_data.get("photo")
+        cloudinary_url = None
         if new_photo:
             cloudinary_url = upload_image(new_photo, folder="notesphere/profile")
-            if cloudinary_url:
-                user.photo = cloudinary_url
-                # Mark as committed so Django doesn't try to re-save to local storage
-                user.photo._committed = True
-        else:
-            # Photo was cleared or not provided — remove old Cloudinary image
-            user.photo = None
 
+        # Clear photo field so Django doesn't try to save file to local storage
+        self.instance.photo = None
+        self.instance.avatar = None
+        user = super().save(commit=False)
+        user.photo = None
+        user.avatar = None
         if commit:
             user.save()
 
+        # Set Cloudinary URL via raw update (bypasses Django file handling)
+        if cloudinary_url and user.pk:
+            User.objects.filter(pk=user.pk).update(photo=cloudinary_url)
+            user.photo = cloudinary_url
+
         # Delete old Cloudinary image after successful save
         if old_photo_url and "cloudinary.com" in old_photo_url:
-            new_url = str(user.photo) if user.photo else ""
-            if old_photo_url != new_url:
+            if old_photo_url != (cloudinary_url or ""):
                 delete_image_by_url(old_photo_url)
 
         return user
