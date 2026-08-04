@@ -242,6 +242,9 @@ EMAIL_HOST_PASSWORD = os.environ.get("BREVO_SMTP_PASSWORD", "")
 EMAIL_USE_TLS  = os.environ.get("EMAIL_USE_TLS", "True").lower()  == "true"
 EMAIL_USE_SSL  = os.environ.get("EMAIL_USE_SSL", "False").lower() == "true"
 
+# Brevo HTTP API key (required for production — Railway blocks SMTP port 587)
+BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "")
+
 # Sender identity shown in every outbound email
 BREVO_FROM_NAME  = os.environ.get("BREVO_FROM_NAME",  "NoteSphere")
 BREVO_FROM_EMAIL = os.environ.get("BREVO_FROM_EMAIL", EMAIL_HOST_USER)

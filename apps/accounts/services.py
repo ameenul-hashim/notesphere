@@ -2,17 +2,21 @@
 
 Keeps views thin and centralises OTP, email, and password-change behaviour.
 
-Email provider: Brevo SMTP (smtp-relay.brevo.com)
+Email provider: Brevo HTTP API (https://api.brevo.com/v3/smtp/email)
 All transactional mail goes through send_transactional_email() — the single
 entry point for every email in the application.
+
+Falls back to Django SMTP if BREVO_API_KEY is not set (local development).
 """
 
+import json
 import logging
 import secrets
+import urllib.request
+import urllib.error
 
 from django.conf import settings
 from django.contrib.auth.hashers import make_password
-from django.core.mail import EmailMessage, get_connection
 from django.db import transaction
 from django.urls import reverse
 from django.utils import timezone
@@ -27,11 +31,16 @@ OTP_MAX_ATTEMPTS = 3
 
 
 # ---------------------------------------------------------------------------
-# Unified transactional email helper
+# Unified transactional email helper — Brevo HTTP API
 # ---------------------------------------------------------------------------
 
 def send_transactional_email(to, subject, text_body, html_body=None, reply_to=None):
-    """Send one transactional email via Brevo SMTP.
+    """Send one transactional email via Brevo HTTP API.
+
+    Uses https://api.brevo.com/v3/smtp/email (port 443) which is not
+    blocked by Railway's outbound firewall (SMTP port 587 is blocked).
+
+    Falls back to Django SMTP if BREVO_API_KEY is not configured.
 
     Args:
         to          : recipient address (str) or list of addresses.
@@ -48,11 +57,64 @@ def send_transactional_email(to, subject, text_body, html_body=None, reply_to=No
     if isinstance(reply_to, str):
         reply_to = [reply_to]
 
+    api_key = getattr(settings, "BREVO_API_KEY", "") or ""
+    if api_key:
+        return _send_via_brevo_api(api_key, to, subject, text_body, html_body, reply_to)
+    else:
+        return _send_via_smtp(to, subject, text_body, html_body, reply_to)
+
+
+def _send_via_brevo_api(api_key, to, subject, text_body, html_body, reply_to):
+    """Send email using Brevo's transactional HTTP API."""
+    from_name  = getattr(settings, "BREVO_FROM_NAME",  "NoteSphere").strip()
+    from_email = getattr(settings, "BREVO_FROM_EMAIL", "noreply@notesphere.com").strip()
+
+    payload = {
+        "sender": {"name": from_name, "email": from_email},
+        "to": [{"email": addr} for addr in to],
+        "subject": subject,
+        "textContent": text_body,
+    }
+    if html_body:
+        payload["htmlContent"] = html_body
+    if reply_to:
+        payload["replyTo"] = [{"email": reply_to[0] if isinstance(reply_to, list) else reply_to}]
+
+    data = json.dumps(payload).encode("utf-8")
+    req = urllib.request.Request(
+        "https://api.brevo.com/v3/smtp/email",
+        data=data,
+        headers={
+            "accept": "application/json",
+            "api-key": api_key,
+            "content-type": "application/json",
+        },
+        method="POST",
+    )
+
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            body = resp.read().decode("utf-8", errors="replace")
+            logger.info("Email sent via Brevo API | to=%s | subject=%s | status=%s", to, subject, resp.status)
+            return resp.status in (200, 201, 202)
+    except urllib.error.HTTPError as exc:
+        err_body = exc.read().decode("utf-8", errors="replace") if exc.fp else ""
+        logger.error("Brevo API HTTP %s | to=%s | subject=%s | response=%s", exc.code, to, subject, err_body)
+        return False
+    except Exception as exc:
+        logger.exception("Brevo API FAILED | to=%s | subject=%s | error=%s", to, subject, exc)
+        return False
+
+
+def _send_via_smtp(to, subject, text_body, html_body, reply_to):
+    """Fallback: send email via Django SMTP (works in local dev)."""
+    from django.core.mail import EmailMessage, get_connection
+    import socket
+
     from_name  = getattr(settings, "BREVO_FROM_NAME",  "NoteSphere").strip()
     from_email = getattr(settings, "BREVO_FROM_EMAIL", settings.EMAIL_HOST_USER).strip() or "noreply@notesphere.com"
     from_addr  = f"{from_name} <{from_email}>"
 
-    import socket
     old_timeout = socket.getdefaulttimeout()
     try:
         socket.setdefaulttimeout(15)
@@ -65,7 +127,6 @@ def send_transactional_email(to, subject, text_body, html_body=None, reply_to=No
             use_tls  = settings.EMAIL_USE_TLS,
             use_ssl  = settings.EMAIL_USE_SSL,
         )
-
         msg = EmailMessage(
             subject    = subject,
             body       = text_body,
@@ -77,16 +138,11 @@ def send_transactional_email(to, subject, text_body, html_body=None, reply_to=No
         if html_body:
             msg.content_subtype = "html"
             msg.body = html_body
-
         sent = msg.send(fail_silently=False)
-        logger.info("Email sent | to=%s | subject=%s | accepted=%s", to, subject, sent)
+        logger.info("Email sent via SMTP | to=%s | subject=%s | accepted=%s", to, subject, sent)
         return sent > 0
-
     except Exception as exc:
-        logger.exception(
-            "Email FAILED | to=%s | subject=%s | error=%s",
-            to, subject, exc,
-        )
+        logger.exception("SMTP FAILED | to=%s | subject=%s | error=%s", to, subject, exc)
         return False
     finally:
         socket.setdefaulttimeout(old_timeout)

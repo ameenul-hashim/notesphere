@@ -9,12 +9,16 @@ Usage anywhere in Django:
     db.collection("community_chat").add({ ... })
 
 Security:
-    The service account JSON is loaded from the path set in FIREBASE_SERVICE_ACCOUNT_PATH
-    (an environment variable) or falls back to config/firebase/firebase-service-account.json.
-    This file is listed in .gitignore and MUST NEVER be committed to Git.
+    The service account JSON is loaded from:
+    1. FIREBASE_SERVICE_ACCOUNT_JSON env var (raw JSON string, used on Railway)
+    2. FIREBASE_SERVICE_ACCOUNT_PATH env var (file path)
+    3. config/firebase/firebase-service-account.json (local dev fallback)
+    The JSON file is listed in .gitignore and MUST NEVER be committed to Git.
 """
 
+import json
 import os
+import tempfile
 import threading
 from pathlib import Path
 
@@ -26,12 +30,39 @@ _app = None
 
 
 def _get_service_account_path() -> str:
-    """Return path to the service account JSON — env var takes priority."""
+    """Return path to the service account JSON.
+
+    Priority:
+        1. FIREBASE_SERVICE_ACCOUNT_JSON env var → write to temp file
+        2. FIREBASE_SERVICE_ACCOUNT_PATH env var → file path
+        3. Default gitignored location
+    """
+    # 1. Raw JSON string in env var (for Railway / cloud deployments)
+    json_str = os.environ.get("FIREBASE_SERVICE_ACCOUNT_JSON", "")
+    if json_str:
+        # Validate it's valid JSON and write to a temp file
+        try:
+            parsed = json.loads(json_str)
+            tmp = tempfile.NamedTemporaryFile(
+                prefix="firebase-sa-",
+                suffix=".json",
+                mode="w",
+                delete=False,
+            )
+            json.dump(parsed, tmp)
+            tmp.close()
+            return tmp.name
+        except (json.JSONDecodeError, OSError) as e:
+            raise RuntimeError(
+                f"FIREBASE_SERVICE_ACCOUNT_JSON env var contains invalid JSON: {e}"
+            ) from e
+
+    # 2. Explicit file path
     env_path = os.environ.get("FIREBASE_SERVICE_ACCOUNT_PATH", "")
     if env_path and Path(env_path).exists():
         return env_path
 
-    # Default location (gitignored)
+    # 3. Default location (local dev, gitignored)
     base = Path(__file__).resolve().parent.parent.parent
     default = base / "config" / "firebase" / "firebase-service-account.json"
     return str(default)
