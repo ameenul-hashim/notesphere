@@ -160,6 +160,15 @@ class ChapterForm(forms.ModelForm):
         ),
     )
 
+    display_order = forms.IntegerField(
+        label="Display order",
+        required=False,
+        help_text="Auto-increments (0, 1, 2...) when left blank on a new note.",
+        widget=forms.NumberInput(
+            attrs={"class": INPUT_CLASS, "min": "0", "placeholder": "auto (0, 1, 2...)"}
+        ),
+    )
+
     class Meta:
         model = Chapter
         fields = [
@@ -192,9 +201,6 @@ class ChapterForm(forms.ModelForm):
                 }
             ),
             "status": forms.Select(attrs={"class": INPUT_CLASS}),
-            "display_order": forms.NumberInput(
-                attrs={"class": INPUT_CLASS, "min": "0", "placeholder": "0"}
-            ),
         }
         error_messages = {
             "subject": {"required": "Please select a subject."},
@@ -213,6 +219,17 @@ class ChapterForm(forms.ModelForm):
         return pdf_url
 
     def save(self, commit=True):
+        # 0. Auto-increment display order (0, 1, 2...) when creating without an explicit value
+        if self.instance.pk is None and self.cleaned_data.get("display_order") is None:
+            subject_id = self.cleaned_data.get("subject").pk
+            last_order = (
+                Chapter.objects.filter(subject_id=subject_id)
+                .order_by("-display_order")
+                .values_list("display_order", flat=True)
+                .first()
+            )
+            self.instance.display_order = (last_order if last_order is not None else -1) + 1
+
         # 1. Read old thumbnail URL directly from DB
         old_thumb_url = None
         if self.instance.pk:

@@ -362,6 +362,14 @@ def chapter_create(request):
         )
         initial["chapter_number"] = (last_number or 0) + 1
 
+        last_order = (
+            Chapter.objects.filter(subject=selected_subject)
+            .order_by("-display_order")
+            .values_list("display_order", flat=True)
+            .first()
+        )
+        initial["display_order"] = (last_order if last_order is not None else -1) + 1
+
     form = ChapterForm(request.POST or None, request.FILES or None, initial=initial)
     if selected_subject:
         form.fields["subject"].disabled = True
