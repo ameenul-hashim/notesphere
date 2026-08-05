@@ -23,7 +23,7 @@
           {{ chapter.format_name }}
         </span>
       </div>
-      {% include "_status_badge.html" with status=chapter.status label=chapter.get_status_display %}
+      {% if is_admin %}{% include "_status_badge.html" with status=chapter.status label=chapter.get_status_display %}{% endif %}
     </div>
 
     <div>

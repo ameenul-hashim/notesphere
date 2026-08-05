@@ -23,7 +23,7 @@
         </div>
         <h1 class="page-title flex items-center gap-3">
           {{ semester.name }}
-          {% include "_status_badge.html" with status=semester.status label=semester.get_status_display %}
+          {% if is_admin %}{% include "_status_badge.html" with status=semester.status label=semester.get_status_display %}{% endif %}
         </h1>
         <p class="page-subtitle mt-1">
           {% if semester.description %}{{ semester.description }}{% else %}Subjects available for {{ semester.name }}.{% endif %}
@@ -60,7 +60,7 @@
                 </div>
               {% endif %}
               <div class="absolute top-3 right-3">
-                {% include "_status_badge.html" with status=subject.status label=subject.get_status_display %}
+                {% if is_admin %}{% include "_status_badge.html" with status=subject.status label=subject.get_status_display %}{% endif %}
               </div>
             </a>
 
