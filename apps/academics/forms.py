@@ -1,6 +1,7 @@
 """Forms for the academics module."""
 
 from django import forms
+from django.core.files.uploadedfile import UploadedFile
 
 from accounts.forms import INPUT_CLASS
 from config.integrations.cloudinary_storage import delete_image_by_url, upload_image
@@ -50,26 +51,25 @@ class SemesterForm(forms.ModelForm):
             except Exception:
                 pass
 
-        # 2. Upload new thumbnail to Cloudinary
+        # 2. Upload a NEW thumbnail to Cloudinary only when a file was chosen
         new_thumb = self.cleaned_data.get("thumbnail")
         cloudinary_url = None
-        if new_thumb and hasattr(new_thumb, "read"):
+        if isinstance(new_thumb, UploadedFile):
             cloudinary_url = upload_image(new_thumb, folder="notesphere/semesters")
 
-        # 3. Clear thumbnail so Django doesn't save to local storage
-        self.instance.thumbnail = None
+        # 3. Keep the existing thumbnail unless a replacement was uploaded
         instance = super().save(commit=False)
-        instance.thumbnail = None
+        if cloudinary_url:
+            instance.thumbnail = cloudinary_url
+        elif old_thumb_url:
+            instance.thumbnail = old_thumb_url
+        else:
+            instance.thumbnail = None
         if commit:
             instance.save()
 
-        # 4. Set Cloudinary URL via raw update
-        if cloudinary_url and instance.pk:
-            Semester.objects.filter(pk=instance.pk).update(thumbnail=cloudinary_url)
-            instance.thumbnail = cloudinary_url
-
-        # 5. Delete old Cloudinary image (always, if different)
-        if old_thumb_url and old_thumb_url != (cloudinary_url or ""):
+        # 4. Delete the old Cloudinary image only when replaced by a new one
+        if cloudinary_url and old_thumb_url and old_thumb_url != cloudinary_url:
             try:
                 delete_image_by_url(old_thumb_url)
             except Exception:
@@ -122,26 +122,25 @@ class SubjectForm(forms.ModelForm):
             except Exception:
                 pass
 
-        # 2. Upload new thumbnail to Cloudinary
+        # 2. Upload a NEW thumbnail to Cloudinary only when a file was chosen
         new_thumb = self.cleaned_data.get("thumbnail")
         cloudinary_url = None
-        if new_thumb and hasattr(new_thumb, "read"):
+        if isinstance(new_thumb, UploadedFile):
             cloudinary_url = upload_image(new_thumb, folder="notesphere/subjects")
 
-        # 3. Clear thumbnail so Django doesn't save to local storage
-        self.instance.thumbnail = None
+        # 3. Keep the existing thumbnail unless a replacement was uploaded
         instance = super().save(commit=False)
-        instance.thumbnail = None
+        if cloudinary_url:
+            instance.thumbnail = cloudinary_url
+        elif old_thumb_url:
+            instance.thumbnail = old_thumb_url
+        else:
+            instance.thumbnail = None
         if commit:
             instance.save()
 
-        # 4. Set Cloudinary URL via raw update
-        if cloudinary_url and instance.pk:
-            Subject.objects.filter(pk=instance.pk).update(thumbnail=cloudinary_url)
-            instance.thumbnail = cloudinary_url
-
-        # 5. Delete old Cloudinary image (always, if different)
-        if old_thumb_url and old_thumb_url != (cloudinary_url or ""):
+        # 4. Delete the old Cloudinary image only when replaced by a new one
+        if cloudinary_url and old_thumb_url and old_thumb_url != cloudinary_url:
             try:
                 delete_image_by_url(old_thumb_url)
             except Exception:
