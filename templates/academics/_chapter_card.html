@@ -41,20 +41,14 @@
   </div>
 
   <div class="pt-5 mt-5 border-t border-border space-y-3">
-    {# Primary Chapter Actions: Read & Download #}
+    {# Primary Chapter Actions: View & Download #}
     <div class="flex flex-col sm:flex-row items-stretch gap-2">
-      {% if chapter.document_url %}
-        <a href="{% url 'academics:chapter_read' chapter.pk %}" class="btn btn-primary inline-flex items-center justify-center gap-2 flex-1" title="Open {{ chapter.format_name }} in the in-app reader">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-          </svg>
-          Read {{ chapter.format_name }}
-        </a>
-      {% else %}
-        <a href="{% url 'academics:chapter_read' chapter.pk %}" class="btn btn-primary inline-flex items-center justify-center gap-2 flex-1">
-          Read {{ chapter.format_name }}
-        </a>
-      {% endif %}
+      <a href="{% url 'academics:chapter_read' chapter.pk %}" class="btn btn-primary inline-flex items-center justify-center gap-2 flex-1" title="Open {{ chapter.format_name }} in the app">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+        </svg>
+        View {{ chapter.format_name }}
+      </a>
 
       {% if chapter.document_url %}
         <a href="{% url 'academics:chapter_download' chapter.pk %}" class="btn btn-download inline-flex items-center justify-center gap-1.5" title="Download {{ chapter.format_name }} document">
