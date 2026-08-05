@@ -45,6 +45,9 @@ def login_view(request):
     if request.user.is_authenticated:
         return redirect_after_login(request.user)
 
+    if request.GET.get("session_expired"):
+        messages.info(request, "You were logged out automatically due to inactivity. Please log in again.")
+
     form = LoginForm(request.POST or None, request=request, allowed_role=User.Role.STUDENT)
     if request.method == "POST" and form.is_valid():
         user = form.cleaned_data["user"]

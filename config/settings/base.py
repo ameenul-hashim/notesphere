@@ -83,6 +83,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "config.idle_timeout_middleware.IdleTimeoutMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -150,6 +151,10 @@ LOGOUT_REDIRECT_URL = "accounts:login"
 # Session settings — expire when browser closes so users go offline on close
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_COOKIE_AGE = 86400  # 1 day fallback for remember-me scenarios
+
+# Auto-logout idle sessions: log users out after this many minutes without
+# activity and flush their session + cookie. Configurable via environment.
+SESSION_IDLE_TIMEOUT_MINUTES = int(os.environ.get("SESSION_IDLE_TIMEOUT_MINUTES", "30"))
 
 # ---------------------------------------------------------------------------
 # Database
