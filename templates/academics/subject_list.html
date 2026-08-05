@@ -80,7 +80,7 @@
             <p class="media-desc">{{ subject.description|default:"No description provided." }}</p>
             <div class="media-meta">
               <a href="{% url 'academics:subject_detail' subject.pk %}" class="font-semibold text-primary hover:underline inline-flex items-center gap-1">
-                <span>{{ subject.semester.name }} ({{ subject.chapter_count }} chapter{{ subject.chapter_count|pluralize }})</span>
+                <span>{{ subject.semester.name }} &middot; 🇬🇧 {{ subject.english_count }} &middot; 🇮🇳 {{ subject.malayalam_count }}</span>
                 <span>&rarr;</span>
               </a>
               <span class="ml-auto flex items-center gap-2">

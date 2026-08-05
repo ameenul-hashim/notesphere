@@ -222,8 +222,9 @@ class ChapterForm(forms.ModelForm):
         # 0. Auto-increment display order (0, 1, 2...) when creating without an explicit value
         if self.instance.pk is None and self.cleaned_data.get("display_order") is None:
             subject_id = self.cleaned_data.get("subject").pk
+            language = self.cleaned_data.get("language")
             last_order = (
-                Chapter.objects.filter(subject_id=subject_id)
+                Chapter.objects.filter(subject_id=subject_id, language=language)
                 .order_by("-display_order")
                 .values_list("display_order", flat=True)
                 .first()

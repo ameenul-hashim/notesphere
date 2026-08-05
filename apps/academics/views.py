@@ -145,11 +145,29 @@ def semester_detail(request, pk):
     """View a semester and list its subject cards."""
     if request.user.is_admin:
         semester = get_object_or_404(Semester, pk=pk)
-        subjects = semester.subjects.annotate(chapter_count=Count("chapters"))
+        subjects = semester.subjects.annotate(
+            chapter_count=Count("chapters"),
+            english_count=Count("chapters", filter=Q(chapters__language=Chapter.Language.ENGLISH)),
+            malayalam_count=Count("chapters", filter=Q(chapters__language=Chapter.Language.MALAYALAM)),
+        )
     else:
         semester = get_object_or_404(Semester, pk=pk, status=Semester.Status.ACTIVE)
         subjects = semester.subjects.filter(status=Subject.Status.ACTIVE).annotate(
-            chapter_count=Count("chapters", filter=Q(chapters__status=Chapter.Status.ACTIVE))
+            chapter_count=Count("chapters", filter=Q(chapters__status=Chapter.Status.ACTIVE)),
+            english_count=Count(
+                "chapters",
+                filter=Q(
+                    chapters__status=Chapter.Status.ACTIVE,
+                    chapters__language=Chapter.Language.ENGLISH,
+                ),
+            ),
+            malayalam_count=Count(
+                "chapters",
+                filter=Q(
+                    chapters__status=Chapter.Status.ACTIVE,
+                    chapters__language=Chapter.Language.MALAYALAM,
+                ),
+            ),
         )
 
     return render(
@@ -172,7 +190,11 @@ def subject_list(request):
     sort = request.GET.get("sort", "display_order")
     direction = request.GET.get("dir", "asc")
 
-    subjects = Subject.objects.select_related("semester").annotate(chapter_count=Count("chapters"))
+    subjects = Subject.objects.select_related("semester").annotate(
+        chapter_count=Count("chapters"),
+        english_count=Count("chapters", filter=Q(chapters__language=Chapter.Language.ENGLISH)),
+        malayalam_count=Count("chapters", filter=Q(chapters__language=Chapter.Language.MALAYALAM)),
+    )
 
     if query:
         subjects = subjects.filter(
@@ -354,17 +376,18 @@ def chapter_create(request):
         selected_subject = Subject.objects.select_related("semester").filter(pk=int(subject_id)).first()
 
     if selected_subject:
+        lang = initial.get("language", Chapter.Language.ENGLISH)
+        chapter_qs = Chapter.objects.filter(subject=selected_subject, language=lang)
+
         last_number = (
-            Chapter.objects.filter(subject=selected_subject)
-            .order_by("-chapter_number")
+            chapter_qs.order_by("-chapter_number")
             .values_list("chapter_number", flat=True)
             .first()
         )
         initial["chapter_number"] = (last_number or 0) + 1
 
         last_order = (
-            Chapter.objects.filter(subject=selected_subject)
-            .order_by("-display_order")
+            chapter_qs.order_by("-display_order")
             .values_list("display_order", flat=True)
             .first()
         )
@@ -393,12 +416,16 @@ def chapter_create(request):
 @login_required
 @admin_required
 def chapter_next_number(request):
-    """Return the next auto chapter number for a subject (AJAX helper)."""
+    """Return the next auto chapter number for a subject+language (AJAX helper)."""
     subject_id = request.GET.get("subject", "")
+    language = request.GET.get("language", "").upper()
+    if language not in Chapter.Language.values:
+        language = Chapter.Language.ENGLISH
+
     next_number = 1
     if subject_id.isdigit():
         last_number = (
-            Chapter.objects.filter(subject_id=int(subject_id))
+            Chapter.objects.filter(subject_id=int(subject_id), language=language)
             .order_by("-chapter_number")
             .values_list("chapter_number", flat=True)
             .first()

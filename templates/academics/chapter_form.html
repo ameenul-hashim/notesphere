@@ -88,12 +88,14 @@
 <script>
   (function () {
     var subjectSelect = document.getElementById('{{ form.subject.id_for_label }}');
+    var languageSelect = document.getElementById('{{ form.language.id_for_label }}');
     var chapterNumber = document.getElementById('{{ form.chapter_number.id_for_label }}');
     if (!subjectSelect || !chapterNumber) return;
     function fetchNext() {
       var sid = subjectSelect.value;
+      var lid = languageSelect ? languageSelect.value : '{{ form.language.value|default:"ENGLISH" }}';
       if (!sid) return;
-      fetch('{% url "academics:chapter_next_number" %}?subject=' + encodeURIComponent(sid))
+      fetch('{% url "academics:chapter_next_number" %}?subject=' + encodeURIComponent(sid) + '&language=' + encodeURIComponent(lid || 'ENGLISH'))
         .then(function (r) { return r.json(); })
         .then(function (data) {
           if (data && data.next) chapterNumber.value = data.next;
@@ -101,6 +103,7 @@
         .catch(function () {});
     }
     subjectSelect.addEventListener('change', fetchNext);
+    if (languageSelect) languageSelect.addEventListener('change', fetchNext);
   })();
 </script>
 {% endblock %}
