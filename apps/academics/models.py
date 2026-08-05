@@ -106,6 +106,7 @@ class Chapter(models.Model):
     chapter_number = models.PositiveIntegerField(default=1, help_text="Chapter number or module index")
     pdf_url = models.URLField(max_length=500, blank=True, help_text="Direct URL to PDF (Supabase, Drive, CDN)")
     pdf_file = models.FileField(upload_to="chapters/pdfs/", null=True, blank=True, help_text="Upload local PDF file")
+    thumbnail = models.ImageField(upload_to="chapters/thumbnails/", max_length=500, null=True, blank=True)
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.ACTIVE)
     display_order = models.PositiveIntegerField(default=0)
 

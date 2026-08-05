@@ -22,7 +22,7 @@
 
   {% include "_form_errors.html" %}
 
-  <form method="post" novalidate class="space-y-4">
+  <form method="post" enctype="multipart/form-data" novalidate class="space-y-4">
     {% csrf_token %}
 
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -41,6 +41,24 @@
     </div>
 
     {% include "_field.html" with field=form.subname %}
+
+    <div class="field">
+      {% if form.thumbnail.label %}
+        <label for="{{ form.thumbnail.id_for_label }}" class="field-label">{{ form.thumbnail.label }}</label>
+      {% endif %}
+      {{ form.thumbnail }}
+      <p class="field-hint">Optional image shown on the note card. If skipped, the NoteSphere branded thumbnail is used.</p>
+      <div class="image-preview" data-preview-target>
+        {% if form.instance.thumbnail %}
+          <img src="{{ form.instance.thumbnail.url }}" alt="Current thumbnail">
+        {% endif %}
+      </div>
+      {% if form.thumbnail.errors %}
+        {% for error in form.thumbnail.errors %}
+          <p class="field-error">{{ error }}</p>
+        {% endfor %}
+      {% endif %}
+    </div>
 
     <div class="p-4 rounded-xl bg-card border border-border space-y-4">
       <div class="border-b border-border pb-2">

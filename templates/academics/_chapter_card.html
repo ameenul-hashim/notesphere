@@ -1,4 +1,15 @@
+{% load static %}
 <div class="card card-pad flex flex-col justify-between transition-all hover:border-primary/50 hover:shadow-lg group">
+  {% if chapter.thumbnail %}
+    <div class="relative aspect-video rounded-xl bg-muted/30 border border-border overflow-hidden mb-4">
+      <img src="{{ chapter.thumbnail.url }}" alt="{{ chapter.title }}" class="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105">
+    </div>
+  {% else %}
+    <div class="relative aspect-video rounded-xl overflow-hidden mb-4 border border-border">
+      <img src="{% static 'images/notesphere-notes-placeholder.svg' %}" alt="NoteSphere notes thumbnail" class="w-full h-full object-cover">
+    </div>
+  {% endif %}
+
   <div class="space-y-3">
     <div class="flex flex-wrap items-center justify-between gap-2">
       <div class="flex flex-wrap items-center gap-2">

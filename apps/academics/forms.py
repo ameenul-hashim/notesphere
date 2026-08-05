@@ -169,6 +169,7 @@ class ChapterForm(forms.ModelForm):
             "title",
             "subname",
             "chapter_number",
+            "thumbnail",
             "pdf_url",
             "status",
             "display_order",
@@ -183,6 +184,7 @@ class ChapterForm(forms.ModelForm):
             "chapter_number": forms.NumberInput(
                 attrs={"class": INPUT_CLASS, "min": "1", "placeholder": "1"}
             ),
+            "thumbnail": forms.FileInput(attrs={"class": INPUT_CLASS, "accept": "image/*", "data-preview": ""}),
             "pdf_url": forms.URLInput(
                 attrs={
                     "class": INPUT_CLASS,
@@ -209,4 +211,41 @@ class ChapterForm(forms.ModelForm):
         if not pdf_url:
             raise forms.ValidationError("PDF URL is required.")
         return pdf_url
+
+    def save(self, commit=True):
+        # 1. Read old thumbnail URL directly from DB
+        old_thumb_url = None
+        if self.instance.pk:
+            try:
+                db_val = Chapter.objects.filter(pk=self.instance.pk).values_list("thumbnail", flat=True).first()
+                if db_val and "cloudinary.com" in str(db_val):
+                    old_thumb_url = str(db_val)
+            except Exception:
+                pass
+
+        # 2. Upload a NEW thumbnail to Cloudinary only when a file was chosen
+        new_thumb = self.cleaned_data.get("thumbnail")
+        cloudinary_url = None
+        if isinstance(new_thumb, UploadedFile):
+            cloudinary_url = upload_image(new_thumb, folder="notesphere/chapters")
+
+        # 3. Keep the existing thumbnail unless a replacement was uploaded
+        instance = super().save(commit=False)
+        if cloudinary_url:
+            instance.thumbnail = cloudinary_url
+        elif old_thumb_url:
+            instance.thumbnail = old_thumb_url
+        else:
+            instance.thumbnail = None
+        if commit:
+            instance.save()
+
+        # 4. Delete the old Cloudinary image only when replaced by a new one
+        if cloudinary_url and old_thumb_url and old_thumb_url != cloudinary_url:
+            try:
+                delete_image_by_url(old_thumb_url)
+            except Exception:
+                pass
+
+        return instance
 
