@@ -26,6 +26,7 @@ urlpatterns = [
     path("dashboard/subjects/<int:pk>/delete/", views.subject_delete, name="subject_delete"),
     # Chapters
     path("dashboard/chapters/new/", views.chapter_create, name="chapter_create"),
+    path("dashboard/chapters/next-number/", views.chapter_next_number, name="chapter_next_number"),
     path("dashboard/chapters/<int:pk>/edit/", views.chapter_edit, name="chapter_edit"),
     path("dashboard/chapters/<int:pk>/delete/", views.chapter_delete, name="chapter_delete"),
     path("dashboard/chapters/<int:pk>/read/", views.chapter_read, name="chapter_read"),

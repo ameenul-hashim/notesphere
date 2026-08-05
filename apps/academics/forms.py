@@ -150,7 +150,15 @@ class SubjectForm(forms.ModelForm):
 
 
 class ChapterForm(forms.ModelForm):
-    """Create or update a chapter/module with PDF link or upload."""
+    """Create or update a chapter/module with a PDF URL."""
+
+    subname = forms.CharField(
+        label="Subname (optional)",
+        required=False,
+        widget=forms.TextInput(
+            attrs={"class": INPUT_CLASS, "placeholder": "Subname (e.g. Introduction & Basic Concepts)", "maxlength": "200"}
+        ),
+    )
 
     class Meta:
         model = Chapter
@@ -160,9 +168,7 @@ class ChapterForm(forms.ModelForm):
             "title",
             "subname",
             "chapter_number",
-            "description",
             "pdf_url",
-            "pdf_file",
             "status",
             "display_order",
         ]
@@ -172,18 +178,8 @@ class ChapterForm(forms.ModelForm):
             "title": forms.TextInput(
                 attrs={"class": INPUT_CLASS, "placeholder": "Chapter Name (e.g. Module 1)", "maxlength": "150"}
             ),
-            "subname": forms.TextInput(
-                attrs={"class": INPUT_CLASS, "placeholder": "Subname (e.g. Introduction & Basic Concepts)", "maxlength": "200"}
-            ),
             "chapter_number": forms.NumberInput(
                 attrs={"class": INPUT_CLASS, "min": "1", "placeholder": "1"}
-            ),
-            "description": forms.Textarea(
-                attrs={
-                    "class": INPUT_CLASS,
-                    "placeholder": "Brief description of topics covered in this chapter",
-                    "rows": 3,
-                }
             ),
             "pdf_url": forms.URLInput(
                 attrs={
@@ -191,7 +187,6 @@ class ChapterForm(forms.ModelForm):
                     "placeholder": "https://supabase-storage-url.pdf or direct PDF URL",
                 }
             ),
-            "pdf_file": forms.FileInput(attrs={"class": INPUT_CLASS, "accept": ".pdf,application/pdf"}),
             "status": forms.Select(attrs={"class": INPUT_CLASS}),
             "display_order": forms.NumberInput(
                 attrs={"class": INPUT_CLASS, "min": "0", "placeholder": "0"}
@@ -204,13 +199,12 @@ class ChapterForm(forms.ModelForm):
                 "required": "Chapter number is required.",
                 "invalid": "Chapter number must be a valid positive integer.",
             },
+            "pdf_url": {"required": "PDF URL is required.", "invalid": "Please enter a valid PDF URL."},
         }
 
-    def clean(self):
-        cleaned_data = super().clean()
-        pdf_url = cleaned_data.get("pdf_url")
-        pdf_file = cleaned_data.get("pdf_file")
-        if not pdf_url and not pdf_file:
-            raise forms.ValidationError("Please provide either a PDF URL or upload a PDF file.")
-        return cleaned_data
+    def clean_pdf_url(self):
+        pdf_url = self.cleaned_data.get("pdf_url")
+        if not pdf_url:
+            raise forms.ValidationError("PDF URL is required.")
+        return pdf_url
 

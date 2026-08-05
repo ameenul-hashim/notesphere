@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Count, Q
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
@@ -346,6 +347,15 @@ def chapter_create(request):
         initial["subject"] = int(subject_id)
         selected_subject = Subject.objects.select_related("semester").filter(pk=int(subject_id)).first()
 
+    if selected_subject:
+        last_number = (
+            Chapter.objects.filter(subject=selected_subject)
+            .order_by("-chapter_number")
+            .values_list("chapter_number", flat=True)
+            .first()
+        )
+        initial["chapter_number"] = (last_number or 0) + 1
+
     form = ChapterForm(request.POST or None, request.FILES or None, initial=initial)
     if selected_subject:
         form.fields["subject"].disabled = True
@@ -364,6 +374,23 @@ def chapter_create(request):
             "selected_subject": selected_subject,
         },
     )
+
+
+@login_required
+@admin_required
+def chapter_next_number(request):
+    """Return the next auto chapter number for a subject (AJAX helper)."""
+    subject_id = request.GET.get("subject", "")
+    next_number = 1
+    if subject_id.isdigit():
+        last_number = (
+            Chapter.objects.filter(subject_id=int(subject_id))
+            .order_by("-chapter_number")
+            .values_list("chapter_number", flat=True)
+            .first()
+        )
+        next_number = (last_number or 0) + 1
+    return JsonResponse({"next": next_number})
 
 
 @login_required
