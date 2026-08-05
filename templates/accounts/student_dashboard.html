@@ -4,13 +4,17 @@
 {% block content %}
 <div class="page-head">
   <h1 class="page-title">Welcome, {{ user.full_name }}</h1>
-  <p class="page-subtitle">Browse your active semesters below.</p>
+  <p class="page-subtitle">Browse the available semesters below. Locked semesters open once they are activated by the admin.</p>
 </div>
 
-{% if active_semesters %}
+{% if semesters %}
   <div class="media-grid">
-    {% for semester in active_semesters %}
-      <a href="{% url 'academics:semester_detail' semester.pk %}" class="media-card media-card-lg card-hover">
+    {% for semester in semesters %}
+      {% if semester.status == 'ACTIVE' %}
+        <a href="{% url 'academics:semester_detail' semester.pk %}" class="media-card media-card-lg card-hover">
+      {% else %}
+        <div class="media-card media-card-lg media-card-locked" title="This semester is locked">
+      {% endif %}
         <div class="media-thumb">
           {% if semester.thumbnail %}
             <img src="{{ semester.thumbnail.url }}" alt="{{ semester.name }}">
@@ -21,22 +25,38 @@
               </svg>
             </span>
           {% endif %}
+          {% if semester.status != 'ACTIVE' %}
+            <div class="media-lock-overlay">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+              <span>Locked</span>
+            </div>
+          {% endif %}
         </div>
         <div class="media-body">
           <h3 class="media-title">{{ semester.name }}</h3>
           <p class="media-desc">{{ semester.description|default:"No description provided." }}</p>
           <div class="media-meta">
             <span class="muted">{{ semester.subject_count }} subject{{ semester.subject_count|pluralize }}</span>
-            <span class="ml-auto muted">View subjects &rarr;</span>
+            {% if semester.status == 'ACTIVE' %}
+              <span class="ml-auto muted">View subjects &rarr;</span>
+            {% else %}
+              <span class="ml-auto muted">Locked &middot; opens when activated</span>
+            {% endif %}
           </div>
         </div>
-      </a>
+      {% if semester.status == 'ACTIVE' %}
+        </a>
+      {% else %}
+        </div>
+      {% endif %}
     {% endfor %}
   </div>
 {% else %}
   <div class="empty-state">
-    <p class="empty-title">No active semesters</p>
-    <p class="empty-desc">Semesters will appear here when they are available.</p>
+    <p class="empty-title">No semesters available</p>
+    <p class="empty-desc">Semesters will appear here when they are added.</p>
   </div>
 {% endif %}
 {% endblock %}

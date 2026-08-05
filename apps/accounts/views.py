@@ -137,11 +137,11 @@ def save_theme(request):
 @login_required
 @student_required
 def student_dashboard(request):
-    active_semesters = (
-        Semester.objects.filter(status=Semester.Status.ACTIVE)
+    semesters = (
+        Semester.objects.order_by("display_order", "-created_at")
         .annotate(subject_count=Count("subjects", filter=Q(subjects__status="ACTIVE")))
     )
-    return render(request, "accounts/student_dashboard.html", {"active_semesters": active_semesters})
+    return render(request, "accounts/student_dashboard.html", {"semesters": semesters})
 
 
 @login_required

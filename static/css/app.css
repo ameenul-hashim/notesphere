@@ -2153,6 +2153,78 @@ p {
   border-color: var(--border-strong);
 }
 
+/* Locked (inactive) semester cards on the student dashboard */
+.media-card-locked {
+  cursor: not-allowed;
+}
+.media-card-locked .media-thumb {
+  filter: grayscale(0.35);
+}
+.media-lock-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: color-mix(in srgb, var(--bg) 58%, transparent);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.media-lock-overlay svg {
+  width: 30px;
+  height: 30px;
+  opacity: 0.9;
+}
+
+/* ---------- Active / Inactive status toggle (semester form) ---------- */
+.status-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  padding: 4px;
+  border-radius: 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+.status-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 9px 12px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+.status-toggle-btn svg {
+  width: 16px;
+  height: 16px;
+}
+.status-toggle-btn:hover {
+  color: var(--text);
+}
+.status-toggle-btn.is-active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+}
+.status-toggle-btn[data-status-value="ACTIVE"].is-active {
+  color: var(--success-strong, var(--success));
+}
+.status-toggle-btn[data-status-value="INACTIVE"].is-active {
+  color: var(--warning-strong, var(--warning));
+}
+
 /* Larger card length for main semester cards */
 .media-card-lg {
   min-height: 310px;
