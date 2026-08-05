@@ -47,11 +47,6 @@ class SignUpForm(forms.Form):
         widget=forms.TextInput(attrs={"class": INPUT_CLASS, "placeholder": "1234567890", "maxlength": "10"}),
         validators=[validate_phone],
     )
-    confirm_phone = forms.CharField(
-        label="Confirm phone number (optional)",
-        required=False,
-        widget=forms.TextInput(attrs={"class": INPUT_CLASS, "placeholder": "1234567890", "maxlength": "10"}),
-    )
     password = forms.CharField(
         widget=forms.PasswordInput(attrs={"class": INPUT_CLASS, "data-toggle": "password"}),
         validators=[validate_password_strength],
@@ -88,13 +83,6 @@ class SignUpForm(forms.Form):
         confirm_password = cleaned.get("confirm_password")
         if password and confirm_password and password != confirm_password:
             raise ValidationError("Passwords do not match.")
-        phone = cleaned.get("phone")
-        confirm_phone = cleaned.get("confirm_phone")
-        if phone:
-            if not confirm_phone:
-                self.add_error("confirm_phone", "Please confirm your phone number.")
-            elif phone != confirm_phone:
-                self.add_error("confirm_phone", "Phone numbers do not match.")
         return cleaned
 
     def save(self):
