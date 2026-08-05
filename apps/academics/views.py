@@ -1,8 +1,12 @@
 """Views for the academics module (semester, subject, and chapter management for admins,
 interactive card browsing and PDF reading/downloading for students)."""
 
+import io
+import os
 import re
 import urllib.request
+
+import mammoth
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -20,6 +24,14 @@ from .models import Chapter, Semester, Subject
 
 SEMESTERS_PER_PAGE = 12
 SUBJECTS_PER_PAGE = 12
+
+DOCUMENT_CONTENT_TYPES = {
+    ".pdf": "application/pdf",
+    ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ".doc": "application/msword",
+}
+
+USER_AGENT = "Mozilla/5.0 (compatible; NoteSphere/1.0)"
 
 SEMESTER_SORTABLE_FIELDS = {
     "name": "name",
@@ -470,19 +482,56 @@ def chapter_delete(request, pk):
     return redirect("academics:subject_detail", pk=subject_pk)
 
 
+def _accessible_chapter(request, pk):
+    """Return a chapter the current user is allowed to view/download."""
+    if request.user.is_admin:
+        return get_object_or_404(Chapter.objects.select_related("subject__semester"), pk=pk)
+    return get_object_or_404(
+        Chapter.objects.select_related("subject__semester"),
+        pk=pk,
+        status=Chapter.Status.ACTIVE,
+        subject__status=Subject.Status.ACTIVE,
+        subject__semester__status=Semester.Status.ACTIVE,
+    )
+
+
+def _document_source(chapter):
+    """Return (raw_bytes, hint) where hint is the file name or remote Content-Type.
+
+    Raises Http404 if the chapter has no document or the remote source is unreachable.
+    """
+    if chapter.pdf_file:
+        fh = chapter.pdf_file.open("rb")
+        try:
+            return fh.read(), chapter.pdf_file.name
+        finally:
+            fh.close()
+
+    url = chapter.document_url
+    if not url:
+        raise Http404
+
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+        with urllib.request.urlopen(req, timeout=60) as remote:
+            return remote.read(), remote.headers.get("Content-Type") or url
+    except Exception:
+        raise Http404
+
+
 @login_required
 def chapter_read(request, pk):
-    """In-app PDF reader view for students and admins."""
-    if request.user.is_admin:
-        chapter = get_object_or_404(Chapter.objects.select_related("subject__semester"), pk=pk)
-    else:
-        chapter = get_object_or_404(
-            Chapter.objects.select_related("subject__semester"),
-            pk=pk,
-            status=Chapter.Status.ACTIVE,
-            subject__status=Subject.Status.ACTIVE,
-            subject__semester__status=Semester.Status.ACTIVE,
-        )
+    """In-app reader that renders PDFs inline and converts DOCX to HTML."""
+    chapter = _accessible_chapter(request, pk)
+
+    docx_html = None
+    if chapter.is_docx:
+        try:
+            data, _hint = _document_source(chapter)
+            result = mammoth.convert_to_html(io.BytesIO(data))
+            docx_html = result.value
+        except Exception:
+            docx_html = None
 
     return render(
         request,
@@ -491,39 +540,62 @@ def chapter_read(request, pk):
             "chapter": chapter,
             "subject": chapter.subject,
             "semester": chapter.subject.semester,
+            "is_pdf": chapter.is_pdf,
+            "is_docx": chapter.is_docx,
+            "docx_html": docx_html,
+            "view_url": reverse("academics:chapter_view", kwargs={"pk": chapter.pk}),
         },
     )
 
 
 @login_required
-def chapter_download(request, pk):
-    """Stream the PDF as a forced download (remote URLs are proxied through the
-    server so the browser downloads instead of opening the file)."""
-    if request.user.is_admin:
-        chapter = get_object_or_404(Chapter.objects.select_related("subject__semester"), pk=pk)
-    else:
-        chapter = get_object_or_404(
-            Chapter.objects.select_related("subject__semester"),
-            pk=pk,
-            status=Chapter.Status.ACTIVE,
-            subject__status=Subject.Status.ACTIVE,
-            subject__semester__status=Semester.Status.ACTIVE,
-        )
+def chapter_view(request, pk):
+    """Serve the document inline (Content-Disposition: inline) so the browser
+    renders it inside the in-app reader instead of downloading."""
+    chapter = _accessible_chapter(request, pk)
 
-    raw_name = f"notesphere-{chapter.subject.name}-{chapter.get_kind_display().lower()}-{chapter.chapter_number}"
-    filename = re.sub(r"[^\w\-.]+", "-", raw_name).strip("-") + ".pdf"
+    data, hint = _document_source(chapter)
+    ext = chapter.file_extension
+    if ext in DOCUMENT_CONTENT_TYPES:
+        content_type = DOCUMENT_CONTENT_TYPES[ext]
+    elif "/" in hint:
+        content_type = hint.split(";")[0].strip()
+    else:
+        content_type = "application/octet-stream"
+
+    filename = chapter.download_name(ext)
+    response = HttpResponse(data, content_type=content_type)
+    response["Content-Disposition"] = f'inline; filename="{filename}"'
+    response["X-Content-Type-Options"] = "nosniff"
+    return response
+
+
+@login_required
+def chapter_download(request, pk):
+    """Stream the document as a forced download (remote URLs are proxied through
+    the server so the browser downloads instead of opening the file)."""
+    chapter = _accessible_chapter(request, pk)
+
+    ext = chapter.file_extension
+    filename = chapter.download_name(ext)
+    fallback_type = DOCUMENT_CONTENT_TYPES.get(ext, "application/octet-stream")
 
     if chapter.pdf_file:
-        return FileResponse(chapter.pdf_file.open("rb"), as_attachment=True, filename=filename)
+        return FileResponse(
+            chapter.pdf_file.open("rb"),
+            as_attachment=True,
+            filename=filename,
+            content_type=fallback_type,
+        )
 
     url = chapter.document_url
     if not url:
         raise Http404
 
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (compatible; NoteSphere/1.0)"})
+        req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
         with urllib.request.urlopen(req, timeout=60) as remote:
-            content_type = remote.headers.get("Content-Type", "application/pdf")
+            content_type = remote.headers.get("Content-Type") or fallback_type
             response = HttpResponse(remote.read(), content_type=content_type)
             response["Content-Disposition"] = f'attachment; filename="{filename}"'
             return response

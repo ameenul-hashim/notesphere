@@ -30,5 +30,6 @@ urlpatterns = [
     path("dashboard/chapters/<int:pk>/edit/", views.chapter_edit, name="chapter_edit"),
     path("dashboard/chapters/<int:pk>/delete/", views.chapter_delete, name="chapter_delete"),
     path("dashboard/chapters/<int:pk>/read/", views.chapter_read, name="chapter_read"),
+    path("dashboard/chapters/<int:pk>/view/", views.chapter_view, name="chapter_view"),
     path("dashboard/chapters/<int:pk>/download/", views.chapter_download, name="chapter_download"),
 ]

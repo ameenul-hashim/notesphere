@@ -1,5 +1,9 @@
 """Academic models for NoteSphere (semesters and subjects)."""
 
+import os
+import re
+from urllib.parse import urlparse
+
 from django.db import models
 
 
@@ -128,4 +132,34 @@ class Chapter(models.Model):
         if self.pdf_file:
             return self.pdf_file.url
         return self.pdf_url or ""
+
+    @property
+    def file_name(self):
+        """Stored or remote file name used for format detection and downloads."""
+        if self.pdf_file:
+            return self.pdf_file.name
+        return urlparse(self.document_url or "").path
+
+    @property
+    def file_extension(self):
+        return os.path.splitext(self.file_name)[1].lower()
+
+    @property
+    def is_docx(self):
+        return self.file_extension in (".docx", ".doc")
+
+    @property
+    def is_pdf(self):
+        return self.file_extension == ".pdf"
+
+    @property
+    def format_name(self):
+        return "DOCX" if self.is_docx else "PDF"
+
+    def download_name(self, ext=None):
+        """Safe, format-aware download filename (e.g. notesphere-subject-module-1.pdf)."""
+        ext = ext or self.file_extension or ".pdf"
+        raw_name = f"notesphere-{self.subject.name}-{self.get_kind_display().lower()}-{self.chapter_number}"
+        base = re.sub(r"[^\w\-.]+", "-", raw_name).strip("-")
+        return f"{base}{ext}"
 
