@@ -48,6 +48,9 @@ def login_view(request):
     if request.GET.get("session_expired"):
         messages.info(request, "You were logged out automatically due to inactivity. Please log in again.")
 
+    if request.GET.get("blocked"):
+        messages.error(request, "Your account has been blocked. Please contact support.")
+
     form = LoginForm(request.POST or None, request=request, allowed_role=User.Role.STUDENT)
     if request.method == "POST" and form.is_valid():
         user = form.cleaned_data["user"]

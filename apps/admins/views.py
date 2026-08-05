@@ -5,6 +5,7 @@ from datetime import datetime, time, timedelta
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.sessions.models import Session
 from django.core.paginator import Paginator
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
@@ -275,6 +276,7 @@ def block_student(request, pk):
         if student.status in (User.Status.ACTIVE, User.Status.INACTIVE):
             student.status = User.Status.BLOCKED
             student.save(update_fields=["status", "updated_at"])
+            _purge_user_sessions(student)
             messages.success(request, f"{student.full_name} has been blocked.")
         else:
             messages.error(request, "This student cannot be blocked in their current state.")
@@ -293,6 +295,17 @@ def unblock_student(request, pk):
         else:
             messages.error(request, "Only blocked students can be unblocked.")
     return redirect("admins:student_detail", pk=pk)
+
+
+def _purge_user_sessions(user):
+    """Delete every active session row belonging to a user immediately."""
+    user_id = str(user.pk)
+    for session in Session.objects.all():
+        try:
+            if session.get_decoded().get("_auth_user_id") == user_id:
+                session.delete()
+        except Exception:
+            continue
 
 
 @login_required
