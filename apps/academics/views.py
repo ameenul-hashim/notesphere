@@ -1,9 +1,12 @@
 """Views for the academics module (semester, subject, and chapter management for admins,
 interactive card browsing and PDF reading/downloading for students)."""
 
+import io
 import os
 import re
 import urllib.request
+
+import mammoth
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -29,6 +32,44 @@ DOCUMENT_CONTENT_TYPES = {
 }
 
 USER_AGENT = "Mozilla/5.0 (compatible; NoteSphere/1.0)"
+
+DOCX_HTML_PAGE = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NoteSphere Document</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Segoe UI', Roboto, Arial, sans-serif; background: #f4f4f5; color: #1f2937; line-height: 1.7; -webkit-font-smoothing: antialiased; }
+  .docx-body { max-width: 820px; margin: 24px auto; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 32px 40px; box-shadow: 0 8px 24px rgba(0,0,0,0.06); }
+  .docx-body p { margin: 0 0 1rem; }
+  .docx-body h1, .docx-body h2, .docx-body h3, .docx-body h4, .docx-body h5, .docx-body h6 { margin: 1.5rem 0 0.75rem; font-weight: 700; line-height: 1.3; }
+  .docx-body h1 { font-size: 1.75rem; }
+  .docx-body h2 { font-size: 1.45rem; }
+  .docx-body h3 { font-size: 1.2rem; }
+  .docx-body h4 { font-size: 1.05rem; }
+  .docx-body h5, .docx-body h6 { font-size: 1rem; }
+  .docx-body ul, .docx-body ol { margin: 0 0 1rem 1.5rem; padding: 0; }
+  .docx-body li { margin-bottom: 0.25rem; }
+  .docx-body table { border-collapse: collapse; width: 100%; margin: 0 0 1rem; }
+  .docx-body th, .docx-body td { border: 1px solid #d1d5db; padding: 0.5rem 0.75rem; text-align: left; vertical-align: top; }
+  .docx-body th { font-weight: 700; background: #f3f4f6; }
+  .docx-body img { max-width: 100%; height: auto; }
+  .docx-body a { color: #7c3aed; text-decoration: underline; }
+  .docx-body blockquote { margin: 0 0 1rem; padding: 0.5rem 1rem; border-left: 3px solid #7c3aed; background: #f3f4f6; }
+  .docx-body pre, .docx-body code { background: #f3f4f6; padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-size: 0.9em; }
+  .docx-body pre { padding: 0.75rem 1rem; overflow-x: auto; margin-bottom: 1rem; }
+  .docx-body pre code { padding: 0; background: transparent; }
+  @media (max-width: 640px) {
+    .docx-body { margin: 0; border-radius: 0; padding: 20px 18px; }
+  }
+</style>
+</head>
+<body>
+  <div class="docx-body">{content}</div>
+</body>
+</html>"""
 
 SEMESTER_SORTABLE_FIELDS = {
     "name": "name",
@@ -518,9 +559,18 @@ def _document_source(chapter):
 
 @login_required
 def chapter_view(request, pk):
-    """Serve the document inline (Content-Disposition: inline) so the browser
-    opens it directly in a new tab instead of downloading."""
+    """Open the document directly in a new tab. PDFs are served inline for the
+    browser's native viewer; DOCX files are rendered to HTML server-side so they
+    open in the browser instead of downloading."""
     chapter = _accessible_chapter(request, pk)
+
+    if chapter.is_docx:
+        try:
+            data, _hint = _document_source(chapter)
+            result = mammoth.convert_to_html(io.BytesIO(data))
+        except Exception:
+            raise Http404
+        return HttpResponse(DOCX_HTML_PAGE.replace("{content}", result.value), content_type="text/html; charset=utf-8")
 
     data, hint = _document_source(chapter)
     ext = chapter.file_extension

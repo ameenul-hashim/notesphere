@@ -14,7 +14,7 @@
         Back
       </a>
       <div>
-        <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-semibold uppercase tracking-wider text-muted mb-1">
+        <div class="hidden sm:flex sm:flex-wrap items-center gap-x-2 gap-y-1 text-xs font-semibold uppercase tracking-wider text-muted mb-1">
           <a href="{% if is_admin %}{% url 'academics:semester_list' %}{% else %}{% url 'accounts:student_dashboard' %}{% endif %}" class="hover:text-primary transition-colors">
             Semesters
           </a>
@@ -50,10 +50,10 @@
   {# Language Selection Medium Cards #}
   <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
     {# English Medium Card #}
-    <a href="?lang=ENGLISH" class="card card-pad transition-all duration-200 flex items-center justify-between group {% if selected_lang == 'ENGLISH' %}border-2 border-primary bg-primary/5 shadow-md{% else %}hover:border-border-strong hover:bg-surface-2/60{% endif %}">
+    <a href="?lang=ENGLISH" class="card card-pad transition-all duration-200 flex items-center justify-between group {% if selected_lang == 'ENGLISH' %}border-2 border-primary ring-4 ring-primary/20 bg-primary/10 shadow-lg{% else %}hover:border-border-strong hover:bg-surface-2/60{% endif %}">
       <div class="flex items-center gap-3.5">
         <div class="w-11 h-11 rounded-xl flex items-center justify-center font-bold text-base {% if selected_lang == 'ENGLISH' %}bg-primary text-primary-contrast shadow-sm{% else %}bg-surface-2 text-foreground group-hover:bg-primary/10 group-hover:text-primary{% endif %}">
-          🇬🇧
+          EN
         </div>
         <div>
           <h3 class="font-bold text-base text-foreground group-hover:text-primary transition-colors flex items-center gap-2">
@@ -79,10 +79,10 @@
     </a>
 
     {# Malayalam Medium Card #}
-    <a href="?lang=MALAYALAM" class="card card-pad transition-all duration-200 flex items-center justify-between group {% if selected_lang == 'MALAYALAM' %}border-2 border-primary bg-primary/5 shadow-md{% else %}hover:border-border-strong hover:bg-surface-2/60{% endif %}">
+    <a href="?lang=MALAYALAM" class="card card-pad transition-all duration-200 flex items-center justify-between group {% if selected_lang == 'MALAYALAM' %}border-2 border-primary ring-4 ring-primary/20 bg-primary/10 shadow-lg{% else %}hover:border-border-strong hover:bg-surface-2/60{% endif %}">
       <div class="flex items-center gap-3.5">
         <div class="w-11 h-11 rounded-xl flex items-center justify-center font-bold text-base {% if selected_lang == 'MALAYALAM' %}bg-primary text-primary-contrast shadow-sm{% else %}bg-surface-2 text-foreground group-hover:bg-primary/10 group-hover:text-primary{% endif %}">
-          🇮🇳
+          MAL
         </div>
         <div>
           <h3 class="font-bold text-base text-foreground group-hover:text-primary transition-colors flex items-center gap-2">

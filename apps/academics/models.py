@@ -156,6 +156,10 @@ class Chapter(models.Model):
     def format_name(self):
         return "DOCX" if self.is_docx else "PDF"
 
+    @property
+    def language_short(self):
+        return "EN" if self.language == self.Language.ENGLISH else "MAL"
+
     def download_name(self, ext=None):
         """Safe, format-aware download filename (e.g. notesphere-subject-module-1.pdf)."""
         ext = ext or self.file_extension or ".pdf"
