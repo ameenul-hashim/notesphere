@@ -25,8 +25,9 @@
   <form method="post" novalidate class="space-y-4">
     {% csrf_token %}
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
       {% include "_field.html" with field=form.subject %}
+      {% include "_field.html" with field=form.kind %}
       {% include "_field.html" with field=form.language %}
     </div>
 

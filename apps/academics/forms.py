@@ -164,6 +164,7 @@ class ChapterForm(forms.ModelForm):
         model = Chapter
         fields = [
             "subject",
+            "kind",
             "language",
             "title",
             "subname",
@@ -174,6 +175,7 @@ class ChapterForm(forms.ModelForm):
         ]
         widgets = {
             "subject": forms.Select(attrs={"class": INPUT_CLASS}),
+            "kind": forms.Select(attrs={"class": INPUT_CLASS}),
             "language": forms.Select(attrs={"class": INPUT_CLASS}),
             "title": forms.TextInput(
                 attrs={"class": INPUT_CLASS, "placeholder": "Chapter Name (e.g. Module 1)", "maxlength": "150"}

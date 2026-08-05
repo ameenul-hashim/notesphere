@@ -17,7 +17,7 @@
       <div>
         <div class="flex items-center gap-2">
           <span class="px-2 py-0.5 rounded text-[11px] font-bold bg-primary/10 text-primary uppercase">
-            Module {{ chapter.chapter_number }}
+            {{ chapter.get_kind_display }} {{ chapter.chapter_number }}
           </span>
           <span class="text-xs text-muted font-medium">{{ subject.name }} ({{ semester.name }})</span>
         </div>
@@ -27,7 +27,7 @@
 
     <div class="flex items-center gap-2">
       {% if chapter.document_url %}
-        <a href="{{ chapter.document_url }}" target="_blank" download class="btn btn-primary btn-sm inline-flex items-center gap-2">
+        <a href="{% url 'academics:chapter_download' chapter.pk %}" class="btn btn-primary btn-sm inline-flex items-center gap-2">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
           </svg>

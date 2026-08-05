@@ -83,7 +83,17 @@ class Chapter(models.Model):
         ENGLISH = "ENGLISH", "English Notes"
         MALAYALAM = "MALAYALAM", "Malayalam Notes"
 
+    class Kind(models.TextChoices):
+        MODULE = "MODULE", "Module"
+        CHAPTER = "CHAPTER", "Chapter"
+
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name="chapters")
+    kind = models.CharField(
+        max_length=10,
+        choices=Kind.choices,
+        default=Kind.MODULE,
+        help_text="Whether this entry is a Module or a Chapter.",
+    )
     language = models.CharField(
         max_length=15,
         choices=Language.choices,

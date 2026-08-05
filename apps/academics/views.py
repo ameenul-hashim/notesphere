@@ -1,11 +1,14 @@
 """Views for the academics module (semester, subject, and chapter management for admins,
 interactive card browsing and PDF reading/downloading for students)."""
 
+import re
+import urllib.request
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Count, Q
-from django.http import JsonResponse
+from django.http import FileResponse, Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
@@ -274,7 +277,9 @@ def subject_detail(request, pk):
     english_count = base_chapters.filter(language=Chapter.Language.ENGLISH).count()
     malayalam_count = base_chapters.filter(language=Chapter.Language.MALAYALAM).count()
 
-    chapters = base_chapters.filter(language=selected_lang)
+    selected_chapters = base_chapters.filter(language=selected_lang)
+    modules = selected_chapters.filter(kind=Chapter.Kind.MODULE)
+    chapters_only = selected_chapters.filter(kind=Chapter.Kind.CHAPTER)
 
     return render(
         request,
@@ -282,7 +287,8 @@ def subject_detail(request, pk):
         {
             "subject": subject,
             "semester": subject.semester,
-            "chapters": chapters,
+            "modules": modules,
+            "chapters_only": chapters_only,
             "selected_lang": selected_lang,
             "english_count": english_count,
             "malayalam_count": malayalam_count,
@@ -452,3 +458,39 @@ def chapter_read(request, pk):
             "semester": chapter.subject.semester,
         },
     )
+
+
+@login_required
+def chapter_download(request, pk):
+    """Stream the PDF as a forced download (remote URLs are proxied through the
+    server so the browser downloads instead of opening the file)."""
+    if request.user.is_admin:
+        chapter = get_object_or_404(Chapter.objects.select_related("subject__semester"), pk=pk)
+    else:
+        chapter = get_object_or_404(
+            Chapter.objects.select_related("subject__semester"),
+            pk=pk,
+            status=Chapter.Status.ACTIVE,
+            subject__status=Subject.Status.ACTIVE,
+            subject__semester__status=Semester.Status.ACTIVE,
+        )
+
+    raw_name = f"notesphere-{chapter.subject.name}-{chapter.get_kind_display().lower()}-{chapter.chapter_number}"
+    filename = re.sub(r"[^\w\-.]+", "-", raw_name).strip("-") + ".pdf"
+
+    if chapter.pdf_file:
+        return FileResponse(chapter.pdf_file.open("rb"), as_attachment=True, filename=filename)
+
+    url = chapter.document_url
+    if not url:
+        raise Http404
+
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (compatible; NoteSphere/1.0)"})
+        with urllib.request.urlopen(req, timeout=60) as remote:
+            content_type = remote.headers.get("Content-Type", "application/pdf")
+            response = HttpResponse(remote.read(), content_type=content_type)
+            response["Content-Disposition"] = f'attachment; filename="{filename}"'
+            return response
+    except Exception:
+        raise Http404
