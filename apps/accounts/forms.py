@@ -42,9 +42,15 @@ class SignUpForm(forms.Form):
         error_messages={"required": "Email is required.", "invalid": "Invalid email address."},
     )
     phone = forms.CharField(
+        label="Phone number (optional)",
+        required=False,
         widget=forms.TextInput(attrs={"class": INPUT_CLASS, "placeholder": "1234567890", "maxlength": "10"}),
         validators=[validate_phone],
-        error_messages={"required": "Phone number is required."},
+    )
+    confirm_phone = forms.CharField(
+        label="Confirm phone number (optional)",
+        required=False,
+        widget=forms.TextInput(attrs={"class": INPUT_CLASS, "placeholder": "1234567890", "maxlength": "10"}),
     )
     password = forms.CharField(
         widget=forms.PasswordInput(attrs={"class": INPUT_CLASS, "data-toggle": "password"}),
@@ -70,6 +76,8 @@ class SignUpForm(forms.Form):
 
     def clean_phone(self):
         phone = self.cleaned_data.get("phone")
+        if not phone:
+            return None
         if User.objects.filter(phone=phone).exists():
             raise ValidationError("Phone number already exists.")
         return phone
@@ -80,6 +88,13 @@ class SignUpForm(forms.Form):
         confirm_password = cleaned.get("confirm_password")
         if password and confirm_password and password != confirm_password:
             raise ValidationError("Passwords do not match.")
+        phone = cleaned.get("phone")
+        confirm_phone = cleaned.get("confirm_phone")
+        if phone:
+            if not confirm_phone:
+                self.add_error("confirm_phone", "Please confirm your phone number.")
+            elif phone != confirm_phone:
+                self.add_error("confirm_phone", "Phone numbers do not match.")
         return cleaned
 
     def save(self):
@@ -274,9 +289,10 @@ class AdminProfileForm(forms.ModelForm):
         error_messages={"required": "Email is required.", "invalid": "Invalid email address."},
     )
     phone = forms.CharField(
+        label="Phone number (optional)",
+        required=False,
         widget=forms.TextInput(attrs={"class": INPUT_CLASS, "placeholder": "1234567890", "maxlength": "10"}),
         validators=[validate_phone],
-        error_messages={"required": "Phone number is required."},
     )
 
     class Meta:
@@ -303,6 +319,8 @@ class AdminProfileForm(forms.ModelForm):
 
     def clean_phone(self):
         phone = self.cleaned_data.get("phone")
+        if not phone:
+            return None
         queryset = User.objects.filter(phone=phone)
         if self.instance.pk is not None:
             queryset = queryset.exclude(pk=self.instance.pk)
@@ -319,9 +337,10 @@ class StudentContactForm(forms.ModelForm):
         error_messages={"required": "Email is required.", "invalid": "Invalid email address."},
     )
     phone = forms.CharField(
+        label="Phone number (optional)",
+        required=False,
         widget=forms.TextInput(attrs={"class": INPUT_CLASS, "placeholder": "1234567890", "maxlength": "10"}),
         validators=[validate_phone],
-        error_messages={"required": "Phone number is required."},
     )
 
     class Meta:
@@ -339,6 +358,8 @@ class StudentContactForm(forms.ModelForm):
 
     def clean_phone(self):
         phone = self.cleaned_data.get("phone")
+        if not phone:
+            return None
         queryset = User.objects.filter(phone=phone)
         if self.instance.pk is not None:
             queryset = queryset.exclude(pk=self.instance.pk)

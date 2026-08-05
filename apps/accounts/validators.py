@@ -36,7 +36,7 @@ def validate_username(value):
 
 def validate_phone(value):
     if not value or not value.strip():
-        raise ValidationError("Phone number is required.")
+        return
     if not re.fullmatch(r"\d{10}", value):
         raise ValidationError("Phone number must contain exactly 10 digits.")
 

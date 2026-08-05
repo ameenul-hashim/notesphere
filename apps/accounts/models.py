@@ -49,7 +49,7 @@ class User(AbstractUser):
 
     full_name = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
-    phone = models.CharField(max_length=10, unique=True)
+    phone = models.CharField(max_length=10, unique=True, null=True, blank=True)
     role = models.CharField(max_length=10, choices=Role.choices, default=Role.STUDENT)
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.ACTIVE)
     theme = models.CharField(
@@ -85,7 +85,7 @@ class User(AbstractUser):
     objects = UserManager()
 
     USERNAME_FIELD = "username"
-    REQUIRED_FIELDS = ["email", "phone", "full_name"]
+    REQUIRED_FIELDS = ["email", "full_name"]
 
     class Meta:
         ordering = ["-created_at"]

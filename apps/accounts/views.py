@@ -254,6 +254,7 @@ def student_support(request):
             messages.error(request, "Please fill out both subject and description.")
         else:
             support_email = getattr(settings, "SUPPORT_EMAIL", getattr(settings, "EMAIL_HOST_USER", ""))
+            phone_display = request.user.phone or "-"
 
             text_body = (
                 f"Support Request from Student\n"
@@ -261,7 +262,7 @@ def student_support(request):
                 f"Name     : {request.user.full_name}\n"
                 f"Username : {request.user.username}\n"
                 f"Email    : {request.user.email}\n"
-                f"Phone    : {request.user.phone}\n"
+                f"Phone    : {phone_display}\n"
                 f"{'=' * 40}\n\n"
                 f"Subject  : {subject}\n\n"
                 f"Message:\n{message_text}"
@@ -273,7 +274,7 @@ def student_support(request):
     <tr><td style="padding:4px 0;"><strong>Name</strong></td><td>{request.user.full_name}</td></tr>
     <tr><td style="padding:4px 0;"><strong>Username</strong></td><td>@{request.user.username}</td></tr>
     <tr><td style="padding:4px 0;"><strong>Email</strong></td><td>{request.user.email}</td></tr>
-    <tr><td style="padding:4px 0;"><strong>Phone</strong></td><td>{request.user.phone}</td></tr>
+    <tr><td style="padding:4px 0;"><strong>Phone</strong></td><td>{phone_display}</td></tr>
     <tr><td style="padding:4px 0;"><strong>Subject</strong></td><td>{subject}</td></tr>
   </table>
   <div style="background:#f3f4f6;border-radius:6px;padding:16px;">
