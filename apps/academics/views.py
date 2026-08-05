@@ -1,12 +1,9 @@
 """Views for the academics module (semester, subject, and chapter management for admins,
 interactive card browsing and PDF reading/downloading for students)."""
 
-import io
 import os
 import re
 import urllib.request
-
-import mammoth
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -520,38 +517,9 @@ def _document_source(chapter):
 
 
 @login_required
-def chapter_read(request, pk):
-    """In-app reader that renders PDFs inline and converts DOCX to HTML."""
-    chapter = _accessible_chapter(request, pk)
-
-    docx_html = None
-    if chapter.is_docx:
-        try:
-            data, _hint = _document_source(chapter)
-            result = mammoth.convert_to_html(io.BytesIO(data))
-            docx_html = result.value
-        except Exception:
-            docx_html = None
-
-    return render(
-        request,
-        "academics/chapter_read.html",
-        {
-            "chapter": chapter,
-            "subject": chapter.subject,
-            "semester": chapter.subject.semester,
-            "is_pdf": chapter.is_pdf,
-            "is_docx": chapter.is_docx,
-            "docx_html": docx_html,
-            "view_url": reverse("academics:chapter_view", kwargs={"pk": chapter.pk}),
-        },
-    )
-
-
-@login_required
 def chapter_view(request, pk):
     """Serve the document inline (Content-Disposition: inline) so the browser
-    renders it inside the in-app reader instead of downloading."""
+    opens it directly in a new tab instead of downloading."""
     chapter = _accessible_chapter(request, pk)
 
     data, hint = _document_source(chapter)
