@@ -7,7 +7,7 @@
   {# Topbar Reader Header #}
   <div class="card card-pad py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
     <div class="flex items-center gap-3">
-      <a href="{% url 'academics:subject_detail' subject.pk %}" class="btn btn-ghost btn-sm" title="Back to Subject">
+      <a href="{% url 'academics:subject_detail' subject.pk %}" class="btn btn-ghost btn-sm hidden sm:inline-flex" title="Back to Subject">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/>
         </svg>

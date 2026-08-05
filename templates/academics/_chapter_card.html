@@ -1,7 +1,7 @@
 <div class="card card-pad flex flex-col justify-between transition-all hover:border-primary/50 hover:shadow-lg group">
   <div class="space-y-3">
-    <div class="flex items-center justify-between">
-      <div class="flex items-center gap-2">
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <div class="flex flex-wrap items-center gap-2">
         <span class="px-2.5 py-1 rounded-md text-xs font-bold bg-primary/10 text-primary uppercase tracking-wider">
           {{ chapter.get_kind_display }} {{ chapter.chapter_number }}
         </span>
@@ -28,22 +28,22 @@
 
   <div class="pt-5 mt-5 border-t border-border space-y-3">
     {# Primary Chapter Actions: Read & Download #}
-    <div class="flex items-center gap-2">
+    <div class="flex flex-col sm:flex-row items-stretch gap-2">
       {% if chapter.document_url %}
-        <a href="{{ chapter.document_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary flex-1 inline-flex items-center justify-center gap-2" title="Open PDF for reading">
+        <a href="{{ chapter.document_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary inline-flex items-center justify-center gap-2 flex-1" title="Open PDF for reading">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
           </svg>
           View PDF
         </a>
       {% else %}
-        <a href="{% url 'academics:chapter_read' chapter.pk %}" class="btn btn-primary flex-1 inline-flex items-center justify-center gap-2">
+        <a href="{% url 'academics:chapter_read' chapter.pk %}" class="btn btn-primary inline-flex items-center justify-center gap-2 flex-1">
           Read PDF
         </a>
       {% endif %}
 
       {% if chapter.document_url %}
-        <a href="{% url 'academics:chapter_download' chapter.pk %}" class="btn btn-download inline-flex items-center gap-1.5" title="Download PDF document">
+        <a href="{% url 'academics:chapter_download' chapter.pk %}" class="btn btn-download inline-flex items-center justify-center gap-1.5" title="Download PDF document">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
           </svg>
@@ -54,7 +54,7 @@
 
     {# Admin Controls #}
     {% if is_admin %}
-      <div class="flex items-center justify-between pt-2 border-t border-border/50 text-xs">
+      <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-border/50 text-xs">
         <span class="text-muted">Order: #{{ chapter.display_order }}</span>
         <div class="flex items-center gap-2">
           <a href="{% url 'academics:chapter_edit' chapter.pk %}" class="btn btn-xs btn-ghost border border-border text-foreground hover:bg-surface-2" title="Edit Chapter">Edit</a>
