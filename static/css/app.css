@@ -400,6 +400,11 @@ p {
   color: var(--success);
   border-color: var(--success-border);
 }
+.badge-primary {
+  background: var(--primary-soft, color-mix(in srgb, var(--primary) 12%, transparent));
+  color: var(--primary);
+  border-color: color-mix(in srgb, var(--primary) 25%, transparent);
+}
 .badge-warning {
   background: var(--warning-bg);
   color: var(--warning);
