@@ -1,12 +1,28 @@
 {% load static %}
-<div class="card card-pad flex flex-col justify-between transition-all hover:border-primary/50 hover:shadow-lg group">
+<div class="card card-pad flex flex-col justify-between transition-all {% if not is_admin and chapter.status != 'ACTIVE' %}media-card-locked{% else %}hover:border-primary/50 hover:shadow-lg group{% endif %}">
   {% if chapter.thumbnail %}
     <div class="relative aspect-video rounded-xl bg-muted/30 border border-border overflow-hidden mb-4">
-      <img src="{{ chapter.thumbnail.url }}" alt="{{ chapter.title }}" class="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105">
+      <img src="{{ chapter.thumbnail.url }}" alt="{{ chapter.title }}" class="w-full h-full object-contain transition-transform duration-300 {% if is_admin or chapter.status == 'ACTIVE' %}group-hover:scale-105{% endif %}">
+      {% if not is_admin and chapter.status != 'ACTIVE' %}
+        <div class="media-lock-overlay">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          <span>Locked</span>
+        </div>
+      {% endif %}
     </div>
   {% else %}
     <div class="relative aspect-video rounded-xl overflow-hidden mb-4 border border-border">
       <img src="{% static 'images/notesphere-notes-placeholder.svg' %}" alt="NoteSphere notes thumbnail" class="w-full h-full object-cover">
+      {% if not is_admin and chapter.status != 'ACTIVE' %}
+        <div class="media-lock-overlay">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          <span>Locked</span>
+        </div>
+      {% endif %}
     </div>
   {% endif %}
 
@@ -23,7 +39,7 @@
           {{ chapter.format_name }}
         </span>
       </div>
-      {% if is_admin %}{% include "_status_badge.html" with status=chapter.status label=chapter.get_status_display %}{% endif %}
+      {% if is_admin %}{% include "_status_badge.html" with status=chapter.status label=chapter.get_status_display %}{% elif chapter.status != 'ACTIVE' %}{% include "_status_badge.html" with status='INACTIVE' label='Locked' %}{% endif %}
     </div>
 
     <div>
@@ -43,20 +59,29 @@
   <div class="pt-5 mt-5 border-t border-border space-y-3">
     {# Primary Chapter Actions: View & Download #}
     <div class="flex flex-col sm:flex-row items-stretch gap-2">
-      <a href="{% url 'academics:chapter_view' chapter.pk %}" target="_blank" rel="noopener noreferrer" class="btn btn-primary inline-flex items-center justify-center gap-2 flex-1" title="Open {{ chapter.format_name }} in a new tab">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-        </svg>
-        View {{ chapter.format_name }}
-      </a>
-
-      {% if chapter.document_url %}
-        <a href="{% url 'academics:chapter_download' chapter.pk %}" class="btn btn-download inline-flex items-center justify-center gap-1.5" title="Download {{ chapter.format_name }} document">
+      {% if not is_admin and chapter.status != 'ACTIVE' %}
+        <span class="btn btn-ghost border border-border text-muted cursor-not-allowed opacity-70 inline-flex items-center justify-center gap-2 flex-1" aria-disabled="true" title="Locked by admin">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+            <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
           </svg>
-          Download
+          Locked
+        </span>
+      {% else %}
+        <a href="{% url 'academics:chapter_view' chapter.pk %}" target="_blank" rel="noopener noreferrer" class="btn btn-primary inline-flex items-center justify-center gap-2 flex-1" title="Open {{ chapter.format_name }} in a new tab">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+          </svg>
+          View {{ chapter.format_name }}
         </a>
+
+        {% if chapter.document_url %}
+          <a href="{% url 'academics:chapter_download' chapter.pk %}" class="btn btn-download inline-flex items-center justify-center gap-1.5" title="Download {{ chapter.format_name }} document">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Download
+          </a>
+        {% endif %}
       {% endif %}
     </div>
 

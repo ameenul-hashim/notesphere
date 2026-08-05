@@ -40,11 +40,15 @@
   {% if subjects %}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {% for subject in subjects %}
-        <div class="card card-pad flex flex-col justify-between transition-all hover:border-primary/50 hover:shadow-lg group">
+        <div class="card card-pad flex flex-col justify-between transition-all {% if not is_admin and subject.status != 'ACTIVE' %}media-card-locked{% else %}hover:border-primary/50 hover:shadow-lg group{% endif %}">
           <div>
-            <a href="{% url 'academics:subject_detail' subject.pk %}" class="aspect-video rounded-xl bg-muted/30 border border-border overflow-hidden mb-4 relative flex items-center justify-center block">
+            {% if is_admin or subject.status == 'ACTIVE' %}
+              <a href="{% url 'academics:subject_detail' subject.pk %}" class="aspect-video rounded-xl bg-muted/30 border border-border overflow-hidden mb-4 relative flex items-center justify-center block">
+            {% else %}
+              <div class="aspect-video rounded-xl bg-muted/30 border border-border overflow-hidden mb-4 relative flex items-center justify-center">
+            {% endif %}
               {% if subject.thumbnail %}
-                <img src="{{ subject.thumbnail.url }}" alt="{{ subject.name }}" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300">
+                <img src="{{ subject.thumbnail.url }}" alt="{{ subject.name }}" class="w-full h-full object-contain {% if is_admin or subject.status == 'ACTIVE' %}group-hover:scale-105 transition-transform duration-300{% endif %}">
               {% else %}
                 <div class="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-bold text-xl">
                   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -53,15 +57,31 @@
                 </div>
               {% endif %}
               <div class="absolute top-3 right-3">
-                {% if is_admin %}{% include "_status_badge.html" with status=subject.status label=subject.get_status_display %}{% endif %}
+                {% if is_admin %}{% include "_status_badge.html" with status=subject.status label=subject.get_status_display %}{% elif subject.status != 'ACTIVE' %}{% include "_status_badge.html" with status='INACTIVE' label='Locked' %}{% endif %}
               </div>
-            </a>
+              {% if not is_admin and subject.status != 'ACTIVE' %}
+                <div class="media-lock-overlay">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                  </svg>
+                  <span>Locked</span>
+                </div>
+              {% endif %}
+            {% if is_admin or subject.status == 'ACTIVE' %}
+              </a>
+            {% else %}
+              </div>
+            {% endif %}
 
             <div class="space-y-2">
-              <h3 class="text-lg font-bold text-foreground group-hover:text-primary transition-colors">
-                <a href="{% url 'academics:subject_detail' subject.pk %}" class="focus:outline-none">
-                  {{ subject.name }}
-                </a>
+              <h3 class="text-lg font-bold text-foreground {% if is_admin or subject.status == 'ACTIVE' %}group-hover:text-primary transition-colors{% endif %}">
+                {% if is_admin or subject.status == 'ACTIVE' %}
+                  <a href="{% url 'academics:subject_detail' subject.pk %}" class="focus:outline-none">
+                    {{ subject.name }}
+                  </a>
+                {% else %}
+                  <span>{{ subject.name }}</span>
+                {% endif %}
               </h3>
               <p class="text-sm text-muted line-clamp-2">
                 {{ subject.description|default:"No description provided for this subject." }}
@@ -91,9 +111,15 @@
                   <button type="submit" class="btn btn-xs btn-danger font-semibold">Delete</button>
                 </form>
               {% endif %}
-              <a href="{% url 'academics:subject_detail' subject.pk %}" class="btn btn-xs btn-primary flex-1 sm:flex-none justify-center">
-                View Chapters &rarr;
-              </a>
+              {% if is_admin or subject.status == 'ACTIVE' %}
+                <a href="{% url 'academics:subject_detail' subject.pk %}" class="btn btn-xs btn-primary flex-1 sm:flex-none justify-center">
+                  View Chapters &rarr;
+                </a>
+              {% else %}
+                <span class="btn btn-xs btn-ghost border border-border text-muted cursor-not-allowed opacity-70 flex-1 sm:flex-none justify-center" aria-disabled="true" title="Locked by admin">
+                  Locked
+                </span>
+              {% endif %}
             </div>
           </div>
         </div>

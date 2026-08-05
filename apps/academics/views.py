@@ -202,22 +202,10 @@ def semester_detail(request, pk):
         )
     else:
         semester = get_object_or_404(Semester, pk=pk, status=Semester.Status.ACTIVE)
-        subjects = semester.subjects.filter(status=Subject.Status.ACTIVE).annotate(
-            chapter_count=Count("chapters", filter=Q(chapters__status=Chapter.Status.ACTIVE)),
-            english_count=Count(
-                "chapters",
-                filter=Q(
-                    chapters__status=Chapter.Status.ACTIVE,
-                    chapters__language=Chapter.Language.ENGLISH,
-                ),
-            ),
-            malayalam_count=Count(
-                "chapters",
-                filter=Q(
-                    chapters__status=Chapter.Status.ACTIVE,
-                    chapters__language=Chapter.Language.MALAYALAM,
-                ),
-            ),
+        subjects = semester.subjects.annotate(
+            chapter_count=Count("chapters"),
+            english_count=Count("chapters", filter=Q(chapters__language=Chapter.Language.ENGLISH)),
+            malayalam_count=Count("chapters", filter=Q(chapters__language=Chapter.Language.MALAYALAM)),
         )
 
     return render(
@@ -344,7 +332,7 @@ def subject_detail(request, pk):
             status=Subject.Status.ACTIVE,
             semester__status=Semester.Status.ACTIVE,
         )
-        base_chapters = subject.chapters.filter(status=Chapter.Status.ACTIVE)
+        base_chapters = subject.chapters.all()
 
     english_count = base_chapters.filter(language=Chapter.Language.ENGLISH).count()
     malayalam_count = base_chapters.filter(language=Chapter.Language.MALAYALAM).count()
