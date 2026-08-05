@@ -21,9 +21,9 @@
       {% endif %}
     </div>
 
-    <p class="text-sm text-muted line-clamp-3">
-      {{ chapter.description|default:"No notes or overview provided for this chapter." }}
-    </p>
+    {% if chapter.description %}
+      <p class="text-sm text-muted line-clamp-3">{{ chapter.description }}</p>
+    {% endif %}
   </div>
 
   <div class="pt-5 mt-5 border-t border-border space-y-3">
