@@ -131,6 +131,28 @@
           </a>
         </div>
       </header>
+
+      <div class="notice-marquee">
+        <span class="notice-marquee-tag" aria-hidden="true">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11v2a1 1 0 0 0 1 1h2l3 6V5L6 11H4a1 1 0 0 0-1 1z"/><path d="M14 8a5 5 0 0 1 0 8"/><path d="M17 5a9 9 0 0 1 0 14"/>
+          </svg>
+          <span class="notice-marquee-label">Notice</span>
+        </span>
+        <marquee
+          direction="left"
+          scrollamount="5"
+          behavior="scroll"
+          onmouseover="this.stop()"
+          onmouseout="this.start()"
+        >
+          <span class="notice-marquee-track">
+            <span class="notice-item">Built &amp; managed by <strong>Hashim</strong></span>
+            <span class="notice-item">For further information &amp; support, please fill the <a href="{% url 'accounts:student_support' %}">support form</a> and send your concerns &amp; reviews</span>
+            <span class="notice-item">Made for Calicut University students</span>
+          </span>
+        </marquee>
+      </div>
     {% else %}
       <header class="auth-header">
         <span class="brand"><span class="brand-mark">N</span>NoteSphere</span>

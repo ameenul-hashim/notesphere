@@ -931,6 +931,74 @@ p {
   box-shadow: 0 6px 24px -12px rgba(0, 0, 0, 0.28);
 }
 
+/* ---------- Scrolling notice marquee ---------- */
+.notice-marquee {
+  position: relative;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  background: linear-gradient(90deg, var(--primary) 0%, var(--info) 55%, var(--primary-hover) 100%);
+  color: var(--on-primary);
+  border-bottom: 1px solid color-mix(in srgb, var(--on-primary) 28%, transparent);
+  font-size: 12.5px;
+  font-weight: 600;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.notice-marquee-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
+  padding: 8px 12px 8px 0;
+  border-inline-end: 1px solid color-mix(in srgb, var(--on-primary) 38%, transparent);
+}
+.notice-marquee-label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.notice-marquee marquee {
+  flex: 1;
+  min-width: 0;
+  display: block;
+}
+.notice-marquee-track {
+  display: inline-block;
+  padding: 8px 0;
+}
+.notice-item {
+  padding: 0 26px;
+}
+.notice-item strong {
+  font-weight: 800;
+}
+.notice-item a {
+  color: inherit;
+  font-weight: 800;
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}
+@media (max-width: 640px) {
+  .notice-marquee {
+    padding: 0 12px;
+    gap: 8px;
+  }
+  .notice-marquee-tag {
+    padding-right: 8px;
+  }
+  .notice-marquee-label {
+    display: none;
+  }
+  .notice-item {
+    padding: 0 18px;
+  }
+}
+
 .breadcrumb {
   display: flex;
   align-items: center;
