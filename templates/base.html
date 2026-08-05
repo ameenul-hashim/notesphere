@@ -143,11 +143,6 @@
     <main class="{% if user.is_authenticated %}app-main{% else %}auth-main{% endif %}">
       {% block content %}{% endblock %}
     </main>
-
-    <footer class="app-footer">
-      <p>&copy; {% now "Y" %} NoteSphere &middot; Calicut University Unofficial Notes</p>
-      <p class="app-footer-credit">Managed &amp; created by <strong>Hashim</strong></p>
-    </footer>
   </div>
 
   {% include "_modal.html" %}
