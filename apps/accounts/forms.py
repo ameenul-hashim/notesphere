@@ -87,7 +87,7 @@ class SignUpForm(forms.Form):
 
     def save(self):
         data = self.cleaned_data
-        default_avatar = Avatar.objects.filter(is_active=True).first()
+        default_avatar = Avatar.get_default()
         user = User.objects.create_user(
             username=data["username"],
             email=data["email"],

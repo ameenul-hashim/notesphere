@@ -206,7 +206,7 @@ def student_profile(request):
 def student_avatar(request):
     """Dedicated page for selecting and updating student profile avatar."""
     if not request.user.avatar:
-        default_avatar = Avatar.objects.filter(is_active=True).first()
+        default_avatar = Avatar.get_default()
         if default_avatar:
             request.user.avatar = default_avatar
             request.user.save(update_fields=["avatar", "updated_at"])

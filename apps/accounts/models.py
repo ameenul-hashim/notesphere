@@ -172,6 +172,14 @@ class Avatar(models.Model):
     def __str__(self):
         return self.name or f"Avatar {self.pk} ({self.get_gender_display()})"
 
+    @classmethod
+    def get_default(cls):
+        """Default avatar for new and existing users: the second male avatar."""
+        return (
+            cls.objects.filter(is_active=True, gender=cls.Gender.MALE, display_order=12).first()
+            or cls.objects.filter(is_active=True).first()
+        )
+
     @property
     def gradient(self):
         return f"linear-gradient(135deg, {self.color_from}, {self.color_to})"
