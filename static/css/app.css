@@ -867,6 +867,15 @@ p {
   color: var(--sidebar-text-muted);
 }
 
+.sidebar-copyright {
+  margin-top: 12px;
+  padding: 0 4px;
+  text-align: center;
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: var(--sidebar-text-muted);
+}
+
 /* Collapsed sidebar (desktop only) */
 .sidebar.collapsed {
   width: var(--sidebar-width-collapsed);
@@ -1042,6 +1051,29 @@ p {
   margin: 0 auto;
 }
 
+/* ---------- App footer (copyright) ---------- */
+.app-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 16px 16px 24px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+.app-footer-credit {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+.app-footer-credit strong {
+  color: var(--primary);
+  font-weight: 800;
+}
+
 .desktop-only {
   display: none;
 }
@@ -1110,6 +1142,70 @@ p {
 
 .auth-card--wide {
   max-width: 560px;
+}
+
+/* ---------- Auth hero (big university branding) ---------- */
+.auth-hero {
+  text-align: center;
+  padding: 6px 0 4px;
+}
+.auth-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  background: var(--primary-soft);
+  border: 1px solid color-mix(in srgb, var(--primary) 32%, transparent);
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.auth-hero-badge svg {
+  color: var(--primary);
+}
+.auth-hero-title {
+  margin-top: 14px;
+  font-size: 42px;
+  font-weight: 900;
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+}
+.auth-hero-line {
+  display: block;
+}
+.auth-hero-line--grad {
+  color: var(--primary);
+  background-image: linear-gradient(100deg, var(--primary) 5%, var(--info) 55%, var(--primary-hover) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .auth-hero-line--grad {
+    color: transparent;
+  }
+}
+.auth-hero-sub {
+  margin: 12px auto 0;
+  max-width: 330px;
+  font-size: 13.5px;
+  color: var(--text-muted);
+}
+.auth-hero-divider {
+  height: 1px;
+  margin: 20px 0 22px;
+  background: linear-gradient(90deg, transparent, var(--border-strong), transparent);
+}
+
+@media (max-width: 480px) {
+  .auth-hero-title {
+    font-size: 34px;
+  }
+  .auth-hero-sub {
+    font-size: 13px;
+  }
 }
 
 .auth-title {
