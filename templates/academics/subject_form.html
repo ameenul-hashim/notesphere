@@ -27,6 +27,7 @@
     {% include "_field.html" with field=form.semester %}
     {% include "_field.html" with field=form.name %}
     {% include "_field.html" with field=form.description %}
+    {% include "_field.html" with field=form.medium %}
     <div class="field">
       {% if form.thumbnail.label %}
         <label for="{{ form.thumbnail.id_for_label }}" class="field-label">{{ form.thumbnail.label }}</label>

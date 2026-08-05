@@ -318,10 +318,6 @@ def subject_create(request):
 @login_required
 def subject_detail(request, pk):
     """View a subject and list its English and Malayalam chapter/module cards."""
-    selected_lang = request.GET.get("lang", Chapter.Language.ENGLISH).upper()
-    if selected_lang not in Chapter.Language.values:
-        selected_lang = Chapter.Language.ENGLISH
-
     if request.user.is_admin:
         subject = get_object_or_404(Subject.objects.select_related("semester"), pk=pk)
         base_chapters = subject.chapters.all()
@@ -333,6 +329,17 @@ def subject_detail(request, pk):
             semester__status=Semester.Status.ACTIVE,
         )
         base_chapters = subject.chapters.all()
+
+    if subject.medium == Subject.Medium.ENGLISH_ONLY:
+        available_langs = [Chapter.Language.ENGLISH]
+    elif subject.medium == Subject.Medium.MALAYALAM_ONLY:
+        available_langs = [Chapter.Language.MALAYALAM]
+    else:
+        available_langs = [Chapter.Language.ENGLISH, Chapter.Language.MALAYALAM]
+
+    selected_lang = request.GET.get("lang", available_langs[0]).upper()
+    if selected_lang not in available_langs:
+        selected_lang = available_langs[0]
 
     english_count = base_chapters.filter(language=Chapter.Language.ENGLISH).count()
     malayalam_count = base_chapters.filter(language=Chapter.Language.MALAYALAM).count()
@@ -350,6 +357,7 @@ def subject_detail(request, pk):
             "modules": modules,
             "chapters_only": chapters_only,
             "selected_lang": selected_lang,
+            "available_langs": available_langs,
             "english_count": english_count,
             "malayalam_count": malayalam_count,
             "is_admin": request.user.is_admin,

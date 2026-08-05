@@ -83,7 +83,7 @@ class SubjectForm(forms.ModelForm):
 
     class Meta:
         model = Subject
-        fields = ["semester", "name", "description", "thumbnail", "status", "display_order"]
+        fields = ["semester", "name", "description", "thumbnail", "medium", "status", "display_order"]
         widgets = {
             "semester": forms.Select(attrs={"class": INPUT_CLASS}),
             "name": forms.TextInput(
@@ -97,6 +97,14 @@ class SubjectForm(forms.ModelForm):
                 }
             ),
             "thumbnail": forms.FileInput(attrs={"class": INPUT_CLASS, "accept": "image/*", "data-preview": ""}),
+            "medium": forms.Select(
+                attrs={"class": INPUT_CLASS},
+                choices=[
+                    (Subject.Medium.BOTH, "English & Malayalam"),
+                    (Subject.Medium.ENGLISH_ONLY, "English only"),
+                    (Subject.Medium.MALAYALAM_ONLY, "Malayalam only"),
+                ],
+            ),
             "status": forms.Select(attrs={"class": INPUT_CLASS}),
             "display_order": forms.NumberInput(
                 attrs={"class": INPUT_CLASS, "min": "0", "placeholder": "0"}

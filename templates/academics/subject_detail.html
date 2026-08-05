@@ -37,7 +37,8 @@
   </div>
 
   {# Language Selection Medium Cards #}
-  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+  <div class="grid grid-cols-1 {% if available_langs|length > 1 %}sm:grid-cols-2{% endif %} gap-4">
+    {% if 'ENGLISH' in available_langs %}
     {# English Medium Card #}
     <a href="?lang=ENGLISH" class="card card-pad transition-all duration-200 flex items-center justify-between group {% if selected_lang == 'ENGLISH' %}shadow-lg{% endif %}" {% if selected_lang == 'ENGLISH' %}style="border: 2px solid var(--primary); box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 25%, transparent), 0 12px 28px -8px rgba(0,0,0,0.18);"{% endif %}>
       <div class="flex items-center gap-3.5">
@@ -66,7 +67,9 @@
         {% endif %}
       </div>
     </a>
+    {% endif %}
 
+    {% if 'MALAYALAM' in available_langs %}
     {# Malayalam Medium Card #}
     <a href="?lang=MALAYALAM" class="card card-pad transition-all duration-200 flex items-center justify-between group {% if selected_lang == 'MALAYALAM' %}shadow-lg{% endif %}" {% if selected_lang == 'MALAYALAM' %}style="border: 2px solid var(--warning); box-shadow: 0 0 0 4px color-mix(in srgb, var(--warning) 25%, transparent), 0 12px 28px -8px rgba(0,0,0,0.18);"{% endif %}>
       <div class="flex items-center gap-3.5">
@@ -95,6 +98,7 @@
         {% endif %}
       </div>
     </a>
+    {% endif %}
   </div>
 
   {# Modules Cards Grid #}

@@ -56,11 +56,22 @@ class Subject(models.Model):
         ACTIVE = "ACTIVE", "Active"
         INACTIVE = "INACTIVE", "Inactive"
 
+    class Medium(models.TextChoices):
+        BOTH = "BOTH", "English & Malayalam"
+        ENGLISH_ONLY = "ENGLISH_ONLY", "English only"
+        MALAYALAM_ONLY = "MALAYALAM_ONLY", "Malayalam only"
+
     semester = models.ForeignKey(Semester, on_delete=models.CASCADE, related_name="subjects")
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
     thumbnail = models.ImageField(upload_to="subjects/", max_length=500, null=True, blank=True)
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.ACTIVE)
+    medium = models.CharField(
+        max_length=20,
+        choices=Medium.choices,
+        default=Medium.BOTH,
+        help_text="Which language medium this subject offers.",
+    )
     display_order = models.PositiveIntegerField(default=0)
 
     created_at = models.DateTimeField(auto_now_add=True)
