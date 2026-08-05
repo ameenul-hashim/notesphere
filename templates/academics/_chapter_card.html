@@ -14,7 +14,7 @@
     </div>
   {% else %}
     <div class="relative aspect-video rounded-xl overflow-hidden mb-4 border border-border">
-      <img src="{% static 'images/notesphere-notes-placeholder.svg' %}" alt="NoteSphere notes thumbnail" class="w-full h-full object-cover">
+      <img src="{% if chapter.language == 'MALAYALAM' %}{% static 'images/notesphere-notes-mal.svg' %}{% else %}{% static 'images/notesphere-notes-en.svg' %}{% endif %}" alt="NoteSphere {{ chapter.language_short }} notes thumbnail" class="w-full h-full object-cover">
       {% if not is_admin and chapter.status != 'ACTIVE' %}
         <div class="media-lock-overlay">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
