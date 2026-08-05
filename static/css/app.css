@@ -152,6 +152,24 @@ p {
   opacity: 0.88;
 }
 
+.btn-download {
+  background: var(--success);
+  color: var(--on-success, #ffffff);
+  box-shadow: 0 2px 8px -2px var(--success-border);
+}
+.btn-download:hover {
+  background: var(--success-strong);
+  color: var(--on-success, #ffffff);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px -6px var(--success-border);
+}
+.btn-download svg {
+  transition: transform 0.18s ease;
+}
+.btn-download:hover svg {
+  transform: translateY(2px);
+}
+
 .btn-ghost {
   background: var(--surface);
   border-color: var(--border-strong);
