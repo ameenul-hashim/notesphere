@@ -9,6 +9,8 @@ from django.db.models import Count, Q
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 
+from django.urls import reverse
+
 from .decorators import student_required
 from .forms import (
     AvatarSelectionForm,
@@ -23,13 +25,116 @@ from .forms import (
 )
 from academics.models import Semester
 from .models import Avatar, PasswordResetOTP, User
-from .services import create_and_send_otp, send_transactional_email, set_password_and_track
+from .services import (
+    create_and_send_otp,
+    get_google_auth_url,
+    get_google_user_info,
+    send_transactional_email,
+    set_password_and_track,
+)
 
 
 def redirect_after_login(user):
     if user.role == User.Role.ADMIN:
         return redirect("admins:dashboard")
     return redirect("accounts:student_dashboard")
+
+
+def _generate_unique_username(email, name=""):
+    import re
+    base = name.lower().replace(" ", "_") if name else email.split("@")[0].lower()
+    base = re.sub(r"[^a-z0-9_]", "", base) or "student"
+    username = base[:20]
+    counter = 1
+    while User.objects.filter(username=username).exists():
+        username = f"{base[:15]}_{counter}"
+        counter += 1
+    return username
+
+
+def google_login(request):
+    """Initiate Google OAuth flow for students."""
+    if request.user.is_authenticated:
+        return redirect_after_login(request.user)
+
+    redirect_uri = request.build_absolute_uri(reverse("accounts:google_callback"))
+    auth_url = get_google_auth_url(request, redirect_uri)
+    if not auth_url:
+        messages.error(
+            request,
+            "Google Sign-In is not configured yet. Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in .env.",
+        )
+        return redirect("accounts:login")
+
+    return redirect(auth_url)
+
+
+def google_callback(request):
+    """Callback endpoint for Google OAuth authorization code."""
+    if request.user.is_authenticated:
+        return redirect_after_login(request.user)
+
+    code = request.GET.get("code")
+    error = request.GET.get("error")
+
+    if error or not code:
+        messages.error(request, "Google Sign-In was cancelled or failed.")
+        return redirect("accounts:login")
+
+    redirect_uri = request.build_absolute_uri(reverse("accounts:google_callback"))
+    google_info = get_google_user_info(code, redirect_uri)
+
+    if not google_info or "email" not in google_info:
+        messages.error(request, "Could not retrieve profile information from Google. Please try again.")
+        return redirect("accounts:login")
+
+    email = google_info["email"].lower().strip()
+    full_name = google_info.get("name") or google_info.get("given_name") or email.split("@")[0]
+
+    user = User.objects.filter(email=email).first()
+
+    if user:
+        if user.role == User.Role.ADMIN:
+            messages.error(request, "This email belongs to an Admin account. Please log in at the admin portal.")
+            return redirect("accounts:login")
+
+        if user.status == User.Status.BLOCKED:
+            messages.error(request, "Your account has been blocked. Please contact support.")
+            return redirect("accounts:login")
+
+        # If account was created manually with username/password, prompt to use password login
+        if user.has_usable_password():
+            messages.error(request, "An account with this email address already exists. Please log in using your username and password.")
+            return redirect("accounts:login")
+
+        if not user.is_email_verified:
+            user.is_email_verified = True
+
+        if not user.avatar:
+            user.avatar = Avatar.get_default()
+
+        user.save(update_fields=["is_email_verified", "avatar", "updated_at"])
+        login(request, user)
+        messages.success(request, f"Welcome back, {user.full_name}!")
+        return redirect_after_login(user)
+
+    # Register new Student user directly via Google (unusable password)
+    username = _generate_unique_username(email, full_name)
+    user = User.objects.create_user(
+        username=username,
+        email=email,
+        full_name=full_name,
+        role=User.Role.STUDENT,
+        status=User.Status.ACTIVE,
+        is_email_verified=True,
+    )
+    user.set_unusable_password()
+    user.avatar = Avatar.get_default()
+    user.save(update_fields=["password", "avatar"])
+
+    login(request, user)
+    messages.success(request, f"Welcome to NoteSphere, {user.full_name}!")
+    return redirect_after_login(user)
 
 
 def signup(request):

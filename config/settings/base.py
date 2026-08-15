@@ -274,3 +274,9 @@ SUPPORT_EMAIL = os.environ.get("SUPPORT_EMAIL", "noreply@notesphere.com")
 # ---------------------------------------------------------------------------
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# ---------------------------------------------------------------------------
+# Google OAuth Configuration (Student Sign-In / Sign-Up)
+# ---------------------------------------------------------------------------
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
+GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")

@@ -391,3 +391,75 @@ def set_password_and_track(user, raw_password):
     user.password_changed_at = timezone.now()
     user.save(update_fields=["password", "password_changed_at", "updated_at"])
     return user
+
+
+# ---------------------------------------------------------------------------
+# Google OAuth Helpers (Student Sign-In / Sign-Up)
+# ---------------------------------------------------------------------------
+
+def get_google_auth_url(request, redirect_uri):
+    """Build the official Google OAuth 2.0 authorization URL with account prompt."""
+    client_id = getattr(settings, "GOOGLE_CLIENT_ID", "")
+    if not client_id:
+        return None
+
+    import urllib.parse
+    params = {
+        "client_id": client_id,
+        "redirect_uri": redirect_uri,
+        "response_type": "code",
+        "scope": "openid email profile",
+        "prompt": "select_account",
+    }
+    return f"https://accounts.google.com/o/oauth2/v2/auth?{urllib.parse.urlencode(params)}"
+
+
+def get_google_user_info(code, redirect_uri):
+    """Exchange authorization code for tokens and retrieve Google user profile.
+
+    Returns dict with keys: 'email', 'name', 'given_name', 'family_name', 'picture', 'sub'
+    or None on failure.
+    """
+    client_id = getattr(settings, "GOOGLE_CLIENT_ID", "")
+    client_secret = getattr(settings, "GOOGLE_CLIENT_SECRET", "")
+    if not client_id or not client_secret or not code:
+        logger.error("Google OAuth error: missing client_id, client_secret, or code")
+        return None
+
+    import urllib.parse
+
+    # 1. Exchange authorization code for access token
+    token_url = "https://oauth2.googleapis.com/token"
+    token_data = {
+        "code": code,
+        "client_id": client_id,
+        "client_secret": client_secret,
+        "redirect_uri": redirect_uri,
+        "grant_type": "authorization_code",
+    }
+    encoded_token_data = urllib.parse.urlencode(token_data).encode("utf-8")
+    token_req = urllib.request.Request(token_url, data=encoded_token_data, method="POST")
+
+    try:
+        with urllib.request.urlopen(token_req, timeout=10) as resp:
+            token_res = json.loads(resp.read().decode("utf-8"))
+            access_token = token_res.get("access_token")
+    except Exception as exc:
+        logger.error("Google OAuth token exchange failed: %s", exc)
+        return None
+
+    if not access_token:
+        return None
+
+    # 2. Fetch user info using access token
+    userinfo_url = "https://www.googleapis.com/oauth2/v3/userinfo"
+    userinfo_req = urllib.request.Request(
+        userinfo_url,
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+    try:
+        with urllib.request.urlopen(userinfo_req, timeout=10) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except Exception as exc:
+        logger.error("Google OAuth userinfo fetch failed: %s", exc)
+        return None

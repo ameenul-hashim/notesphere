@@ -35,23 +35,11 @@
       </div>
       <div class="detail-item">
         <p class="detail-label">Phone</p>
-        <p class="detail-value">{{ student.phone }}</p>
-      </div>
-      <div class="detail-item">
-        <p class="detail-label">Email Verified</p>
-        <p class="detail-value">{% if student.is_email_verified %}Yes{% else %}No{% endif %}</p>
-      </div>
-      <div class="detail-item">
-        <p class="detail-label">Phone Verified</p>
-        <p class="detail-value">{% if student.is_phone_verified %}Yes{% else %}No{% endif %}</p>
+        <p class="detail-value">{{ student.phone|default:"Not provided" }}</p>
       </div>
       <div class="detail-item">
         <p class="detail-label">Last Login</p>
         <p class="detail-value">{{ student.last_login|date:"d M Y H:i"|default:"Never" }}</p>
-      </div>
-      <div class="detail-item">
-        <p class="detail-label">Password Changed</p>
-        <p class="detail-value">{{ student.password_changed_at|date:"d M Y H:i"|default:"Never" }}</p>
       </div>
       <div class="detail-item">
         <p class="detail-label">Created Date</p>

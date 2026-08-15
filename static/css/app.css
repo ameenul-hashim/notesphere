@@ -209,6 +209,54 @@ p {
   width: 100%;
 }
 
+.btn-google {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 11px 20px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+  box-shadow: var(--shadow-sm);
+  text-decoration: none;
+}
+.btn-google:hover {
+  background: var(--surface-2);
+  border-color: var(--text-muted);
+  box-shadow: var(--shadow);
+}
+.btn-google:active {
+  transform: scale(0.98);
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 18px 0;
+  color: var(--text-faint);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid var(--border);
+}
+.auth-divider span {
+  padding: 0 12px;
+}
+
 .icon-btn {
   display: inline-flex;
   align-items: center;
@@ -1194,13 +1242,14 @@ p {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 96px 20px 48px;
+  padding: 24px 20px;
+  min-height: calc(100vh - 120px);
 }
 
 .auth-card {
   width: 100%;
-  max-width: 420px;
-  padding: 26px 24px;
+  max-width: 400px;
+  padding: 20px 24px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 16px;
@@ -1209,19 +1258,19 @@ p {
 }
 
 .auth-card--wide {
-  max-width: 560px;
+  max-width: 520px;
 }
 
 /* ---------- Auth hero (big university branding) ---------- */
 .auth-hero {
   text-align: center;
-  padding: 6px 0 4px;
+  padding: 2px 0;
 }
 .auth-hero-badge {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 14px;
+  padding: 4px 12px;
   border-radius: var(--radius-pill);
   background: var(--primary-soft);
   border: 1px solid color-mix(in srgb, var(--primary) 32%, transparent);
@@ -1235,8 +1284,8 @@ p {
   color: var(--primary);
 }
 .auth-hero-title {
-  margin-top: 14px;
-  font-size: 42px;
+  margin-top: 8px;
+  font-size: 32px;
   font-weight: 900;
   line-height: 1.04;
   letter-spacing: -0.03em;
@@ -1256,28 +1305,28 @@ p {
   }
 }
 .auth-hero-sub {
-  margin: 12px auto 0;
+  margin: 6px auto 0;
   max-width: 330px;
-  font-size: 13.5px;
+  font-size: 13px;
   color: var(--text-muted);
 }
 .auth-hero-divider {
   height: 1px;
-  margin: 20px 0 22px;
+  margin: 10px 0 12px;
   background: linear-gradient(90deg, transparent, var(--border-strong), transparent);
 }
 
 @media (max-width: 480px) {
   .auth-hero-title {
-    font-size: 34px;
+    font-size: 28px;
   }
   .auth-hero-sub {
-    font-size: 13px;
+    font-size: 12.5px;
   }
 }
 
 .auth-title {
-  font-size: 20px;
+  font-size: 19px;
   font-weight: 800;
 }
 
@@ -1285,12 +1334,12 @@ p {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 
 .auth-sub {
-  margin: 4px 0 22px;
-  font-size: 14px;
+  margin: 2px 0 12px;
+  font-size: 13.5px;
   color: var(--text-muted);
 }
 

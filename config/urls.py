@@ -18,8 +18,10 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     # Custom admin interface.
     path("dashboard/", include("admins.urls")),
-    # Student-facing authentication.
+    path("dashboard/admin/login/", RedirectView.as_view(pattern_name="admins:admin_login", permanent=False)),
+    # Student-facing authentication (supports both /login/ and /accounts/login/).
     path("", include("accounts.urls")),
+    path("accounts/", include("accounts.urls")),
     # Academic features (semesters, later subjects).
     path("", include("academics.urls")),
     # Community Chat & Active Members.
