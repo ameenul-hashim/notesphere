@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NoteSphere</title>
+  <meta name="description" content="NoteSphere - Your smart note-taking platform. Loading...">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at 30% 20%, #1e3a8a 0%, #0f172a 60%, #020617 100%);
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      color: #fff;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Floating background particles */
+    .particles {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.15);
+      animation: floatUp linear infinite;
+    }
+    @keyframes floatUp {
+      0% { transform: translateY(110vh) scale(0); opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+    }
+
+    /* Brand container */
+    .brand {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(2.5rem, 8vw, 5rem);
+      font-weight: 800;
+      letter-spacing: 2px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .letter {
+      display: inline-block;
+      opacity: 0;
+      animation: assemble 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      text-shadow: 0 0 30px rgba(99, 102, 241, 0.6);
+    }
+
+    /* Each letter starts from a random position and joins center */
+    @keyframes assemble {
+      0% {
+        opacity: 0;
+        transform: translate(var(--start-x), var(--start-y)) rotate(var(--start-rot)) scale(0.3);
+      }
+      60% { opacity: 1; }
+      100% {
+        opacity: 1;
+        transform: translate(0, 0) rotate(0deg) scale(1);
+      }
+    }
+
+    .brand .accent {
+      color: #818cf8;
+    }
+
+    /* Tagline */
+    .tagline {
+      margin-top: 20px;
+      font-size: clamp(0.9rem, 2.5vw, 1.2rem);
+      color: #94a3b8;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      opacity: 0;
+      animation: fadeIn 1s ease 1.2s forwards;
+      position: relative;
+      z-index: 2;
+    }
+    @keyframes fadeIn { to { opacity: 1; } }
+
+    /* Loading bar */
+    .loader {
+      margin-top: 40px;
+      width: 220px;
+      height: 4px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+      z-index: 2;
+    }
+    .loader-bar {
+      height: 100%;
+      width: 40%;
+      background: linear-gradient(90deg, #6366f1, #818cf8, #a5b4fc);
+      border-radius: 4px;
+      animation: slide 1.2s ease-in-out infinite;
+    }
+    @keyframes slide {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(350%); }
+    }
+
+    .status {
+      margin-top: 14px;
+      font-size: 0.85rem;
+      color: #64748b;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Bottom hint */
+    .hint {
+      position: absolute;
+      bottom: 24px;
+      font-size: 0.75rem;
+      color: #475569;
+      letter-spacing: 1px;
+      z-index: 2;
+    }
+  </style>
+</head>
+<body>
+  <div class="particles" id="particles"></div>
+
+  <div class="brand" id="brand">
+    <span class="letter">N</span>
+    <span class="letter">o</span>
+    <span class="letter">t</span>
+    <span class="letter">e</span>
+    <span class="letter accent">S</span>
+    <span class="letter accent">p</span>
+    <span class="letter accent">h</span>
+    <span class="letter accent">e</span>
+    <span class="letter accent">r</span>
+    <span class="letter accent">e</span>
+  </div>
+
+  <div class="tagline">Your Smart Notes, Everywhere</div>
+
+  <div class="loader"><div class="loader-bar"></div></div>
+  <div class="status" id="status">Waking up the server...</div>
+
+  <div class="hint">NoteSphere &copy; <span id="year"></span></div>
+
+  <script>
+    // Current year
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Generate floating particles
+    const particles = document.getElementById('particles');
+    for (let i = 0; i < 25; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      const size = Math.random() * 6 + 2;
+      p.style.width = size + 'px';
+      p.style.height = size + 'px';
+      p.style.left = Math.random() * 100 + '%';
+      p.style.animationDuration = (Math.random() * 8 + 6) + 's';
+      p.style.animationDelay = (Math.random() * 8) + 's';
+      particles.appendChild(p);
+    }
+
+    // Assign random start positions to each letter so they "fly in" from random areas
+    const letters = document.querySelectorAll('.letter');
+    letters.forEach((letter, i) => {
+      const angle = (i / letters.length) * Math.PI * 2;
+      const dist = 120 + Math.random() * 180;
+      const x = Math.cos(angle) * dist;
+      const y = Math.sin(angle) * dist;
+      const rot = (Math.random() - 0.5) * 360;
+      const delay = 0.1 + (i * 0.08);
+      letter.style.setProperty('--start-x', x + 'px');
+      letter.style.setProperty('--start-y', y + 'px');
+      letter.style.setProperty('--start-rot', rot + 'deg');
+      letter.style.animationDelay = delay + 's';
+    });
+
+    // Poll the Render app until it wakes up, then redirect
+    const APP_URL = "https://notesphere-4rlw.onrender.com";
+    const statusEl = document.getElementById('status');
+    let attempts = 0;
+
+    function check() {
+      attempts++;
+      fetch(APP_URL, { mode: "no-cors" })
+        .then(() => {
+          statusEl.textContent = "Server is ready! Redirecting...";
+          window.location.href = APP_URL;
+        })
+        .catch(() => {
+          if (attempts > 30) {
+            statusEl.textContent = "Still waking up... this can take a minute";
+          }
+          setTimeout(check, 3000);
+        });
+    }
+
+    check();
+  </script>
+</body>
+</html>
