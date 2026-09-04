@@ -386,10 +386,13 @@ p {
   text-align: center;
 }
 .form-note a {
-  color: var(--text);
+  color: var(--primary);
   font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 .form-note a:hover {
+  color: var(--primary-hover);
   text-decoration: underline;
   text-underline-offset: 3px;
 }

@@ -47,12 +47,16 @@ ALLOWED_HOSTS = [
 if not ALLOWED_HOSTS:
     ALLOWED_HOSTS = ["*"]
 
-raw_csrf_origins = os.environ.get("CSRF_TRUSTED_ORIGINS", "https://*.up.railway.app,https://*.railway.app")
+raw_csrf_origins = os.environ.get("CSRF_TRUSTED_ORIGINS", "")
 CSRF_TRUSTED_ORIGINS = [
     origin.strip().strip('"').strip("'")
     for origin in raw_csrf_origins.split(",")
     if origin.strip()
 ]
+
+# Trust Railway reverse proxy HTTPS headers
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+USE_X_FORWARDED_HOST = True
 
 
 # ---------------------------------------------------------------------------

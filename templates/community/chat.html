@@ -275,12 +275,11 @@
   }
 
   // NoteSphereChatEdit for Django-rendered messages (inline fallback)
+  // The real implementation lives in firestore_chat.js. This is only a
+  // safety net if that script failed to load.
   if (!window.NoteSphereChatEdit) {
-    window.NoteSphereChatEdit = function(docId, oldText) {
-      var newText = prompt('Edit message:', oldText);
-      if (newText === null || newText.trim() === '' || newText === oldText) return;
-      // If Firestore is not available, redirect to Django edit endpoint
-      window.location.href = '/community/chat/' + docId + '/edit/?content=' + encodeURIComponent(newText.trim());
+    window.NoteSphereChatEdit = function(docId) {
+      alert('Editing is unavailable right now. Please refresh and try again.');
     };
   }
 </script>

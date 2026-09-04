@@ -54,6 +54,9 @@
     const role = user.role;
     const isAdmin = role === 'ADMIN';
     const time = formatTime(data.created_at);
+    const editedBadge = data.edited
+      ? `<span class="text-[9px] italic opacity-70">(edited)</span>`
+      : '';
 
     const outer = document.createElement('div');
     outer.className = 'flex flex-col space-y-1';
@@ -92,7 +95,7 @@
     const currentUser = me();
     const isOwn = isMine(data.sender_id);
     const editBtn = isOwn
-      ? `<button type="button" class="hover:underline font-bold text-[10px] uppercase ${mine ? 'text-primary-foreground' : 'text-primary'}" onclick="NoteSphereChatEdit('${docId}','${escHtml(data.message || '')}')">Edit</button>`
+      ? `<button type="button" class="hover:underline font-bold text-[10px] uppercase ${mine ? 'text-primary-foreground' : 'text-primary'}" onclick="NoteSphereChatEdit('${docId}')">Edit</button>`
       : '';
     const deleteBtn = currentUser.is_admin
       ? `<span>|</span><button type="button" class="hover:underline font-bold text-[10px] uppercase text-danger" onclick="NoteSphereChatDelete('${docId}')">Del</button>`
@@ -121,6 +124,7 @@
             </div>
             <div class="flex items-center gap-2 font-normal">
               <span>${time}</span>
+              ${editedBadge}
               <button type="button"
                 class="hover:underline font-bold text-[10px] uppercase ${mine ? 'text-primary-foreground' : 'text-primary'}"
                 onclick="NoteSphereChatReply('${docId}','${escHtml(user.name)}','${escHtml((data.message || '').substring(0, 60))}')">
@@ -360,11 +364,73 @@
 
   window.NoteSphereChatEdit = function(docId, oldText) {
     if (!window.NoteSphereFB?.isReady) return;
-    var newText = prompt('Edit message:', oldText);
-    if (newText === null || newText.trim() === '' || newText === oldText) return;
-    window.NoteSphereFB.db.collection('community_chat').doc(docId)
-      .update({ message: newText.trim(), edited: true })
-      .catch(e => console.warn('Edit err', e));
+
+    const container = document.getElementById('chat-messages-container');
+    const bubble = container ? container.querySelector(`[data-msg-id="${docId}"]`) : null;
+    if (!bubble) return;
+
+    // Find the message <p> element inside the bubble
+    const msgEl = bubble.querySelector('p.whitespace-pre-wrap');
+    if (!msgEl) return;
+
+    // If already editing, don't start a second one
+    if (bubble.querySelector('.chat-edit-area')) return;
+
+    // Save original text
+    const original = msgEl.textContent;
+
+    // Build inline edit UI
+    const editArea = document.createElement('div');
+    editArea.className = 'chat-edit-area mt-1';
+    editArea.innerHTML = `
+      <textarea class="chat-edit-input w-full text-xs sm:text-sm rounded-lg border border-border bg-surface-1 text-foreground p-2 resize-none focus:outline-none focus:ring-2 focus:ring-primary/50" rows="2">${escHtml(original)}</textarea>
+      <div class="flex items-center gap-2 mt-1.5">
+        <button type="button" class="chat-edit-save text-[10px] font-bold uppercase px-2.5 py-1 rounded-lg bg-primary text-primary-foreground hover:opacity-90">Save</button>
+        <button type="button" class="chat-edit-cancel text-[10px] font-bold uppercase px-2.5 py-1 rounded-lg bg-surface-2 text-muted border border-border hover:bg-surface-3">Cancel</button>
+      </div>`;
+
+    // Replace the message <p> with the edit area
+    msgEl.replaceWith(editArea);
+
+    const textarea = editArea.querySelector('.chat-edit-input');
+    textarea.focus();
+    textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+
+    // Cancel
+    editArea.querySelector('.chat-edit-cancel').addEventListener('click', () => {
+      editArea.replaceWith(msgEl);
+    });
+
+    // Save
+    const save = () => {
+      const newText = textarea.value.trim();
+      if (!newText || newText === original) {
+        editArea.replaceWith(msgEl);
+        return;
+      }
+      window.NoteSphereFB.db.collection('community_chat').doc(docId)
+        .update({ message: newText, edited: true })
+        .then(() => {
+          editArea.replaceWith(msgEl);
+        })
+        .catch(e => {
+          console.warn('Edit err', e);
+          editArea.replaceWith(msgEl);
+        });
+    };
+
+    editArea.querySelector('.chat-edit-save').addEventListener('click', save);
+
+    // Ctrl+Enter to save
+    textarea.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        save();
+      }
+      if (e.key === 'Escape') {
+        editArea.replaceWith(msgEl);
+      }
+    });
   };
 
   window.cancelReplyQuote = function() {
