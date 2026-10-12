@@ -9,8 +9,32 @@ from config.integrations.cloudinary_storage import delete_image_by_url, upload_i
 from .models import Chapter, Semester, Subject
 
 
-class SemesterForm(forms.ModelForm):
+class ThumbnailUploadMixin:
+    """Uploads a chosen thumbnail during validation.
+
+    Raises a field error when the upload fails so the user is never told the
+    save succeeded while the image was silently dropped.
+    """
+
+    thumbnail_folder = "notesphere/misc"
+
+    def clean(self):
+        cleaned = super().clean()
+        new_thumb = cleaned.get("thumbnail")
+        self._uploaded_thumbnail_url = None
+        if isinstance(new_thumb, UploadedFile):
+            self._uploaded_thumbnail_url = upload_image(
+                new_thumb, folder=self.thumbnail_folder
+            )
+            if not self._uploaded_thumbnail_url:
+                self.add_error("thumbnail", "Image upload failed. Please try again.")
+        return cleaned
+
+
+class SemesterForm(ThumbnailUploadMixin, forms.ModelForm):
     """Create or update a semester."""
+
+    thumbnail_folder = "notesphere/semesters"
 
     class Meta:
         model = Semester
@@ -51,11 +75,8 @@ class SemesterForm(forms.ModelForm):
             except Exception:
                 pass
 
-        # 2. Upload a NEW thumbnail to Cloudinary only when a file was chosen
-        new_thumb = self.cleaned_data.get("thumbnail")
-        cloudinary_url = None
-        if isinstance(new_thumb, UploadedFile):
-            cloudinary_url = upload_image(new_thumb, folder="notesphere/semesters")
+        # 2. Use the thumbnail uploaded during validation
+        cloudinary_url = getattr(self, "_uploaded_thumbnail_url", None)
 
         # 3. Keep the existing thumbnail unless a replacement was uploaded
         instance = super().save(commit=False)
@@ -78,8 +99,10 @@ class SemesterForm(forms.ModelForm):
         return instance
 
 
-class SubjectForm(forms.ModelForm):
+class SubjectForm(ThumbnailUploadMixin, forms.ModelForm):
     """Create or update a subject."""
+
+    thumbnail_folder = "notesphere/subjects"
 
     class Meta:
         model = Subject
@@ -130,11 +153,8 @@ class SubjectForm(forms.ModelForm):
             except Exception:
                 pass
 
-        # 2. Upload a NEW thumbnail to Cloudinary only when a file was chosen
-        new_thumb = self.cleaned_data.get("thumbnail")
-        cloudinary_url = None
-        if isinstance(new_thumb, UploadedFile):
-            cloudinary_url = upload_image(new_thumb, folder="notesphere/subjects")
+        # 2. Use the thumbnail uploaded during validation
+        cloudinary_url = getattr(self, "_uploaded_thumbnail_url", None)
 
         # 3. Keep the existing thumbnail unless a replacement was uploaded
         instance = super().save(commit=False)
@@ -157,8 +177,10 @@ class SubjectForm(forms.ModelForm):
         return instance
 
 
-class ChapterForm(forms.ModelForm):
+class ChapterForm(ThumbnailUploadMixin, forms.ModelForm):
     """Create or update a chapter/module with a PDF URL."""
+
+    thumbnail_folder = "notesphere/chapters"
 
     subname = forms.CharField(
         label="Subname (optional)",

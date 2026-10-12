@@ -12,7 +12,7 @@ import os
 
 import cloudinary
 import cloudinary.uploader
-from django.core.files.storage import FileSystemStorage
+from django.core.files.storage import FileSystemStorage, default_storage
 
 logger = logging.getLogger(__name__)
 
@@ -94,11 +94,16 @@ def upload_image(file_obj, folder="notesphere/misc"):
         folder:   Cloudinary folder path (e.g. "notesphere/profile").
 
     Returns:
-        Cloudinary URL string on success, None on failure.
+        Image URL string on success, None on failure.
+        When Cloudinary is not configured, the image is saved to local
+        media storage instead so development keeps working.
     """
     if not _ensure_configured():
-        logger.error("Cloudinary upload failed: not configured")
-        return None
+        logger.warning(
+            "Cloudinary not configured — saving image to local media instead | folder=%s",
+            folder,
+        )
+        return _save_locally(file_obj, folder)
 
     try:
         # Reset file pointer to beginning
@@ -126,6 +131,31 @@ def upload_image(file_obj, folder="notesphere/misc"):
     except Exception as exc:
         logger.exception(
             "Cloudinary upload failed | folder=%s | error=%s",
+            folder, exc,
+        )
+        return None
+
+
+def _save_locally(file_obj, folder="notesphere/misc"):
+    """Save an image to local media storage and return its stored name.
+
+    Used as a fallback when Cloudinary is not configured. Returns the
+    relative storage name (e.g. "notesphere/profile/photo.png") so the
+    field's .url resolves through MEDIA_URL. Returns None if the save fails.
+    """
+    try:
+        if hasattr(file_obj, "seek"):
+            file_obj.seek(0)
+
+        name = getattr(file_obj, "name", "upload")
+        saved_name = default_storage.save(f"{folder}/{name}", file_obj)
+
+        logger.info("Local image save successful | path=%s", saved_name)
+        return saved_name
+
+    except Exception as exc:
+        logger.exception(
+            "Local image save failed | folder=%s | error=%s",
             folder, exc,
         )
         return None

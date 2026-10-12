@@ -6,6 +6,7 @@ from django import forms
 from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import check_password
 from django.core.exceptions import ValidationError
+from django.core.files.uploadedfile import UploadedFile
 from django.utils import timezone
 
 from config.integrations.cloudinary_storage import (
@@ -421,8 +422,15 @@ class AdminPictureForm(forms.ModelForm):
 
     def clean(self):
         cleaned = super().clean()
-        if not cleaned.get("photo"):
+        photo = cleaned.get("photo")
+        if not photo:
             raise ValidationError("Please choose a photo to upload.")
+
+        # Upload during validation so a failed upload is shown as an error
+        # instead of silently clearing the existing picture.
+        self._uploaded_photo_url = upload_image(photo, folder="notesphere/profile")
+        if not self._uploaded_photo_url:
+            self.add_error("photo", "Photo upload failed. Please try again.")
         return cleaned
 
     def save(self, commit=True):
@@ -436,11 +444,8 @@ class AdminPictureForm(forms.ModelForm):
             except Exception:
                 pass
 
-        # 2. Upload new photo to Cloudinary
-        new_photo = self.cleaned_data.get("photo")
-        cloudinary_url = None
-        if new_photo:
-            cloudinary_url = upload_image(new_photo, folder="notesphere/profile")
+        # 2. Use the URL uploaded during validation
+        uploaded_url = getattr(self, "_uploaded_photo_url", None)
 
         # 3. Save user WITHOUT photo (clear it so Django doesn't touch file storage)
         self.instance.photo = None
@@ -451,13 +456,13 @@ class AdminPictureForm(forms.ModelForm):
         if commit:
             user.save()
 
-        # 4. Set Cloudinary URL via raw update
-        if cloudinary_url and user.pk:
-            User.objects.filter(pk=user.pk).update(photo=cloudinary_url)
-            user.photo = cloudinary_url
+        # 4. Set the uploaded URL via raw update
+        if uploaded_url and user.pk:
+            User.objects.filter(pk=user.pk).update(photo=uploaded_url)
+            user.photo = uploaded_url
 
         # 5. Delete old Cloudinary image (always, if different from new)
-        if old_photo_url and old_photo_url != (cloudinary_url or ""):
+        if old_photo_url and old_photo_url != (uploaded_url or ""):
             try:
                 delete_image_by_url(old_photo_url)
             except Exception:
@@ -499,9 +504,53 @@ class AvatarForm(forms.ModelForm):
 
     def clean(self):
         cleaned = super().clean()
-        if self.instance.pk is None and not cleaned.get("image"):
+        image = cleaned.get("image")
+        if self.instance.pk is None and not image:
             raise ValidationError("Please upload an image for a new avatar.")
+
+        # Upload during validation so a failed upload is shown as an error
+        # instead of silently dropping the image. Only a newly submitted
+        # file is uploaded — the existing image is returned as `initial`.
+        self._uploaded_image_url = None
+        if isinstance(image, UploadedFile):
+            self._uploaded_image_url = upload_image(image, folder="notesphere/avatars")
+            if not self._uploaded_image_url:
+                self.add_error("image", "Image upload failed. Please try again.")
         return cleaned
+
+    def save(self, commit=True):
+        # 1. Read old image URL directly from DB (bypasses FieldFile)
+        old_image_url = None
+        if self.instance.pk:
+            try:
+                db_val = Avatar.objects.filter(pk=self.instance.pk).values_list("image", flat=True).first()
+                if db_val and "cloudinary.com" in str(db_val):
+                    old_image_url = str(db_val)
+            except Exception:
+                pass
+
+        # 2. Use the URL uploaded during validation
+        uploaded_url = getattr(self, "_uploaded_image_url", None)
+
+        avatar = super().save(commit=False)
+        if uploaded_url:
+            avatar.image = uploaded_url
+        elif old_image_url:
+            avatar.image = old_image_url
+        if commit:
+            avatar.save()
+            if uploaded_url:
+                Avatar.objects.filter(pk=avatar.pk).update(image=uploaded_url)
+                avatar.image = uploaded_url
+
+        # 3. Delete the old Cloudinary image when replaced by a new one
+        if uploaded_url and old_image_url and old_image_url != uploaded_url:
+            try:
+                delete_image_by_url(old_image_url)
+            except Exception:
+                pass
+
+        return avatar
 
 
 class StudentPasswordForm(forms.Form):
