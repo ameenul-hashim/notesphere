@@ -87,3 +87,33 @@ try:
 except Exception:
     pass
 
+
+# ---------------------------------------------------------------------------
+# STARTUP DIAGNOSTICS — log Cloudinary env var status once when Django loads
+# ---------------------------------------------------------------------------
+
+def _log_startup_cloudinary_diagnostics():
+    """Print Cloudinary-related env var status once at startup (secrets masked)."""
+    _log = logging.getLogger("django.server")
+    cloud_name = os.environ.get("CLOUDINARY_CLOUD_NAME", "")
+    api_key = os.environ.get("CLOUDINARY_API_KEY", "")
+    api_secret = os.environ.get("CLOUDINARY_API_SECRET", "")
+
+    def _mask(k):
+        if not k or len(k) < 8:
+            return "***NOT_SET***"
+        return f"{k[:4]}...{k[-4:]}"
+
+    _log.info("=" * 60)
+    _log.info("STARTUP CLOUDINARY DIAGNOSTICS (production)")
+    _log.info("=" * 60)
+    _log.info("CLOUDINARY_CLOUD_NAME = %s", cloud_name or "(empty)")
+    _log.info("CLOUDINARY_API_KEY    = %s (masked: %s)", "SET" if api_key else "NOT SET", _mask(api_key))
+    _log.info("CLOUDINARY_API_SECRET = %s (masked: %s)", "SET" if api_secret else "NOT SET", _mask(api_secret))
+    _log.info("=" * 60)
+
+try:
+    _log_startup_cloudinary_diagnostics()
+except Exception:
+    pass
+

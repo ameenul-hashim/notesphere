@@ -11,6 +11,7 @@ from django.utils import timezone
 
 from config.integrations.cloudinary_storage import (
     delete_image_by_url,
+    get_last_upload_error,
     upload_image,
 )
 
@@ -430,7 +431,11 @@ class AdminPictureForm(forms.ModelForm):
         # instead of silently clearing the existing picture.
         self._uploaded_photo_url = upload_image(photo, folder="notesphere/profile")
         if not self._uploaded_photo_url:
-            self.add_error("photo", "Photo upload failed. Please try again.")
+            reason = get_last_upload_error()
+            message = "Photo upload failed. Please try again."
+            if reason:
+                message = f"Photo upload failed: {reason}"
+            self.add_error("photo", message)
         return cleaned
 
     def save(self, commit=True):

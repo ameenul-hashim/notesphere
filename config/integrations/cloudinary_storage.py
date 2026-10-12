@@ -22,6 +22,13 @@ logger = logging.getLogger(__name__)
 
 _configured = False
 
+_last_upload_error = None
+
+
+def get_last_upload_error():
+    """Return the most recent upload failure reason (for surfacing to users)."""
+    return _last_upload_error
+
 
 def _ensure_configured():
     """Configure Cloudinary from environment variables (once)."""
@@ -105,6 +112,8 @@ def upload_image(file_obj, folder="notesphere/misc"):
         )
         return _save_locally(file_obj, folder)
 
+    global _last_upload_error
+    _last_upload_error = None
     try:
         # Reset file pointer to beginning
         if hasattr(file_obj, "seek"):
@@ -129,6 +138,7 @@ def upload_image(file_obj, folder="notesphere/misc"):
         return url
 
     except Exception as exc:
+        _last_upload_error = str(exc)
         logger.exception(
             "Cloudinary upload failed | folder=%s | error=%s",
             folder, exc,
