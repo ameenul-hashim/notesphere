@@ -54,6 +54,20 @@ CSRF_TRUSTED_ORIGINS = [
     if origin.strip()
 ]
 
+# Auto-trust the origins of every configured host. This keeps POST forms
+# working behind a reverse proxy / custom (masked) domain: Django requires the
+# browser's `Origin` header to match a trusted origin, and without this every
+# POST from a domain other than the raw Render URL fails with
+# "Origin checking failed ... does not match any trusted origins".
+for _host in ALLOWED_HOSTS:
+    if not _host or _host == "*":
+        continue
+    _origin_host = ("*." + _host.lstrip(".")) if _host.startswith(".") else _host
+    for _scheme in ("https", "http"):
+        _origin = f"{_scheme}://{_origin_host}"
+        if _origin not in CSRF_TRUSTED_ORIGINS:
+            CSRF_TRUSTED_ORIGINS.append(_origin)
+
 # Trust Railway reverse proxy HTTPS headers
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 USE_X_FORWARDED_HOST = True
