@@ -12,6 +12,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.cache import never_cache
+from django.views.decorators.csrf import ensure_csrf_cookie
 
 from accounts.decorators import admin_required
 from accounts.forms import (
@@ -61,6 +62,7 @@ def _shift_month(day, delta):
 
 
 @never_cache
+@ensure_csrf_cookie
 def admin_login(request):
     if request.user.is_authenticated:
         return redirect("admins:dashboard")

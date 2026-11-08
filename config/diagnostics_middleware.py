@@ -7,9 +7,13 @@ Logs detailed exception tracebacks, headers, host information, and CSRF failure 
 import sys
 import logging
 import traceback
+from urllib.parse import urlsplit
+
 from django.conf import settings
+from django.contrib import messages
 from django.core.exceptions import DisallowedHost
-from django.http import HttpResponseBadRequest
+from django.http import HttpResponseBadRequest, JsonResponse
+from django.shortcuts import redirect
 
 logger = logging.getLogger(__name__)
 
@@ -81,6 +85,26 @@ class ProductionDiagnosticsMiddleware:
         print(log_output, file=sys.stderr, flush=True)
 
 
+def _same_host_path(request, url):
+    """Return a safe path from ``url`` when it points at the current host."""
+    if not url:
+        return None
+    try:
+        parts = urlsplit(url)
+    except ValueError:
+        return None
+    try:
+        host = request.get_host()
+    except Exception:
+        return None
+    if parts.netloc and parts.netloc != host:
+        return None
+    path = parts.path or "/"
+    if parts.query:
+        path = f"{path}?{parts.query}"
+    return path
+
+
 def custom_csrf_failure_logger(request, reason=""):
     host_header = request.META.get('HTTP_HOST', '<NO_HTTP_HOST>')
     try:
@@ -102,6 +126,34 @@ def custom_csrf_failure_logger(request, reason=""):
         f"=============================================================================\n"
     )
     print(log_output, file=sys.stderr, flush=True)
+
+    wants_json = (
+        request.headers.get("X-Requested-With") == "XMLHttpRequest"
+        or "application/json" in request.headers.get("Accept", "")
+        or request.path == "/theme/"
+        or request.path.startswith("/community/online-users")
+    )
+    if wants_json:
+        return JsonResponse(
+            {"ok": False, "error": "csrf", "reason": reason}, status=400
+        )
+
+    # Recover gracefully instead of dead-ending on a stale token: send the
+    # browser back to the form it came from (same host only) with a fresh
+    # token, and explain what happened. The rejected POST is never executed.
+    if request.method == "POST":
+        target = _same_host_path(request, request.META.get("HTTP_REFERER", ""))
+        if target is None:
+            target = _same_host_path(request, request.META.get("HTTP_ORIGIN", ""))
+        if target is None:
+            target = "/"
+        try:
+            messages.warning(
+                request, "Your security token expired. Please try again."
+            )
+        except Exception:
+            pass
+        return redirect(target)
 
     return HttpResponseBadRequest(
         f"<h1>400 Bad Request (CSRF Failure Diagnostics)</h1><p>Reason: {reason}</p>",
