@@ -30,7 +30,7 @@
     })();
   </script>
 </head>
-<body>
+<body{% if diwali_active %} data-festival="diwali"{% endif %}>
 
   {% if user.is_authenticated %}
     {% include "_sidebar.html" %}

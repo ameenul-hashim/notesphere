@@ -126,6 +126,7 @@ TEMPLATES = [
                 "accounts.context_processors.active_theme",
                 "accounts.context_processors.firebase_config",
                 "accounts.context_processors.user_notifications",
+                "accounts.context_processors.festival",
             ],
         },
     },
@@ -216,6 +217,13 @@ TIME_ZONE = "Asia/Kolkata"
 USE_I18N = True
 
 USE_TZ = True
+
+# ---------------------------------------------------------------------------
+# Festival decorations (temporary, date-gated)
+# The Diwali background is applied only on this local date (Asia/Kolkata) and
+# disappears automatically the next day — no code change needed to revert.
+# ---------------------------------------------------------------------------
+DIWALI_DATE = os.environ.get("DIWALI_DATE", "2026-11-08")
 
 # ---------------------------------------------------------------------------
 # Static files & media

@@ -101,6 +101,29 @@ def user_notifications(request):
     }
 
 
+def festival(request):
+    """Expose a date-gated festival flag for temporary decorations.
+
+    ``settings.DIWALI_DATE`` is an ISO date (default "2026-11-08"). The Diwali
+    background is shown only when the current local date (TIME_ZONE) matches,
+    so it switches off automatically the next day with no code change.
+    """
+    from datetime import date
+
+    from django.conf import settings
+    from django.utils import timezone
+
+    raw_date = getattr(settings, "DIWALI_DATE", "")
+    diwali_active = False
+    if raw_date:
+        try:
+            diwali_active = timezone.localdate() == date.fromisoformat(str(raw_date))
+        except ValueError:
+            diwali_active = False
+
+    return {"diwali_active": diwali_active}
+
+
 
 
 
