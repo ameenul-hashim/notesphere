@@ -857,7 +857,6 @@ body.diwali-paused .diwali-crackers * { animation-play-state: paused !important;
   .diwali-greeting * {
     animation: none !important;
   }
-}
 body.diwali-reduced .diwali-decor *,
 body.diwali-reduced .diwali-floating,
 body.diwali-reduced .diwali-floating *,

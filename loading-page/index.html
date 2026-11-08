@@ -286,7 +286,7 @@
       animation: dwSpin 90s linear infinite;
     }
     .dw-rangoli--left { left: clamp(-160px, -11vw, -80px); }
-    .dw-rangoli--right { right: clamp(-160px, -11vw, -80px); animation-direction: reverse; }
+    .dw-rangoli--right { right: clamp(-160px, -11vw, -80px); animation: dwSpin 90s linear infinite reverse; }
 
     .dw-spark {
       position: absolute;
@@ -422,7 +422,7 @@
       particles.appendChild(p);
     }
 
-    // Golden fireworks — Diwali mode only, paused while the tab is hidden
+    // Golden fireworks â€” Diwali mode only, paused while the tab is hidden
     if (document.body.classList.contains('diwali')) {
       const fw = document.getElementById('dw-fireworks');
       const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
