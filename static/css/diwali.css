@@ -869,3 +869,6 @@ body.diwali-paused .diwali-decor *,
 body.diwali-paused .diwali-floating * {
   animation-play-state: paused !important;
 }
+
+/* ---------- Fireworks canvas ---------- */
+.diwali-fireworks-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; z-index: 1; }
