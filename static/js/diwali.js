@@ -82,7 +82,7 @@
       for (var i = 0; i < count; i++) {
         var a = (i / count) * Math.PI * 2;
         var sp = 3 + Math.random() * 2;
-        particles.push(new Particle(x, y, Math.cos(a) * sp, Math.sin(a) * sp, color, 60 + Math.random() * 20, 2, "ring"));
+        particles.push(new Particle(x, y, Math.cos(a) * sp, Math.sin(a) * sp, pickColor(), 60 + Math.random() * 20, 2, "ring"));
       }
     } else if (type < 0.25) {
       for (var i = 0; i < count; i++) {
@@ -102,7 +102,7 @@
         var a = Math.random() * Math.PI * 2;
         var b = Math.random() * Math.PI;
         var sp = 1 + Math.random() * 5;
-        particles.push(new Particle(x, y, Math.cos(a) * Math.sin(b) * sp, Math.sin(a) * Math.sin(b) * sp, color, 55 + Math.random() * 25, 1.8, "chrys"));
+        particles.push(new Particle(x, y, Math.cos(a) * Math.sin(b) * sp, Math.sin(a) * Math.sin(b) * sp, pickColor(), 55 + Math.random() * 25, 1.8, "chrys"));
       }
     } else if (type < 0.62) {
       for (var i = 0; i < count; i++) {
@@ -206,12 +206,12 @@
 
   var lastLaunch = 0;
   function scheduleLaunch(now) {
-    var interval = 900 + Math.random() * 1300;
+    var interval = 400 + Math.random() * 700;
     if (now - lastLaunch > interval) {
       lastLaunch = now;
-      var count = Math.random() < 0.25 ? 2 : 1;
+      var count = 2 + Math.floor(Math.random() * 3);
       for (var i = 0; i < count; i++) {
-        if (Math.random() < 0.85) rockets.push(new Rocket(Math.random() * W));
+        rockets.push(new Rocket(Math.random() * W));
       }
     }
   }

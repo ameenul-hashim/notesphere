@@ -278,7 +278,7 @@ body[data-festival="diwali"] .app-shell .diwali-diyas {
     radial-gradient(circle, transparent 0 24%, rgba(255, 207, 107, 0.26) 24% 27%, transparent 27% 41%, rgba(255, 95, 126, 0.24) 41% 44%, transparent 44% 59%, rgba(125, 211, 252, 0.22) 59% 62%, transparent 62%);
   -webkit-mask-image: radial-gradient(circle, #000 0 54%, transparent 73%);
   mask-image: radial-gradient(circle, #000 0 54%, transparent 73%);
-  animation: dw-spin 90s linear infinite;
+  animation: none;
 }
 .diwali-rangoli--left {
   left: clamp(-160px, -11vw, -80px);
