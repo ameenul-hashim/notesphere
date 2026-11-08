@@ -400,7 +400,7 @@
     // or redirecting to the app (handy for sharing/showcasing, no cold start).
     const PREVIEW = new URLSearchParams(window.location.search).has('preview');
     const DIWALI_START = "2026-11-08";
-    const DIWALI_END = "2026-11-10";
+    const DIWALI_END = "2026-11-12";
     const istDate = new Date(Date.now() + 330 * 60 * 1000).toISOString().slice(0, 10);
     if (PREVIEW || (istDate >= DIWALI_START && istDate <= DIWALI_END)) {
       document.body.classList.add('diwali');
@@ -422,7 +422,7 @@
       particles.appendChild(p);
     }
 
-    // Golden fireworks â€” Diwali mode only, paused while the tab is hidden
+    // Golden fireworks Ã¢â‚¬â€ Diwali mode only, paused while the tab is hidden
     if (document.body.classList.contains('diwali')) {
       const fw = document.getElementById('dw-fireworks');
       const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
