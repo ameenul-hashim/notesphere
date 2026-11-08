@@ -2775,7 +2775,7 @@ p {
 }
 
 /* In-app (authenticated) Diwali accents */
-[data-festival="diwali"] body {
+body[data-festival="diwali"] {
   background-image:
     radial-gradient(900px 520px at 100% 0%, rgba(255, 176, 64, 0.10), transparent 60%),
     radial-gradient(820px 520px at 0% 100%, rgba(255, 92, 126, 0.08), transparent 60%);
