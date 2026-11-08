@@ -15,7 +15,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'css/themes.css' %}">
   <link rel="stylesheet" href="{% static 'css/app.css' %}">
-  {% if diwali_active %}<link rel="stylesheet" href="{% static 'css/diwali.css' %}">{% endif %}
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     // Apply theme before paint to avoid flash of wrong theme.
@@ -31,7 +30,7 @@
     })();
   </script>
 </head>
-<body{% if diwali_active %} data-festival="diwali"{% endif %}>
+<body>
 
   {% if user.is_authenticated %}
     {% include "_sidebar.html" %}
@@ -39,8 +38,6 @@
   {% endif %}
 
   <div class="{% if user.is_authenticated %}app-shell{% else %}auth-page{% endif %}">
-
-    {% if diwali_active %}{% include "_diwali_decor.html" %}{% endif %}
 
     {% if user.is_authenticated %}
       <header class="topbar" data-topbar>
@@ -173,7 +170,6 @@
   {% include "_modal.html" %}
   <script src="{% static 'js/theme.js' %}"></script>
   <script src="{% static 'js/main.js' %}"></script>
-  <script src="{% static 'js/csrf_refresh.js' %}"></script>
   {% if user.is_authenticated %}
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -203,16 +199,6 @@
     <script src="{% static 'js/firebase_init.js' %}"></script>
     <script src="{% static 'js/presence.js' %}"></script>
   {% endif %}
-
-  {% block diwali_greeting %}
-    {% if diwali_active and diwali_greeting %}
-      {% include "_diwali_greeting.html" %}
-    {% endif %}
-  {% endblock %}
-
-  {% if diwali_active %}{% include "_diwali_floating.html" %}{% endif %}
-
-  {% if diwali_active %}<script src="{% static 'js/diwali.js' %}"></script>{% endif %}
 
 </body>
 </html>
