@@ -200,5 +200,12 @@
     <script src="{% static 'js/presence.js' %}"></script>
   {% endif %}
 
+  {% if diwali_active %}
+    <div class="diwali-badge" aria-hidden="true">
+      <span class="diwali-badge-flame"></span>
+      <span>Happy Diwali</span>
+    </div>
+  {% endif %}
+
 </body>
 </html>

@@ -104,24 +104,23 @@ def user_notifications(request):
 def festival(request):
     """Expose a date-gated festival flag for temporary decorations.
 
-    ``settings.DIWALI_DATE`` is an ISO date (default "2026-11-08"). The Diwali
-    background is shown only when the current local date (TIME_ZONE) matches,
-    so it switches off automatically the next day with no code change.
+    ``settings.DIWALI_START_DATE`` / ``DIWALI_END_DATE`` are ISO dates that
+    form an inclusive range (default 2026-11-08 .. 2026-11-10). The Diwali
+    theme is shown only while the current local date (TIME_ZONE) is inside the
+    range, so it switches off automatically the day after the end date.
     """
     from datetime import date
 
     from django.conf import settings
     from django.utils import timezone
 
-    raw_date = getattr(settings, "DIWALI_DATE", "")
-    diwali_active = False
-    if raw_date:
-        try:
-            diwali_active = timezone.localdate() == date.fromisoformat(str(raw_date))
-        except ValueError:
-            diwali_active = False
+    try:
+        start = date.fromisoformat(str(getattr(settings, "DIWALI_START_DATE", "")))
+        end = date.fromisoformat(str(getattr(settings, "DIWALI_END_DATE", "")))
+    except (TypeError, ValueError):
+        return {"diwali_active": False}
 
-    return {"diwali_active": diwali_active}
+    return {"diwali_active": start <= timezone.localdate() <= end}
 
 
 

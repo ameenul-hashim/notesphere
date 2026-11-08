@@ -220,10 +220,11 @@ USE_TZ = True
 
 # ---------------------------------------------------------------------------
 # Festival decorations (temporary, date-gated)
-# The Diwali background is applied only on this local date (Asia/Kolkata) and
-# disappears automatically the next day — no code change needed to revert.
+# The Diwali theme is applied only within this inclusive date range
+# (Asia/Kolkata) and disappears automatically after the end date.
 # ---------------------------------------------------------------------------
-DIWALI_DATE = os.environ.get("DIWALI_DATE", "2026-11-08")
+DIWALI_START_DATE = os.environ.get("DIWALI_START_DATE", "2026-11-08")
+DIWALI_END_DATE = os.environ.get("DIWALI_END_DATE", "2026-11-10")
 
 # ---------------------------------------------------------------------------
 # Static files & media
