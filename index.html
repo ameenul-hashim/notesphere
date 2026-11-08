@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -286,7 +286,7 @@
       animation: dwSpin 90s linear infinite;
     }
     .dw-rangoli--left { left: clamp(-160px, -11vw, -80px); }
-    .dw-rangoli--right { right: clamp(-160px, -11vw, -80px); animation-direction: reverse; }
+    .dw-rangoli--right { right: clamp(-160px, -11vw, -80px); animation: dwSpin 90s linear infinite reverse; }
 
     .dw-spark {
       position: absolute;
@@ -400,7 +400,7 @@
     // or redirecting to the app (handy for sharing/showcasing, no cold start).
     const PREVIEW = new URLSearchParams(window.location.search).has('preview');
     const DIWALI_START = "2026-11-08";
-    const DIWALI_END = "2026-11-10";
+    const DIWALI_END = "2026-11-12";
     const istDate = new Date(Date.now() + 330 * 60 * 1000).toISOString().slice(0, 10);
     if (PREVIEW || (istDate >= DIWALI_START && istDate <= DIWALI_END)) {
       document.body.classList.add('diwali');
@@ -422,7 +422,7 @@
       particles.appendChild(p);
     }
 
-    // Golden fireworks — Diwali mode only, paused while the tab is hidden
+    // Golden fireworks ├â┬ó├óΓÇÜ┬¼├óΓé¼┬¥ Diwali mode only, paused while the tab is hidden
     if (document.body.classList.contains('diwali')) {
       const fw = document.getElementById('dw-fireworks');
       const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -479,7 +479,7 @@
     // Poll the Render app until it wakes up, then redirect
     const APP_URL = "https://notesphere-4rlw.onrender.com";
     const statusEl = document.getElementById('status');
-    const MAX_ATTEMPTS = 40;
+    const MAX_ATTEMPTS = 3;
     let attempts = 0;
 
     function showFailed() {
@@ -491,8 +491,15 @@
     function check() {
       attempts++;
 
+      // Keep the request alive long enough for Render to finish cold-starting.
+      // Aborting early can interrupt the wake-up request and prevent the app
+      // from ever becoming ready.
       const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 8000);
+      const timer = setTimeout(() => controller.abort(), 90000);
+
+      statusEl.textContent = attempts > 1
+        ? "Still waking up... this can take a minute"
+        : "Waking up the server...";
 
       fetch(APP_URL, { mode: "no-cors", cache: "no-store", credentials: "omit", signal: controller.signal })
         .then(() => {
@@ -506,10 +513,7 @@
             showFailed();
             return;
           }
-          statusEl.textContent = attempts > 10
-            ? "Still waking up... this can take a minute"
-            : "Waking up the server...";
-          setTimeout(check, 3000);
+          setTimeout(check, 5000);
         });
     }
 
