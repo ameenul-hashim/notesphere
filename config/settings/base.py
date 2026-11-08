@@ -231,7 +231,7 @@ DIWALI_ENABLED = os.environ.get("DIWALI_ENABLED", "1").strip().lower() not in (
     "off",
 )
 DIWALI_START_DATE = os.environ.get("DIWALI_START_DATE", "2026-11-08")
-DIWALI_END_DATE = os.environ.get("DIWALI_END_DATE", "2026-11-10")
+DIWALI_END_DATE = os.environ.get("DIWALI_END_DATE", "2026-11-12")
 
 # ---------------------------------------------------------------------------
 # Static files & media
