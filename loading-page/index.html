@@ -396,10 +396,13 @@
     document.getElementById('year').textContent = new Date().getFullYear();
 
     // Diwali theme for Nov 8-10 (Asia/Kolkata). Auto-reverts after the range.
+    // Add ?preview=1 to keep the festive animation on screen without probing
+    // or redirecting to the app (handy for sharing/showcasing, no cold start).
+    const PREVIEW = new URLSearchParams(window.location.search).has('preview');
     const DIWALI_START = "2026-11-08";
     const DIWALI_END = "2026-11-10";
     const istDate = new Date(Date.now() + 330 * 60 * 1000).toISOString().slice(0, 10);
-    if (istDate >= DIWALI_START && istDate <= DIWALI_END) {
+    if (PREVIEW || (istDate >= DIWALI_START && istDate <= DIWALI_END)) {
       document.body.classList.add('diwali');
       const tag = document.querySelector('.tagline');
       if (tag) tag.textContent = "Happy Diwali from NoteSphere";
@@ -510,7 +513,11 @@
         });
     }
 
-    check();
+    if (PREVIEW) {
+      statusEl.textContent = "Diwali preview - animations only";
+    } else {
+      check();
+    }
   </script>
 </body>
 </html>
