@@ -272,7 +272,7 @@
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), 8000);
 
-      fetch(APP_URL, { mode: "no-cors", cache: "no-store", signal: controller.signal })
+      fetch(APP_URL, { mode: "no-cors", cache: "no-store", credentials: "omit", signal: controller.signal })
         .then(() => {
           clearTimeout(timer);
           statusEl.textContent = "Server is ready! Redirecting...";
