@@ -131,6 +131,61 @@
       letter-spacing: 1px;
       z-index: 2;
     }
+
+    /* ---------- Diwali theme (Nov 8-10, auto-reverts after) ---------- */
+    body.diwali {
+      background:
+        radial-gradient(circle at 20% 15%, rgba(255, 158, 60, 0.35), transparent 45%),
+        radial-gradient(circle at 80% 20%, rgba(255, 95, 126, 0.28), transparent 45%),
+        radial-gradient(circle at 50% 100%, rgba(178, 86, 255, 0.20), transparent 55%),
+        radial-gradient(circle at 30% 20%, #4a1d12 0%, #2a0f23 55%, #12060f 100%);
+    }
+    body.diwali::before {
+      content: "";
+      position: absolute;
+      inset-inline: 0;
+      top: 0;
+      height: 14px;
+      background-image: radial-gradient(circle, #ffd36e 2.5px, transparent 3.5px);
+      background-size: 40px 14px;
+      background-repeat: repeat-x;
+      filter: drop-shadow(0 0 7px rgba(255, 196, 92, 0.95));
+      animation: twinkle 2.6s ease-in-out infinite;
+      z-index: 3;
+      pointer-events: none;
+    }
+    body.diwali::after {
+      content: "";
+      position: absolute;
+      inset-inline: 0;
+      bottom: 0;
+      height: 220px;
+      background: radial-gradient(60% 100% at 50% 100%, rgba(255, 150, 50, 0.28), transparent 75%);
+      pointer-events: none;
+    }
+    body.diwali .brand .accent {
+      color: #ffcf6b;
+      text-shadow: 0 0 34px rgba(255, 180, 70, 0.85);
+    }
+    body.diwali .letter {
+      text-shadow: 0 0 30px rgba(255, 170, 60, 0.7);
+    }
+    body.diwali .tagline {
+      color: #ffd9a3;
+    }
+    body.diwali .loader-bar {
+      background: linear-gradient(90deg, #ff9d3c, #ffd36e, #ff5f7e);
+    }
+    body.diwali .particle {
+      background: rgba(255, 196, 92, 0.55);
+    }
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      body.diwali::before { animation: none; }
+    }
   </style>
 </head>
 <body>
@@ -159,6 +214,16 @@
   <script>
     // Current year
     document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Diwali theme for Nov 8-10 (Asia/Kolkata). Auto-reverts after the range.
+    const DIWALI_START = "2026-11-08";
+    const DIWALI_END = "2026-11-10";
+    const istDate = new Date(Date.now() + 330 * 60 * 1000).toISOString().slice(0, 10);
+    if (istDate >= DIWALI_START && istDate <= DIWALI_END) {
+      document.body.classList.add('diwali');
+      const tag = document.querySelector('.tagline');
+      if (tag) tag.textContent = "Happy Diwali from NoteSphere";
+    }
 
     // Generate floating particles
     const particles = document.getElementById('particles');
@@ -192,19 +257,36 @@
     // Poll the Render app until it wakes up, then redirect
     const APP_URL = "https://notesphere-4rlw.onrender.com";
     const statusEl = document.getElementById('status');
+    const MAX_ATTEMPTS = 40;
     let attempts = 0;
+
+    function showFailed() {
+      statusEl.innerHTML =
+        'Server could not be reached. <a href="' + APP_URL +
+        '" style="color:#818cf8;text-decoration:underline">Open the app directly</a>';
+    }
 
     function check() {
       attempts++;
-      fetch(APP_URL, { mode: "no-cors" })
+
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 8000);
+
+      fetch(APP_URL, { mode: "no-cors", cache: "no-store", signal: controller.signal })
         .then(() => {
+          clearTimeout(timer);
           statusEl.textContent = "Server is ready! Redirecting...";
           window.location.href = APP_URL;
         })
         .catch(() => {
-          if (attempts > 30) {
-            statusEl.textContent = "Still waking up... this can take a minute";
+          clearTimeout(timer);
+          if (attempts >= MAX_ATTEMPTS) {
+            showFailed();
+            return;
           }
+          statusEl.textContent = attempts > 10
+            ? "Still waking up... this can take a minute"
+            : "Waking up the server...";
           setTimeout(check, 3000);
         });
     }
