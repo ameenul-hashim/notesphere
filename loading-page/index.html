@@ -192,19 +192,36 @@
     // Poll the Render app until it wakes up, then redirect
     const APP_URL = "https://notesphere-4rlw.onrender.com";
     const statusEl = document.getElementById('status');
+    const MAX_ATTEMPTS = 40;
     let attempts = 0;
+
+    function showFailed() {
+      statusEl.innerHTML =
+        'Server could not be reached. <a href="' + APP_URL +
+        '" style="color:#818cf8;text-decoration:underline">Open the app directly</a>';
+    }
 
     function check() {
       attempts++;
-      fetch(APP_URL, { mode: "no-cors" })
+
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 8000);
+
+      fetch(APP_URL, { mode: "no-cors", cache: "no-store", signal: controller.signal })
         .then(() => {
+          clearTimeout(timer);
           statusEl.textContent = "Server is ready! Redirecting...";
           window.location.href = APP_URL;
         })
         .catch(() => {
-          if (attempts > 30) {
-            statusEl.textContent = "Still waking up... this can take a minute";
+          clearTimeout(timer);
+          if (attempts >= MAX_ATTEMPTS) {
+            showFailed();
+            return;
           }
+          statusEl.textContent = attempts > 10
+            ? "Still waking up... this can take a minute"
+            : "Waking up the server...";
           setTimeout(check, 3000);
         });
     }
