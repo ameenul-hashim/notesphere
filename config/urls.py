@@ -11,7 +11,11 @@ from django.contrib import admin
 from django.urls import include, path
 from django.views.generic import RedirectView
 
+from config.views import csrf_refresh
+
 urlpatterns = [
+    # Refresh the CSRF token when a cached/focused page may hold a stale one.
+    path("csrf/refresh/", csrf_refresh, name="csrf_refresh"),
     # Root redirects to the login page.
     path("", RedirectView.as_view(pattern_name="accounts:login", permanent=False)),
     # Reserved for future Django admin use.

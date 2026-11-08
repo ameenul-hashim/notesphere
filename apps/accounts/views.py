@@ -10,6 +10,8 @@ from django.http import JsonResponse
 from django.shortcuts import redirect, render
 
 from django.urls import reverse
+from django.views.decorators.cache import never_cache
+from django.views.decorators.csrf import ensure_csrf_cookie
 
 from .decorators import student_required
 from .forms import (
@@ -137,6 +139,8 @@ def google_callback(request):
     return redirect_after_login(user)
 
 
+@never_cache
+@ensure_csrf_cookie
 def signup(request):
     form = SignUpForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
@@ -146,6 +150,8 @@ def signup(request):
     return render(request, "accounts/signup.html", {"form": form})
 
 
+@never_cache
+@ensure_csrf_cookie
 def login_view(request):
     if request.user.is_authenticated:
         return redirect_after_login(request.user)
@@ -173,6 +179,8 @@ def logout_view(request):
     return redirect("accounts:login")
 
 
+@never_cache
+@ensure_csrf_cookie
 def forgot_password(request):
     form = ForgotPasswordForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
@@ -193,6 +201,8 @@ def get_otp_by_flow(flow_id):
         return None
 
 
+@never_cache
+@ensure_csrf_cookie
 def otp_verify(request):
     flow_id = request.GET.get("flow") or request.session.get("reset_flow_id")
     otp_obj = get_otp_by_flow(flow_id)
@@ -209,6 +219,8 @@ def otp_verify(request):
     return render(request, "accounts/otp_verify.html", {"form": form})
 
 
+@never_cache
+@ensure_csrf_cookie
 def reset_password(request):
     flow_id = request.session.get("reset_flow_id") or request.GET.get("flow")
     otp_obj = get_otp_by_flow(flow_id)

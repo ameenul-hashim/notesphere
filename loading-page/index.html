@@ -131,10 +131,245 @@
       letter-spacing: 1px;
       z-index: 2;
     }
+
+    /* ---------- Diwali theme (Nov 8-10, auto-reverts after) ---------- */
+    body.diwali {
+      background:
+        radial-gradient(circle at 20% 15%, rgba(255, 158, 60, 0.35), transparent 45%),
+        radial-gradient(circle at 80% 20%, rgba(255, 95, 126, 0.28), transparent 45%),
+        radial-gradient(circle at 50% 100%, rgba(178, 86, 255, 0.20), transparent 55%),
+        radial-gradient(circle at 30% 20%, #4a1d12 0%, #2a0f23 55%, #12060f 100%);
+    }
+    body.diwali::after {
+      content: "";
+      position: absolute;
+      inset-inline: 0;
+      bottom: 0;
+      height: 220px;
+      background: radial-gradient(60% 100% at 50% 100%, rgba(255, 150, 50, 0.28), transparent 75%);
+      pointer-events: none;
+    }
+    body.diwali .brand .accent {
+      color: #ffcf6b;
+      text-shadow: 0 0 34px rgba(255, 180, 70, 0.85);
+    }
+    body.diwali .letter {
+      text-shadow: 0 0 30px rgba(255, 170, 60, 0.7);
+    }
+    body.diwali .tagline {
+      color: #ffd9a3;
+    }
+    body.diwali .loader-bar {
+      background: linear-gradient(90deg, #ff9d3c, #ffd36e, #ff5f7e);
+    }
+    body.diwali .particle {
+      background: rgba(255, 196, 92, 0.55);
+    }
+
+    /* Decoration layer (visible only in Diwali mode) */
+    .diwali-decor {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      overflow: hidden;
+      pointer-events: none;
+      display: none;
+    }
+    body.diwali .diwali-decor { display: block; }
+
+    .dw-garland {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 26px;
+      background-image:
+        radial-gradient(circle at 6px 8px, #fff8d8 0 1.6px, #ffcf6b 1.6px 3.6px, transparent 4.2px),
+        radial-gradient(circle at 54px 8px, #ffe3ea 0 1.6px, #ff5f7e 1.6px 3.6px, transparent 4.2px),
+        radial-gradient(circle at 102px 8px, #e3f8ff 0 1.6px, #7dd3fc 1.6px 3.6px, transparent 4.2px),
+        radial-gradient(circle at 150px 8px, #f2ffd9 0 1.6px, #a3e635 1.6px 3.6px, transparent 4.2px);
+      background-size: 192px 26px;
+      background-repeat: repeat-x;
+      filter: drop-shadow(0 2px 6px rgba(255, 180, 70, 0.7));
+      animation: twinkle 3.4s ease-in-out infinite;
+    }
+    .dw-garland::before {
+      content: "";
+      position: absolute;
+      left: 0; right: 0; top: 0;
+      height: 12px;
+      border-top: 2px solid rgba(255, 214, 140, 0.5);
+      background: linear-gradient(rgba(255, 214, 140, 0.5), rgba(255, 214, 140, 0));
+    }
+
+    .dw-lantern {
+      position: absolute;
+      top: 0;
+      width: 34px; height: 150px;
+      transform-origin: 50% 0;
+      animation: dwSwing 5.5s ease-in-out infinite;
+    }
+    .dw-lantern--1 { left: clamp(16px, 12vw, 190px); }
+    .dw-lantern--2 { right: clamp(16px, 12vw, 190px); animation-delay: -2.6s; }
+    .dw-cord {
+      position: absolute; left: 50%; top: 0;
+      width: 2px; height: 62%;
+      transform: translateX(-50%);
+      background: linear-gradient(rgba(255, 214, 140, 0.85), rgba(255, 214, 140, 0.1));
+    }
+    .dw-lantern-body {
+      position: absolute; left: 50%; bottom: 12px;
+      width: 30px; height: 42px;
+      transform: translateX(-50%);
+      border-radius: 10px 10px 12px 12px;
+      background: radial-gradient(circle at 50% 30%, rgba(255, 248, 214, 0.96), rgba(255, 176, 64, 0.9) 45%, rgba(180, 83, 9, 0.96) 100%);
+      border: 1px solid rgba(255, 214, 140, 0.75);
+      box-shadow: 0 0 20px 6px rgba(255, 170, 60, 0.5), inset 0 0 8px rgba(255, 240, 200, 0.85);
+    }
+    .dw-lantern-body::before,
+    .dw-lantern-body::after {
+      content: "";
+      position: absolute; left: 50%;
+      width: 16px; height: 3px;
+      transform: translateX(-50%);
+      border-radius: 2px;
+      background: rgba(120, 53, 15, 0.9);
+    }
+    .dw-lantern-body::before { top: -3px; }
+    .dw-lantern-body::after { bottom: -3px; }
+
+    .dw-diya {
+      position: absolute;
+      top: 0;
+      width: 70px; height: 150px;
+      transform-origin: 50% 0;
+      animation: dwSwing 7s ease-in-out infinite;
+    }
+    .dw-diya--left { left: clamp(6px, 5vw, 70px); }
+    .dw-diya--right { right: clamp(6px, 5vw, 70px); animation-delay: -3.4s; }
+    .dw-diya .dw-cord { height: 84px; }
+    .dw-bowl {
+      position: absolute; left: 50%; top: 84px;
+      width: 64px; height: 32px;
+      transform: translateX(-50%);
+      border-radius: 0 0 60% 60% / 0 0 100% 100%;
+      background: radial-gradient(circle at 50% 26%, #f59e0b, #b45309 55%, #7c2d12 100%);
+      box-shadow: 0 16px 24px -10px rgba(255, 140, 40, 0.7), inset 0 -6px 10px rgba(0, 0, 0, 0.28);
+    }
+    .dw-bowl::before {
+      content: "";
+      position: absolute; left: 8%; right: 8%; top: 2px; height: 7px;
+      border-radius: 50%;
+      background: linear-gradient(90deg, #fbbf24, #78350f, #f59e0b);
+      opacity: 0.85;
+    }
+    .dw-flame {
+      position: absolute; left: 50%; top: -17px;
+      width: 14px; height: 24px;
+      transform: translateX(-50%);
+      border-radius: 50% 50% 50% 50% / 65% 65% 35% 35%;
+      background: radial-gradient(circle at 50% 70%, #fff8d8, #ffcf6b 40%, #ff7a00 76%, rgba(255, 80, 0, 0) 100%);
+      box-shadow: 0 0 18px 6px rgba(255, 170, 60, 0.75);
+      animation: dwFlame 1.5s ease-in-out infinite;
+    }
+
+    .dw-rangoli {
+      position: absolute;
+      bottom: clamp(-150px, -9vw, -70px);
+      width: clamp(220px, 34vw, 460px);
+      aspect-ratio: 1 / 1;
+      border-radius: 50%;
+      opacity: 0.55;
+      background:
+        repeating-conic-gradient(from 0deg, rgba(255, 207, 107, 0.5) 0deg 6deg, rgba(255, 207, 107, 0) 6deg 12deg),
+        radial-gradient(circle, transparent 0 24%, rgba(255, 207, 107, 0.26) 24% 27%, transparent 27% 41%, rgba(255, 95, 126, 0.24) 41% 44%, transparent 44% 59%, rgba(125, 211, 252, 0.22) 59% 62%, transparent 62%);
+      -webkit-mask-image: radial-gradient(circle, #000 0 54%, transparent 73%);
+      mask-image: radial-gradient(circle, #000 0 54%, transparent 73%);
+      animation: dwSpin 90s linear infinite;
+    }
+    .dw-rangoli--left { left: clamp(-160px, -11vw, -80px); }
+    .dw-rangoli--right { right: clamp(-160px, -11vw, -80px); animation: dwSpin 90s linear infinite reverse; }
+
+    .dw-spark {
+      position: absolute;
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #fff 0 30%, #ffcf6b 45%, rgba(255, 159, 60, 0) 72%);
+      box-shadow: 0 0 10px 2px rgba(255, 196, 92, 0.8);
+      opacity: 0;
+      animation: dwSparkle 4.4s ease-in-out infinite;
+    }
+    .dw-spark--1 { left: 10%; top: 20%; animation-delay: 0s; }
+    .dw-spark--2 { left: 26%; top: 12%; animation-delay: 0.7s; }
+    .dw-spark--3 { left: 44%; top: 26%; animation-delay: 1.4s; }
+    .dw-spark--4 { left: 62%; top: 14%; animation-delay: 2.1s; }
+    .dw-spark--5 { left: 78%; top: 28%; animation-delay: 0.4s; }
+    .dw-spark--6 { left: 88%; top: 16%; animation-delay: 1.1s; }
+    .dw-spark--7 { left: 18%; top: 52%; animation-delay: 1.8s; }
+    .dw-spark--8 { left: 72%; top: 48%; animation-delay: 2.5s; }
+
+    .dw-fireworks { position: absolute; inset: 0; }
+    .dw-fw { position: absolute; width: 1px; height: 1px; }
+    .dw-fw-dot {
+      position: absolute;
+      width: 4px; height: 4px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #fff, #ffcf6b 55%, rgba(255, 159, 60, 0) 72%);
+      box-shadow: 0 0 8px 1px rgba(255, 196, 92, 0.9);
+      animation: dwBurst 1.4s ease-out forwards;
+    }
+
+    @keyframes twinkle { 0%, 100% { opacity: 0.62; } 50% { opacity: 1; } }
+    @keyframes dwSwing { 0%, 100% { transform: rotate(-3.5deg); } 50% { transform: rotate(3.5deg); } }
+    @keyframes dwFlame {
+      0%, 100% { transform: translateX(-50%) scale(1) rotate(-1deg); opacity: 0.92; }
+      50% { transform: translateX(-50%) scale(1.16) rotate(2deg); opacity: 1; }
+    }
+    @keyframes dwSpin { to { transform: rotate(360deg); } }
+    @keyframes dwSparkle {
+      0%, 72%, 100% { opacity: 0; transform: scale(0.4); }
+      82% { opacity: 1; transform: scale(1.35); }
+    }
+    @keyframes dwBurst {
+      0% { transform: translate(0, 0) scale(0.4); opacity: 0; }
+      18% { opacity: 1; }
+      100% { transform: translate(var(--dx, 0), var(--dy, 0)) scale(0.2); opacity: 0; }
+    }
+
+    @media (max-width: 700px) {
+      .dw-lantern { display: none; }
+      .dw-diya--left { left: 4px; }
+      .dw-diya--right { right: 4px; }
+      .dw-bowl { width: 52px; height: 26px; top: 70px; }
+      .dw-diya .dw-cord { height: 70px; }
+      .dw-flame { top: -14px; width: 12px; height: 20px; }
+      .dw-rangoli { width: 260px; bottom: -110px; opacity: 0.42; }
+      .dw-rangoli--right { display: none; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .diwali-decor * { animation: none !important; }
+    }
   </style>
 </head>
 <body>
   <div class="particles" id="particles"></div>
+
+  <div class="diwali-decor" aria-hidden="true">
+    <div class="dw-garland"></div>
+    <span class="dw-lantern dw-lantern--1"><span class="dw-cord"></span><span class="dw-lantern-body"></span></span>
+    <span class="dw-lantern dw-lantern--2"><span class="dw-cord"></span><span class="dw-lantern-body"></span></span>
+    <span class="dw-diya dw-diya--left"><span class="dw-cord"></span><span class="dw-bowl"><span class="dw-flame"></span></span></span>
+    <span class="dw-diya dw-diya--right"><span class="dw-cord"></span><span class="dw-bowl"><span class="dw-flame"></span></span></span>
+    <span class="dw-rangoli dw-rangoli--left"></span>
+    <span class="dw-rangoli dw-rangoli--right"></span>
+    <span class="dw-spark dw-spark--1"></span>
+    <span class="dw-spark dw-spark--2"></span>
+    <span class="dw-spark dw-spark--3"></span>
+    <span class="dw-spark dw-spark--4"></span>
+    <span class="dw-spark dw-spark--5"></span>
+    <span class="dw-spark dw-spark--6"></span>
+    <span class="dw-spark dw-spark--7"></span>
+    <span class="dw-spark dw-spark--8"></span>
+    <div class="dw-fireworks" id="dw-fireworks"></div>
+  </div>
 
   <div class="brand" id="brand">
     <span class="letter">N</span>
@@ -160,6 +395,19 @@
     // Current year
     document.getElementById('year').textContent = new Date().getFullYear();
 
+    // Diwali theme for Nov 8-10 (Asia/Kolkata). Auto-reverts after the range.
+    // Add ?preview=1 to keep the festive animation on screen without probing
+    // or redirecting to the app (handy for sharing/showcasing, no cold start).
+    const PREVIEW = new URLSearchParams(window.location.search).has('preview');
+    const DIWALI_START = "2026-11-08";
+    const DIWALI_END = "2026-11-12";
+    const istDate = new Date(Date.now() + 330 * 60 * 1000).toISOString().slice(0, 10);
+    if (PREVIEW || (istDate >= DIWALI_START && istDate <= DIWALI_END)) {
+      document.body.classList.add('diwali');
+      const tag = document.querySelector('.tagline');
+      if (tag) tag.textContent = "Happy Diwali from NoteSphere";
+    }
+
     // Generate floating particles
     const particles = document.getElementById('particles');
     for (let i = 0; i < 25; i++) {
@@ -172,6 +420,45 @@
       p.style.animationDuration = (Math.random() * 8 + 6) + 's';
       p.style.animationDelay = (Math.random() * 8) + 's';
       particles.appendChild(p);
+    }
+
+    // Golden fireworks Ã¢â‚¬â€ Diwali mode only, paused while the tab is hidden
+    if (document.body.classList.contains('diwali')) {
+      const fw = document.getElementById('dw-fireworks');
+      const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (fw && !reduce) {
+        let fwTimer = null;
+        const burst = () => {
+          if (document.hidden) return;
+          const b = document.createElement('span');
+          b.className = 'dw-fw';
+          b.style.left = (10 + Math.random() * 80) + '%';
+          b.style.top = (8 + Math.random() * 55) + '%';
+          const dots = 8 + Math.floor(Math.random() * 5);
+          for (let i = 0; i < dots; i++) {
+            const d = document.createElement('span');
+            d.className = 'dw-fw-dot';
+            const angle = (i / dots) * Math.PI * 2;
+            const dist = 18 + Math.random() * 30;
+            d.style.setProperty('--dx', (Math.cos(angle) * dist).toFixed(1) + 'px');
+            d.style.setProperty('--dy', (Math.sin(angle) * dist).toFixed(1) + 'px');
+            d.style.animationDelay = (Math.random() * 0.12).toFixed(2) + 's';
+            b.appendChild(d);
+          }
+          fw.appendChild(b);
+          setTimeout(() => { if (b.parentNode) b.parentNode.removeChild(b); }, 1700);
+        };
+        const schedule = () => {
+          clearTimeout(fwTimer);
+          if (document.hidden) return;
+          fwTimer = setTimeout(() => { burst(); schedule(); }, 6000 + Math.random() * 6000);
+        };
+        schedule();
+        document.addEventListener('visibilitychange', () => {
+          if (document.hidden) { clearTimeout(fwTimer); fwTimer = null; }
+          else if (!fwTimer) schedule();
+        });
+      }
     }
 
     // Assign random start positions to each letter so they "fly in" from random areas
@@ -192,7 +479,7 @@
     // Poll the Render app until it wakes up, then redirect
     const APP_URL = "https://notesphere-4rlw.onrender.com";
     const statusEl = document.getElementById('status');
-    const MAX_ATTEMPTS = 40;
+    const MAX_ATTEMPTS = 3;
     let attempts = 0;
 
     function showFailed() {
@@ -204,10 +491,17 @@
     function check() {
       attempts++;
 
+      // Keep the request alive long enough for Render to finish cold-starting.
+      // Aborting early can interrupt the wake-up request and prevent the app
+      // from ever becoming ready.
       const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 8000);
+      const timer = setTimeout(() => controller.abort(), 90000);
 
-      fetch(APP_URL, { mode: "no-cors", cache: "no-store", signal: controller.signal })
+      statusEl.textContent = attempts > 1
+        ? "Still waking up... this can take a minute"
+        : "Waking up the server...";
+
+      fetch(APP_URL, { mode: "no-cors", cache: "no-store", credentials: "omit", signal: controller.signal })
         .then(() => {
           clearTimeout(timer);
           statusEl.textContent = "Server is ready! Redirecting...";
@@ -219,14 +513,15 @@
             showFailed();
             return;
           }
-          statusEl.textContent = attempts > 10
-            ? "Still waking up... this can take a minute"
-            : "Waking up the server...";
-          setTimeout(check, 3000);
+          setTimeout(check, 5000);
         });
     }
 
-    check();
+    if (PREVIEW) {
+      statusEl.textContent = "Diwali preview - animations only";
+    } else {
+      check();
+    }
   </script>
 </body>
 </html>
