@@ -1,0 +1,60 @@
+{% comment %}
+Global Diwali decoration layer. Rendered only while the festival is active
+(see accounts.context_processors.festival) and shared by every page that
+extends base.html. The whole layer is decorative: it is pointer-events:none
+and layered behind page content, so it can never block forms, navigation or
+the document viewer.
+{% endcomment %}
+<div class="diwali-decor" aria-hidden="true" data-diwali-decor>
+  <span class="diwali-ambient diwali-ambient--a"></span>
+  <span class="diwali-ambient diwali-ambient--b"></span>
+  <span class="diwali-ambient diwali-ambient--c"></span>
+
+  <div class="diwali-garland">
+    <span class="diwali-garland-wire"></span>
+    <span class="diwali-garland-bulbs"></span>
+  </div>
+
+  <div class="diwali-lanterns">
+    <span class="diwali-lantern diwali-lantern--1">
+      <span class="diwali-lantern-cord"></span>
+      <span class="diwali-lantern-body"><span class="diwali-lantern-glow"></span></span>
+    </span>
+    <span class="diwali-lantern diwali-lantern--2">
+      <span class="diwali-lantern-cord"></span>
+      <span class="diwali-lantern-body"><span class="diwali-lantern-glow"></span></span>
+    </span>
+    <span class="diwali-lantern diwali-lantern--3">
+      <span class="diwali-lantern-cord"></span>
+      <span class="diwali-lantern-body"><span class="diwali-lantern-glow"></span></span>
+    </span>
+  </div>
+
+  <div class="diwali-diyas">
+    <span class="diwali-diya-unit diwali-diya-unit--left">
+      <span class="diwali-diya-cord"></span>
+      <span class="diwali-diya-bowl"><span class="diwali-diya-flame"></span></span>
+    </span>
+    <span class="diwali-diya-unit diwali-diya-unit--right">
+      <span class="diwali-diya-cord"></span>
+      <span class="diwali-diya-bowl"><span class="diwali-diya-flame"></span></span>
+    </span>
+  </div>
+
+  <span class="diwali-rangoli diwali-rangoli--left"></span>
+  <span class="diwali-rangoli diwali-rangoli--right"></span>
+
+  <div class="diwali-sparkles">
+    <span class="diwali-sparkle diwali-sparkle--1"></span>
+    <span class="diwali-sparkle diwali-sparkle--2"></span>
+    <span class="diwali-sparkle diwali-sparkle--3"></span>
+    <span class="diwali-sparkle diwali-sparkle--4"></span>
+    <span class="diwali-sparkle diwali-sparkle--5"></span>
+    <span class="diwali-sparkle diwali-sparkle--6"></span>
+    <span class="diwali-sparkle diwali-sparkle--7"></span>
+    <span class="diwali-sparkle diwali-sparkle--8"></span>
+  </div>
+
+  <div class="diwali-particles" data-diwali-particles></div>
+  <div class="diwali-fireworks" data-diwali-fireworks></div>
+</div>

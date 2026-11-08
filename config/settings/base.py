@@ -223,6 +223,13 @@ USE_TZ = True
 # The Diwali theme is applied only within this inclusive date range
 # (Asia/Kolkata) and disappears automatically after the end date.
 # ---------------------------------------------------------------------------
+# Master switch: set DIWALI_ENABLED=0 (or false/no/off) to disable instantly.
+DIWALI_ENABLED = os.environ.get("DIWALI_ENABLED", "1").strip().lower() not in (
+    "0",
+    "false",
+    "no",
+    "off",
+)
 DIWALI_START_DATE = os.environ.get("DIWALI_START_DATE", "2026-11-08")
 DIWALI_END_DATE = os.environ.get("DIWALI_END_DATE", "2026-11-10")
 

@@ -101,26 +101,64 @@ def user_notifications(request):
     }
 
 
-def festival(request):
-    """Expose a date-gated festival flag for temporary decorations.
+DIWALI_GREETING_TITLE = "Happy Diwali!"
+DIWALI_GREETING_MESSAGE = (
+    "May this festival of lights bring happiness, knowledge, success and prosperity."
+)
 
-    ``settings.DIWALI_START_DATE`` / ``DIWALI_END_DATE`` are ISO dates that
-    form an inclusive range (default 2026-11-08 .. 2026-11-10). The Diwali
-    theme is shown only while the current local date (TIME_ZONE) is inside the
-    range, so it switches off automatically the day after the end date.
+
+def festival(request):
+    """Expose the date-gated festival state used by the shared layout.
+
+    ``settings.DIWALI_ENABLED`` is the master switch. When on,
+    ``DIWALI_START_DATE`` / ``DIWALI_END_DATE`` (ISO dates) form an inclusive
+    range evaluated against the server's local date (``TIME_ZONE``), so the
+    theme turns itself off automatically the day after the end date.
+
+    The one-time greeting is remembered in the session so it is shown at most
+    once per visit and never reappears when navigating between pages. To add a
+    future festival, reuse the same ``festival_active`` / ``festival_name``
+    contract and scope a new stylesheet to ``body[data-festival="<name>"]``.
     """
     from datetime import date
 
     from django.conf import settings
     from django.utils import timezone
 
+    enabled = bool(getattr(settings, "DIWALI_ENABLED", True))
     try:
         start = date.fromisoformat(str(getattr(settings, "DIWALI_START_DATE", "")))
         end = date.fromisoformat(str(getattr(settings, "DIWALI_END_DATE", "")))
     except (TypeError, ValueError):
-        return {"diwali_active": False}
+        return {
+            "diwali_active": False,
+            "festival_active": False,
+            "festival_name": "",
+            "diwali_greeting": False,
+        }
 
-    return {"diwali_active": start <= timezone.localdate() <= end}
+    active = enabled and start <= timezone.localdate() <= end
+    show_greeting = False
+    if active:
+        try:
+            seen = bool(request.session.get("ns_diwali_greeted", False))
+        except Exception:
+            seen = True
+        if not seen:
+            show_greeting = True
+            try:
+                request.session["ns_diwali_greeted"] = True
+            except Exception:
+                pass
+
+    return {
+        "diwali_active": active,
+        "festival_active": active,
+        "festival_name": "diwali" if active else "",
+        "diwali_greeting": show_greeting,
+        "diwali_greeting_title": DIWALI_GREETING_TITLE,
+        "diwali_greeting_message": DIWALI_GREETING_MESSAGE,
+    }
 
 
 

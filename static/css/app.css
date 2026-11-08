@@ -2736,8 +2736,7 @@ p {
   pointer-events: none;
 }
 
-[data-festival="diwali"] .auth-page > * {
-  position: relative;
+[data-festival="diwali"] .auth-page > :not(.diwali-decor) {
   z-index: 1;
 }
 
