@@ -285,7 +285,7 @@ body[data-festival="diwali"] .app-shell .diwali-diyas {
 }
 .diwali-rangoli--right {
   right: clamp(-160px, -11vw, -80px);
-  animation-direction: reverse;
+  animation: dw-spin 90s linear infinite reverse;
 }
 
 /* ---------- Sparkles ---------- */
